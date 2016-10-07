@@ -2,6 +2,7 @@
 
 *	[AWS-CLI](#aws-cli)
 *	[SSH PEM Keys](#ssh-pem-keys)
+*	[Linux AMI](#linux-ami)
 *	[Start Linux EC2 Instance](#start-linux-ec2-instance)
 
 
@@ -69,6 +70,31 @@ I also recommend that you keep it in `~/.aws`.
 `aws ec2 create-key-pair --key-name KEYNAME --query 'KeyMaterial' --output text > ~/.aws/KEYNAME.pem`
 
 And lastly I REALLY recommend that you `chmod 400 ~/.aws/*pem` so that others cannot view it.
+
+
+
+
+## Linux AMI
+
+I will be creating and saving a Linux AMI based on Amazon Linux.
+I will `yum update` to upgrade many of the built in packages.
+I will then modify the base environment ...
+*	Update ~/.bashrc with some aliases and PATH modifications
+*	add ~/.inputrc
+* edit ~/.vimrc and add ~/.vim/
+*	install the latest gawk
+*	edit ~/.Renviron
+*	edit ~/.Rprofile
+And then install 
+*	Matlab
+*	[Spectral Network](http://proteomics.ucsd.edu/software-tools/spectral-networks/)
+*	[MODa](http://prix.hanyang.ac.kr/download/software_archive/release/moda_v1.51.zip)
+*	[GutenTag](http://fields.scripps.edu/yates/wp/?page_id=17)
+*	[InsPecT: Depreciated Tool](http://proteomics.ucsd.edu/Software/Inspect/)
+*	[Specialize](http://proteomics.ucsd.edu/software-tools/specialize/)
+*	[Skyline](https://skyline.gs.washington.edu/labkey/project/home/software/Skyline/begin.view)
+*	[Proteowizard](http://proteowizard.sourceforge.net/downloads.shtml)
+*	[R](https://www.r-project.org) (possibly through yum)
 
 
 

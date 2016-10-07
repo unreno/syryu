@@ -1,8 +1,8 @@
 # syryu
 
-*	[s](#AWS-CLI)
-*	[a](#SSH PEM Keys)
-*	[x](#Start Linux EC2 Instance)
+*	[AWS-CLI](#aws-cli)
+*	[SSH PEM Keys](#ssh-pem-keys)
+*	[Start Linux EC2 Instance](#start-linux-ec2-instance)
 
 
 

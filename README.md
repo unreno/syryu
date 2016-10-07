@@ -85,6 +85,7 @@ I will then modify the base environment ...
 *	install the latest gawk
 *	edit ~/.Renviron
 *	edit ~/.Rprofile
+
 And then install 
 *	Matlab
 *	[Spectral Network](http://proteomics.ucsd.edu/software-tools/spectral-networks/)

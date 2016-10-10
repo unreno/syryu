@@ -14,9 +14,12 @@
 To access AWS resources via the terminal, `awscli` must be installed and configured.
 
 
+
+
 ###	Installation
 
-pip is a python package manager and awscli is most easily distributed via it.
+pip is a python package manager and awscli is most easily distributed via it,
+although it can be installed on its own.
 
 A thorough guide on installing the AWS CLI is available ...
 
@@ -24,8 +27,19 @@ http://docs.aws.amazon.com/cli/latest/userguide/installing.html
 
 `pip install --user --upgrade awscli`
 
+Once installed, confirm that the aws script is in your PATH by running `aws`.
+A help page should be displayed.
+If something like `-bash: aws: command not found` is displayed,
+the `aws` scripts are not installed in your PATH.
+
+
+
 
 ###	Configure
+
+Once the `aws` scripts are installed, they need to be configured for access to your account resources.
+This will require the creation of an Access Key on the AWS website.
+This key's values need to be copied to your own computer.
 
 Visit ...
 
@@ -42,6 +56,8 @@ At a terminal command line, type `aws configure`. It will prompt you for the Acc
 The region is important as instances and AMIs are specific to each.
 
 
+
+
 ###	Usage
 
 `aws s3 sync s3://somebucket/ ~/s3/somebucket`
@@ -56,11 +72,15 @@ Trailing slashes are important for folders.
 
 
 
+
 ## SSH PEM Keys
 
 You will need to create a key pair in order to start and login to an EC2 linux instance.
 There is no username or password, just this PEM file which is the key.
 Without it you cannot gain access to a running instance.
+
+
+
 
 ### Creation
 

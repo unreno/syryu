@@ -169,6 +169,10 @@ If so, running ...
 ... should point out that adding the option `--NOT-DRY-RUN` will actually start an instance.
 
 
+If you would like a different instance type, specify it with `--instance-type INSTANCE_TYPE`.
+
+If you would like more disk space on the instance, specify the number of GB with `--volume-size ###`.
+
 
 Running the following should create an t2.micro instance using our most recent AMI.
 

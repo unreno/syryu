@@ -122,7 +122,7 @@ And then install
 *	[Proteowizard](http://proteowizard.sourceforge.net/downloads.shtml)
 	*	Web download followed by scp upload
 *	[R](https://www.r-project.org) (sudo yum install R)
-
+*	[MatLab](http://www.mathworks.com/downloads/web_downloads/download_release?release=R2016b)
 
 
 
@@ -147,4 +147,47 @@ make install
 ```
 
 For the moment, it is just 2 scripts, only 1 of which is useful to you.
+
+
+If you've made it this far, you have installed and configured the aws cli.
+You have also created a ssh key pair.
+
+Running the following with the appropriate KEYNAME ...
+
+`create_ec2_instance.bash --key ~/.aws/KEYNAME.pem`
+
+... should suggest success, among other things, with ...
+
+`An error occurred (DryRunOperation) when calling the RunInstances operation: Request would have succeeded, but DryRun flag is set.`
+
+
+
+If so, running ...
+
+`create_ec2_instance.bash -h`
+
+... should point out that adding the option `--NOT-DRY-RUN` will actually start an instance.
+
+
+
+Running the following should create an t2.micro instance using our most recent AMI.
+
+`create_ec2_instance.bash --key ~/.aws/KEYNAME.pem --NOT-DRY-RUN`
+
+After the script runs, it should show how to get the instance's IP address
+and an appropriate command to ssh to this instance.
+
+
+When finished using this instance, running `sudo halt` will terminate it.
+You could also stop it from the web console.
+You will stop being billed and the end of the running hour.
+All data on the instance will be gone forever.
+
+
+
+
+
+
+
+
 

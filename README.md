@@ -115,7 +115,6 @@ And then install
 	*	http://fields.scripps.edu/download/GutenTag.zip
 *	[InsPecT](http://proteomics.ucsd.edu/Software/Inspect/)
 	*	http://proteomics.ucsd.edu/Software/Inspect/Inspect.20120109.zip
-	*	Windows Only?
 *	[Specialize](http://proteomics.ucsd.edu/software-tools/specialize/)
 	*	http://proteomics.ucsd.edu/Software/Specialize/Specialize_v1.0.zip
 *	[Skyline](https://skyline.gs.washington.edu/labkey/project/home/software/Skyline/begin.view)
@@ -124,6 +123,11 @@ And then install
 	*	Web download followed by scp upload
 *	[R](https://www.r-project.org) (sudo yum install R)
 
+
+
+
+
+I should probably NOT set up the vi-style command line editor.
 
 
 

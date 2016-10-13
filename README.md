@@ -109,13 +109,20 @@ I will then modify the base environment ...
 And then install 
 *	Matlab
 *	[Spectral Network](http://proteomics.ucsd.edu/software-tools/spectral-networks/)
+	*	http://proteomics.ucsd.edu/Software/sps/sps-linux-x64-static-latest.zip
 *	[MODa](http://prix.hanyang.ac.kr/download/software_archive/release/moda_v1.51.zip)
 *	[GutenTag](http://fields.scripps.edu/yates/wp/?page_id=17)
+	*	http://fields.scripps.edu/download/GutenTag.zip
 *	[InsPecT](http://proteomics.ucsd.edu/Software/Inspect/)
+	*	http://proteomics.ucsd.edu/Software/Inspect/Inspect.20120109.zip
+	*	Windows Only?
 *	[Specialize](http://proteomics.ucsd.edu/software-tools/specialize/)
+	*	http://proteomics.ucsd.edu/Software/Specialize/Specialize_v1.0.zip
 *	[Skyline](https://skyline.gs.washington.edu/labkey/project/home/software/Skyline/begin.view)
+	*	Windows Only??? ---------------------------------------
 *	[Proteowizard](http://proteowizard.sourceforge.net/downloads.shtml)
-*	[R](https://www.r-project.org) (possibly through yum)
+	*	Web download followed by scp upload
+*	[R](https://www.r-project.org) (sudo yum install R)
 
 
 
@@ -125,7 +132,15 @@ And then install
 
 ## Start Linux EC2 Instance
 
+I recommend that you downloand and install
+[my AWS script repo](https://github.com/unreno/aws)
 
+```BASH
+git clone https://github.com/unreno/aws
+cd aws
+cp Makefile.example Makefile
+make install
+```
 
-
+For the moment, it is just 2 scripts, only 1 of which is useful to you.
 

@@ -31,6 +31,8 @@ A help page should be displayed.
 If something like `-bash: aws: command not found` is displayed,
 the `aws` scripts are not installed in your PATH.
 
+This will need to be rectified prior to continuing.
+
 
 
 

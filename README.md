@@ -8,7 +8,6 @@
 
 
 
-
 ##	AWS-CLI
 
 To access AWS resources via the terminal, `awscli` must be installed and configured.
@@ -54,21 +53,39 @@ Click on your user and then click on Security Credentials and then Create Access
 At a terminal command line, type `aws configure`. It will prompt you for the Access Key and Secret Access Key from the web page, as well as region (us-west-2) and output format (json). This info is also kept in ~/.aws/config and ~/.aws/credentials . Once entered, your script should work.
 
 The region is important as instances and AMIs are specific to each.
+While buckets are created in a specific region, they are universally accessible.
+
+I recommend that you secure this directory with `chmod 700 ~/.aws`
 
 
 
 
 ###	Usage
 
-`aws s3 sync s3://somebucket/ ~/s3/somebucket`
+Once the `aws` script is installed and configured, you can use it to access all of the AWS resources.
+
+For example
+
+```BASH
+aws s3 ls s3://syryu
+touch mytestfile
+aws s3 cp mytestfile s3://syryu
+aws s3 ls s3://syryu
+aws s3 rm s3://syryu/mytestfile
+aws s3 ls s3://syryu
+```
 
 Trailing slashes are important for folders.
 
-`aws s3 ls s3://somebucket/somefolder`
+`aws s3 ls s3://syryu/somefolder`
 
 ... is different than ...
 
-`aws s3 ls s3://somebucket/somefolder/`
+`aws s3 ls s3://syryu/somefolder/`
+
+Please note that S3 buckets don't really have folders in the normal sense.
+All items in a bucket stand on there own.
+Think of a folder more as a shared part of the file name.
 
 
 
@@ -76,7 +93,7 @@ Trailing slashes are important for folders.
 ## SSH PEM Keys
 
 You will need to create a key pair in order to start and login to an EC2 linux instance.
-There is no username or password, just this PEM file which is the key.
+There is no username or password, just this PEM file which will be your key.
 Without it you cannot gain access to a running instance.
 
 
@@ -96,18 +113,17 @@ And lastly I REALLY recommend that you `chmod 400 ~/.aws/*pem` so that others ca
 
 ## Linux AMI
 
-I will be creating and saving a Linux AMI based on Amazon Linux.
-I will `yum update` to upgrade many of the built in packages.
-I will then modify the base environment ...
-*	Update ~/.bashrc with some aliases and PATH modifications
-*	add ~/.inputrc
-* edit ~/.vimrc and add ~/.vim/
-*	install the latest gawk
-*	edit ~/.Renviron
-*	edit ~/.Rprofile
+I have created and saved a Linux AMI based on Amazon Linux.
+I ran `yum update` to upgrade many of the built in packages.
+I modified the base environment ...
+*	Updateed ~/.bashrc with some aliases and PATH modifications
+* edited ~/.vimrc and added ~/.vim/
+*	installed the latest gawk and find
+*	edited ~/.Renviron
+*	edited ~/.Rprofile
 
-And then install 
-*	Matlab
+And then installed
+*	[MatLab](http://www.mathworks.com/downloads/web_downloads/download_release?release=R2016b)
 *	[Spectral Network](http://proteomics.ucsd.edu/software-tools/spectral-networks/)
 	*	http://proteomics.ucsd.edu/Software/sps/sps-linux-x64-static-latest.zip
 *	[MODa](http://prix.hanyang.ac.kr/download/software_archive/release/moda_v1.51.zip)
@@ -118,18 +134,10 @@ And then install
 *	[Specialize](http://proteomics.ucsd.edu/software-tools/specialize/)
 	*	http://proteomics.ucsd.edu/Software/Specialize/Specialize_v1.0.zip
 *	[Skyline](https://skyline.gs.washington.edu/labkey/project/home/software/Skyline/begin.view)
-	*	Windows Only??? ---------------------------------------
+	*	Seems to be Windows Only, so NOT installed
 *	[Proteowizard](http://proteowizard.sourceforge.net/downloads.shtml)
 	*	Web download followed by scp upload
 *	[R](https://www.r-project.org) (sudo yum install R)
-*	[MatLab](http://www.mathworks.com/downloads/web_downloads/download_release?release=R2016b)
-
-
-
-
-I should probably NOT set up the vi-style command line editor.
-
-
 
 
 

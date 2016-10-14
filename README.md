@@ -147,6 +147,11 @@ make install
 ```
 
 For the moment, it is just 2 scripts, only 1 of which is useful to you.
+If you don't have `git` installed, you can just download the script ...
+
+https://raw.githubusercontent.com/unreno/aws/master/scripts/create_ec2_instance.bash
+
+... and put it in your PATH or call it from where it is.
 
 
 If you've made it this far, you have installed and configured the aws cli.

@@ -195,6 +195,9 @@ After the script runs, it should show how to get the instance's IP address
 and an appropriate command to ssh to this instance.
 
 
+NOTE: you will NEED to add the -X option to the ssh command for MatLab.
+
+
 When finished using this instance, running `sudo halt` will terminate it.
 You could also stop it from the web console.
 You will stop being billed and the end of the running hour.

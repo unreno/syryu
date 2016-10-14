@@ -31,6 +31,8 @@ A help page should be displayed.
 If something like `-bash: aws: command not found` is displayed,
 the `aws` scripts are not installed in your PATH.
 
+On a Mac, the pip installation likely defaults to `~/Library/Python/2.7/bin/`
+
 This will need to be rectified prior to continuing.
 
 

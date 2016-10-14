@@ -52,9 +52,9 @@ and login. Then go to ...
 
 https://console.aws.amazon.com/iam/home#users
 
-Click on your user and then click on Security Credentials and then Create Access Key. Keep this open as you won't have access to it if you close it. Of course, you could create another set. Nevertheless.
+Click on your user and then click on Security Credentials and then Create Access Key. When a pop-over window opens, click "Show User Security Credentials". Keep this open as you won't have access to it if you close it. Of course, you could create another set. Nevertheless.
 
-At a terminal command line, type `aws configure`. It will prompt you for the Access Key and Secret Access Key from the web page, as well as region (us-west-2) and output format (json). This info is also kept in ~/.aws/config and ~/.aws/credentials . Once entered, your script should work.
+At a terminal command line, type `aws configure`. It will prompt you for the Access Key ID and Secret Access Key from the web page, as well as region (us-west-2) and output format (json). This info is also kept in ~/.aws/config and ~/.aws/credentials . Once entered, your script should work.
 
 The region is important as instances and AMIs are specific to each.
 While buckets are created in a specific region, they are universally accessible.

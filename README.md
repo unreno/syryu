@@ -47,7 +47,7 @@ https://syryu.signin.aws.amazon.com/console
 
 and login. Then go to ...
 
-https://console.aws.amazon.com/iam/home#users/
+https://console.aws.amazon.com/iam/home#users
 
 Click on your user and then click on Security Credentials and then Create Access Key. Keep this open as you won't have access to it if you close it. Of course, you could create another set. Nevertheless.
 

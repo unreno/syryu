@@ -217,3 +217,31 @@ All data on the instance will be gone forever.
 
 
 
+
+
+
+##	Start EC2 Windows Instance from YOUR OWN AMI (with known username and password)
+
+In order to connect to a Windows EC2 Instance from a Mac, you will need to have installed the Microsoft Remote Desktop app from the Apple App Store.
+The version downloadable from Microsoft doesn't seem to work.
+In addition, you will need to know the login credentials.
+If you would like to change them permanently, you will need to create a new AMI.
+
+*	Login to AWS via ... https://syryu.signin.aws.amazon.com/console
+*	This should take you to the AWS Dashboard, if not, visit ... 
+	*	https://us-west-2.console.aws.amazon.com/console/home
+*	Select EC2 from the AWS Services or Shortcuts on the Dashboard
+*	Choose "Launch Instance" from EC2 dashboard
+*	Choose "My AMIs" tab
+*	Select your Windows AMI
+*	Choose instance type ( how much computer is needed )
+*	Ignore or choose security group settings
+*	Upgrade storage as needed
+*	Choose "Proceed without a key pair" as is not needed
+*	Wait about 5 minutes for it to start before can login
+*	Select instance and click Connect from AWS EC2 Dashboard / Instances
+*	Opens pop over window
+*	Download the Remote Desktop File and open it to start Microsoft Remote Desktop
+
+
+

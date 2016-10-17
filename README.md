@@ -165,6 +165,8 @@ https://raw.githubusercontent.com/unreno/aws/master/scripts/create_ec2_instance.
 
 ... and put it in your PATH or call it from where it is.
 
+This script uses `jq` which can be acquired at https://github.com/stedolan/jq
+
 
 If you've made it this far, you have installed and configured the aws cli.
 You have also created a ssh key pair.

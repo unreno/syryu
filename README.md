@@ -128,6 +128,21 @@ I modified the base environment ...
 
 And then installed
 *	[MatLab](http://www.mathworks.com/downloads/web_downloads/download_release?release=R2016b)
+	*	/home/ec2-user/.local/MATLAB/R2016b/bin/activate_matlab.sh
+	*	An X window will open ...
+	*	Check "Activate automatically using the internet ..."	(likely already set)
+	*	Click "Next"
+	*	Enter your Mathworks account email address and password
+	*	Click "Next"
+	*	Select the license from the list (likely is already selected)
+	*	Click "Next"
+	*	Check "I will use the software" with login name "ec2-user" (likely already set)
+	*	Click "Next"
+	*	Click "Confirm"
+	*	Click "Finish"
+	*	This should have create a new license file associate with this hostid in ...
+		*	/home/ec2-user/.matlab/R2016b_licenses/
+	*	run "matlab"
 *	[Spectral Network](http://proteomics.ucsd.edu/software-tools/spectral-networks/)
 	*	http://proteomics.ucsd.edu/Software/sps/sps-linux-x64-static-latest.zip
 *	[MODa](http://prix.hanyang.ac.kr/download/software_archive/release/moda_v1.51.zip)

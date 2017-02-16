@@ -114,16 +114,27 @@ BEGIN{
 		if( num < percent_of_peaks ) {
 			if( verbose ) print "... has been randomly ( " num " < " percent_of_peaks " ) selected to shift ...";
 			if( verbose ) print "... between " min_shift " and " max_shift " ...";
-			random_shift = min_shift + int(10 * rand() * ( max_shift - min_shift + 1 ) ) / 10;
-			if( verbose ) print "... by " random_shift " ...";
-			new_mass = $1 + random_shift;
-			if( verbose ) print "... to new mass " new_mass " ...";
-			if( ( new_mass > 0 ) && ( new_mass < max_mass ) ){
-				if( verbose ) print "... that is between 0 and " max_mass " ...";
-				$1 = new_mass;
-			} else {
-				if( verbose ) print "BUT IS NOT BETWEEN 0 and " max_mass;
+
+			original_mass = $1;
+			i=0
+
+			#	try 3 times to shift, if not then just skip.
+			while( original_mass == $1 && i < 3 ){
+				if( verbose && i > 0 ) print "TRYING AGAIN";
+
+				random_shift = min_shift + int(10 * rand() * ( max_shift - min_shift + 1 ) ) / 10;
+				if( verbose ) print "... by " random_shift " ...";
+				new_mass = $1 + random_shift;
+				if( verbose ) print "... to new mass " new_mass " ...";
+				if( ( new_mass > 0 ) && ( new_mass < max_mass ) ){
+					if( verbose ) print "... that is between 0 and " max_mass " ...";
+					$1 = new_mass;
+				} else {
+					if( verbose ) print "BUT IS NOT BETWEEN 0 and " max_mass;
+				}
+				i++;
 			}
+
 		}
 	} else {
 		if( verbose ) print "... BUT IS IN EXCLUSION RANGE ...";

@@ -12,7 +12,7 @@ percent_of_peaks=30
 
 function usage(){
 	echo
-#			  echo "checks the contents of the given blast output file"
+#	echo "checks the contents of the given blast output file"
 	echo "Outputs file file of same name with .DECOY.mgf appended to root name."
 	echo
 	echo "Usage:"

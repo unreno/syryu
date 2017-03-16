@@ -48,8 +48,6 @@ function usage(){
 	echo
 	exit 1
 }
-#	Basically, this is TRUE AND DO ...
-[ $# -eq 0 ] && usage
 
 while [ $# -ne 0 ] ; do
 	case $1 in
@@ -71,6 +69,9 @@ while [ $# -ne 0 ] ; do
 			break;;
 	esac
 done
+
+#	Basically, this is TRUE AND DO ...
+[ $# -eq 0 ] && usage
 
 #number_of_peaks=
 #percent_of_peaks=30

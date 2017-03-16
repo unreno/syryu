@@ -11,14 +11,14 @@ number_of_peaks=
 percent_of_peaks=30
 
 function usage(){
-  echo
+	echo
 #			  echo "checks the contents of the given blast output file"
 	echo "Outputs file file of same name with .DECOY.mgf appended to root name."
-  echo
-  echo "Usage:"
-  echo
-  echo "$script <OPTIONS> mgf_file(s)"
-  echo
+	echo
+	echo "Usage:"
+	echo
+	echo "$script <OPTIONS> mgf_file(s)"
+	echo
 	echo "Options:"
 	echo "	--min_shift INTEGER......... Minimum value of shift range"
 	echo "	--max_shift INTEGER......... Maximum value of shift range"
@@ -40,12 +40,12 @@ function usage(){
 	echo "Notes:"
 	echo "	number and percent peaks are mutually exclusive. Setting one deletes the other."
 	echo "	options are specified WITHOUT EQUALS SIGN. (ie. --min_shift -50 )"
-  echo
-  echo "Examples:"
+	echo
+	echo "Examples:"
 	echo "	$script 140521_EOC_MCis_NT_3-head-20.mgf"
 	echo "	$script --exclusion_max 900 --percent_of_peaks 100 140521_EOC_MCis_NT_3.mgf"
 	echo
-  echo
+	echo
 	exit 1
 }
 #	Basically, this is TRUE AND DO ...

@@ -9,6 +9,7 @@ min=50
 function usage(){
 	echo
 	echo "Splits reads in given fasta file into sequences at given min length."
+	echo "Output goes to filename with extension removed and '.chopped.fasta' appended."
 	echo
 	echo "Usage:"
 	echo
@@ -51,7 +52,9 @@ done
 while [ $# -ne 0 ] ; do
 #	echo $1
 
-	awk -v min=$min '
+	base=${1%.*}		#	drop the extension
+
+	awk -v min=$min -v base=$base '
 	function split_and_print() {
 		i=1
 		name1=description
@@ -61,12 +64,12 @@ while [ $# -ne 0 ] ; do
 			name2=substr(description,space_position)
 		}
 		while( ( l = length(sequence) ) > 0 ){
-			print name1 "_" i name2
+			print name1 "_" i name2 >> out
 			if( l < ( 2 * min ) ) {
-				print sequence
+				print sequence >> out
 				sequence=""
 			} else {
-				print substr(sequence, 0, min )
+				print substr(sequence, 0, min ) >> out
 				i+=1
 				sequence=substr(sequence,min+1)
 			}
@@ -81,6 +84,10 @@ while [ $# -ne 0 ] ; do
 		if( description ) split_and_print()
 		description=$0
 		sequence=""
+	}
+	BEGIN {
+		out=base".chopped.fasta"
+		printf("") > out
 	}
 	END{
 		split_and_print()

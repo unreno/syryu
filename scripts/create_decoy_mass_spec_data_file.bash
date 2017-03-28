@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 script=`basename $0`
+script_dir=`dirname $0`
 
 #	Defaults:
 min_shift=-200
@@ -79,8 +80,12 @@ done
 while [ $# -ne 0 ] ; do
 
 
+#	outfile=sprintf("%s.DECOY.mgf",infile_base);
+#	printf "" > outfile;
+#( /^[[:alpha:]]/ ){ print >> outfile; }
+#	print $1, $2 >> outfile
+
 awk \
-	-v infile_base=${1%.*} \
 	-v min_shift=$min_shift \
 	-v max_shift=$max_shift \
 	-v exclusion_min=$exclusion_min \
@@ -88,11 +93,7 @@ awk \
 	-v percent_of_peaks=$percent_of_peaks \
 	-v verbose=$verbose \
 '
-BEGIN{
-	outfile=sprintf("%s.DECOY.mgf",infile_base);
-	printf "" > outfile;
-	srand();
-}
+BEGIN{ srand(); }
 ( /^PEPMASS/ ){
 	split($1,s,"=");
 	pepmass = s[2];
@@ -105,7 +106,7 @@ BEGIN{
 	max_mass = pepmass * charge;
 	if( verbose ) printf( "MAX MASS = %s\n", max_mass );
 }
-( /^[[:alpha:]]/ ){ print >> outfile; }
+( /^[[:alpha:]]/ ){ print }
 ( /^[[:digit:]]/ ){
 	if( verbose ) print $1
 	if( verbose ) print "Exclusion range " exclusion_min " - " exclusion_max
@@ -140,8 +141,21 @@ BEGIN{
 	} else {
 		if( verbose ) print "... BUT IS IN EXCLUSION RANGE ...";
 	}
-	print $1, $2 >> outfile
-}' $1
+	print $1, $2
+}' $1 | awk '
+BEGIN { split("",buffer) }
+( /^[0-9 .]+$/ ){
+	buffer[length(buffer)+1]=$0
+}
+( !/^[0-9 .]+$/ ){
+	if( length(buffer) > 0 ){
+		asort(buffer,sorted,"@val_num_asc")
+		for(i=1;i<=length(sorted);i++)
+			print sorted[i];
+		delete(buffer);
+	}
+	print
+}' > ${1%.*}.DECOY.mgf
 
 	shift
 

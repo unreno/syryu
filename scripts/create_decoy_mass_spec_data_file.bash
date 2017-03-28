@@ -80,7 +80,7 @@ while [ $# -ne 0 ] ; do
 
 
 awk \
-	-v infile=$1 \
+	-v infile_base=${1%.*} \
 	-v min_shift=$min_shift \
 	-v max_shift=$max_shift \
 	-v exclusion_min=$exclusion_min \
@@ -89,7 +89,7 @@ awk \
 	-v verbose=$verbose \
 '
 BEGIN{
-	outfile=sprintf("%s.DECOY.mgf",infile);
+	outfile=sprintf("%s.DECOY.mgf",infile_base);
 	printf "" > outfile;
 	srand();
 }

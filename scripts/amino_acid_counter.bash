@@ -73,9 +73,9 @@ while [ $# -ne 0 ] ; do
 	BEGIN {
 		out=base".amino_acid_counts.tsv"
 		split("ABCDEFGHIJKLMNOPQRSTUVWXYZ",acids,"")
-		printf("sequence\t") > out
-		for( i in acids ) printf("%s\t",acids[i]) >> out
-		printf("length\n") >> out
+		printf("ProteinName\t") > out
+		for( i in acids ) printf("%sCount\t",acids[i]) >> out
+		printf("Length\n") >> out
 	}
 	END{
 		analyze_and_print()

@@ -4,14 +4,15 @@ script=`basename $0`
 
 function usage(){
 	echo
-	echo "Reads in given fasta file sequences and counts amino acids."
+	echo "Reads in given fasta file and counts amino acids in each sequence."
 	echo "Output goes to filename with extension removed and '.amino_acid_counts.tsv' appended."
 	echo
 	echo "Usage:"
 	echo
-	echo "$script <OPTIONS> fasta_files(s)"
+#	echo "$script <OPTIONS> fasta_files(s)"
+	echo "$script fasta_files(s)"
 	echo
-	echo "Options:"
+#	echo "Options:"
 #	echo "	--min INTEGER ......... Minimum value of shift range"
 #	echo "	--verbose .................. NO VALUE, just boolean flag"
 	echo
@@ -52,18 +53,12 @@ while [ $# -ne 0 ] ; do
 
 	awk -v base=$base '
 	function analyze_and_print() {
-#		while( ( l = length(sequence) ) > 0 ){
-			gsub(/"/,"\"\"",description)
-			printf( "\"%s\"\t",description ) >> out
-#			if( l < ( 2 * min ) ) {
-				print length(sequence) >> out
-#				sequence=""
-#			} else {
-#				print substr(sequence, 0, min ) >> out
-#				i+=1
-#				sequence=substr(sequence,min+1)
-#			}
-#		}
+		gsub(/"/,"\"\"",description)
+		printf( "\"%s\"\t",description ) >> out
+		tmp=sequence
+		for( i in acids )
+			printf( "%s\t", gsub(acids[i],"",tmp) ) >> out
+		print length(sequence) >> out
 	}
 	( !/^>/ ){
 		gsub(/\r/,"");	#	remove windows carriage returns!
@@ -77,7 +72,10 @@ while [ $# -ne 0 ] ; do
 	}
 	BEGIN {
 		out=base".amino_acid_counts.tsv"
-		print("sequence,length") > out
+		split("ABCDEFGHIJKLMNOPQRSTUVWXYZ",acids,"")
+		printf("sequence\t") > out
+		for( i in acids ) printf("%s\t",acids[i]) >> out
+		printf("length\n") >> out
 	}
 	END{
 		analyze_and_print()

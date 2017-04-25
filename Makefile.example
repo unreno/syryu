@@ -60,6 +60,12 @@ clean: clean-all $(TARGETS:%=clean-%)
 clean-all:
 	@printf "\nCLEANING ALL\n\n"
 
+#	make assumes that you are making this file.
+#	As the dir test exists, it thinks its done, so
+#	we must tell make to run 'make test' regardless.
+.PHONY : test
+
 test:
-	@printf "\nTesting is nice, but not today\n\n"
+	@printf "\nTesting.\n\n"
+	cd test/; test.bash
 

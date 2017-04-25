@@ -66,6 +66,5 @@ clean-all:
 .PHONY : test
 
 test:
-	@printf "\nTesting.\n\n"
-	cd test/; test.bash
+	@cd test/; test.bash
 

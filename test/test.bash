@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+echo
+echo "Begin Testing Script."
+echo
 
 failures=0
 
@@ -15,3 +18,6 @@ failures=`expr $failures + $?`
 
 echo
 echo "Failures: $failures"
+echo
+echo "End Testing Script."
+echo

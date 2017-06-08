@@ -13,8 +13,24 @@ percent_of_peaks=30
 
 function usage(){
 	echo
-#	echo "checks the contents of the given blast output file"
-	echo "Outputs file file of same name with .DECOY.mgf appended to root name."
+	echo "Outputs file of same name with .DECOY.mgf appended to root name."
+	echo
+	echo "reads in an MGF file"
+	echo "takes the following options"
+	echo "	* min and max shift determines the range of shifting"
+	echo "	* exclusion min and max determines range of masses to be left unshifted"
+	echo "	* percent_of_peaks determines the chance of a given mass being shifted"
+	echo "reads its PEPMASS and CHARGE then computes a MAX SHIFTED MASS"
+	echo "reads each MASS INTENSITY pair"
+	echo "	* if mass is outside exclusion range"
+	echo "		* percent chance of shifting determined"
+	echo "	* and if shifting"
+	echo "		* random number in shift range (positive and negative) determined"
+	echo "	* and if summation of input mass and shift >0 and below MAX SHIFTED MASS"
+	echo "		* mass is shifted"
+	echo "	* else"
+	echo "		* mass is left as is"
+	echo "outputs input MGF file with (possibly) modified mass values"
 	echo
 	echo "Usage:"
 	echo
@@ -27,7 +43,8 @@ function usage(){
 	echo "	--exclusion_max INTEGER..... Do not shift values BELOW this"
 	echo "	--number_of_peaks .......... NOT IMPLEMENTED YET"
 	echo "	--percent_of_peaks INTEGER.. PERCENT CHANCE PEAK WILL BE SHIFTED (not sure about this)"
-	echo "	--verbose .................. NO VALUE, just boolean flag"
+	echo "	--verbose .................. NO VALUE, just boolean flag."
+	echo "	          .................. Output file will be invalid MGF as contains a lot of other stuff"
 	echo
 	echo "Default option values:"
 	echo "	--min_shift ........ ${min_shift}"
@@ -160,3 +177,83 @@ BEGIN { split("",buffer) }
 	shift
 
 done
+
+
+#	Create a decoy mass spectrometry data file
+#
+#	Goal: to construct a null distribution of PTM matching scores
+#	How to:
+#	Shift masses of some peaks randomly in a given mgf file
+#
+#
+#	Exclude some peaks in a certain mass range to be shifted
+#	For example,
+#		if the exclusion mass range is between 0 and 200,
+#		then any masses between this range cannot be shifted.
+#
+#	Minimum mass shift and Maximum mass shift
+#	For example,
+#		if a minimum mass shift is 10 and a maximum mass shift is 200,
+#		then a random number from (10, 200) will be chosen.
+#		If 5.5 was chosen for a certain peak with mass 130.5,
+#		then the shifted mass for that peak is 136.
+#
+#	Option to choose either number of peaks to be shifted or % of peaks to be shifted
+#
+#	Input file (mgf file)
+#	Output file  (mgf file with another name)
+#
+#
+#	Restriction
+#
+#	The minimum mass cannot be less than zero.
+#	The maximum mass cannot be larger than Pepmass*Charge
+#
+#
+#	Example
+#
+#	The file contains 2 spectra.
+#	Spectra 1 (PepMass 1000 and charge 1)
+#	The following is masses.
+#	135.5
+#	143.4 -> +5.5 =>148.9	(random chosen to shift)
+#	200.5
+#	300.4 -> -10 => 290.4	(randomly chosen to shift)
+#	420.6
+#	900.5
+#	Spectra 2 (PepMass 500 and charge 2)
+#	300.2 -> 50 => 350.2	(randomly chosen to shift)
+#	403.50
+#	950.5 -> +60 =>  (randomly chosen to shift however CANNOT DO THIS BECAUSE IT BECOME GREATED THAN 500*2)
+#
+
+
+
+#	EXAMPLE SPECTRUM
+#	Only PEPMASS, CHARGE and MASS (first column) values are considered in this script
+
+
+#	BEGIN IONS
+#	TITLE=140521_EOC_MCis_NT_3.12.12.2 File:"140521_EOC_MCis_NT_3.raw", NativeID:"controllerType=0 controllerNumber=1 scan=12"
+#	RTINSECONDS=3.41647884
+#	PEPMASS=573.837194615683 4476.82373046875			[second value not relevant here]
+#	CHARGE=2+
+#	148.3734771 544.1920166016				[line in format of MASS INTENSITY]
+#	149.0221207 11944.6396484375
+#	150.0263882 509.1209106445
+#	151.1748135 597.6806030273
+#	158.5967596 557.734375
+#	161.7232055 524.9778442383
+#	178.6890678 590.6413574219
+#	195.6584047 499.9047241211
+#	205.0836878 1168.0891113281
+#	293.1799579 564.6156616211
+#	307.3158042 567.4732055664
+#	845.83007 616.4040527344
+#	926.6448323 681.1176757813
+#	930.4296215 634.0212402344
+#	END IONS
+
+
+
+

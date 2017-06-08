@@ -132,7 +132,8 @@ BEGIN{ srand(); }
 }
 ( /^[[:alpha:]]/ ){ print }
 ( /^[[:digit:]]/ ){
-	if( verbose ) print $1
+	if( verbose ) print "BEFORE " $0
+	if( verbose ) print "input MASS "$1
 	if( verbose ) print "Exclusion range " exclusion_min " - " exclusion_max
 	if( ( $1 < exclusion_min ) || ( $1 > exclusion_max ) ){
 		if( verbose ) print "... is not in exclusion range ...";

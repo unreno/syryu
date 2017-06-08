@@ -6,6 +6,7 @@ script_dir=`dirname $0`
 #	Defaults:
 min_shift=-200
 max_shift=200
+min_shifted_mass=0
 exclusion_min=0
 exclusion_max=0
 number_of_peaks=
@@ -20,13 +21,14 @@ function usage(){
 	echo "	* min and max shift determines the range of shifting"
 	echo "	* exclusion min and max determines range of masses to be left unshifted"
 	echo "	* percent_of_peaks determines the chance of a given mass being shifted"
+	echo "	* min shifted mass (default 0)"
 	echo "reads its PEPMASS and CHARGE then computes a MAX SHIFTED MASS"
 	echo "reads each MASS INTENSITY pair"
 	echo "	* if mass is outside exclusion range"
 	echo "		* percent chance of shifting determined"
 	echo "	* and if shifting"
 	echo "		* random number in shift range (positive and negative) determined"
-	echo "	* and if summation of input mass and shift >0 and below MAX SHIFTED MASS"
+	echo "	* and if summation of input mass and shift > MIN SHIFTED MASS and below MAX SHIFTED MASS"
 	echo "		* mass is shifted"
 	echo "	* else"
 	echo "		* mass is left as is"
@@ -39,6 +41,7 @@ function usage(){
 	echo "Options:"
 	echo "	--min_shift INTEGER......... Minimum value of shift range"
 	echo "	--max_shift INTEGER......... Maximum value of shift range"
+	echo "	--min_shifted_mass INTEGER.. Minimum value for shifted mass"
 	echo "	--exclusion_min INTEGER..... Do not shift values ABOVE this"
 	echo "	--exclusion_max INTEGER..... Do not shift values BELOW this"
 	echo "	--number_of_peaks .......... NOT IMPLEMENTED YET"
@@ -47,13 +50,14 @@ function usage(){
 	echo "	          .................. Output file will be invalid MGF as contains a lot of other stuff"
 	echo
 	echo "Default option values:"
-	echo "	--min_shift ........ ${min_shift}"
-	echo "	--max_shift ........ ${max_shift}"
-	echo "	--exclusion_min .... ${exclusion_min}"
-	echo "	--exclusion_max .... ${exclusion_max}"
-	echo "	--number_of_peaks .. ${number_of_peaks} NOT YET"
-	echo "	--percent_of_peaks . ${percent_of_peaks}"
-	echo "	--verbose .......... ${verbose}"
+	echo "	--min_shift ......... ${min_shift}"
+	echo "	--max_shift ......... ${max_shift}"
+	echo "	--min_shifted_mass .. ${min_shifted_mass}"
+	echo "	--exclusion_min ..... ${exclusion_min}"
+	echo "	--exclusion_max ..... ${exclusion_max}"
+	echo "	--number_of_peaks ... ${number_of_peaks} NOT YET"
+	echo "	--percent_of_peaks .. ${percent_of_peaks}"
+	echo "	--verbose ........... ${verbose}"
 	echo
 	echo "Notes:"
 	echo "	number and percent peaks are mutually exclusive. Setting one deletes the other."
@@ -73,6 +77,8 @@ while [ $# -ne 0 ] ; do
 			shift; min_shift=$1; shift;;
 		--max_shift)
 			shift; max_shift=$1; shift;;
+		--min_shifted_mass)
+			shift; min_shifted_mass=$1; shift;;
 		--exclusion_min)
 			shift; exclusion_min=$1; shift;;
 		--exclusion_max)
@@ -105,6 +111,7 @@ while [ $# -ne 0 ] ; do
 awk \
 	-v min_shift=$min_shift \
 	-v max_shift=$max_shift \
+	-v min_shifted_mass=$min_shifted_mass \
 	-v exclusion_min=$exclusion_min \
 	-v exclusion_max=$exclusion_max \
 	-v percent_of_peaks=$percent_of_peaks \
@@ -120,8 +127,8 @@ BEGIN{ srand(); }
 	split($1,s,"=");
 	charge = s[2];
 	if( verbose ) printf( "CHARGE = %s\n", charge );
-	max_mass = pepmass * charge;
-	if( verbose ) printf( "MAX MASS = %s\n", max_mass );
+	max_shifted_mass = pepmass * charge;
+	if( verbose ) printf( "MAX MASS = %s\n", max_shifted_mass );
 }
 ( /^[[:alpha:]]/ ){ print }
 ( /^[[:digit:]]/ ){
@@ -145,11 +152,11 @@ BEGIN{ srand(); }
 				if( verbose ) print "... by " random_shift " ...";
 				new_mass = $1 + random_shift;
 				if( verbose ) print "... to new mass " new_mass " ...";
-				if( ( new_mass > 0 ) && ( new_mass < max_mass ) ){
-					if( verbose ) print "... that is between 0 and " max_mass " ...";
+				if( ( new_mass > min_shifted_mass ) && ( new_mass < max_shifted_mass ) ){
+					if( verbose ) print "... that is between " min_shifted_mass " and " max_shifted_mass " ...";
 					$1 = new_mass;
 				} else {
-					if( verbose ) print "BUT IS NOT BETWEEN 0 and " max_mass;
+					if( verbose ) print "BUT IS NOT BETWEEN " min_shifted_mass " and " max_shifted_mass;
 				}
 				i++;
 			}

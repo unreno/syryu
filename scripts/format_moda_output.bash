@@ -115,7 +115,7 @@ done
 while [ $# -ne 0 ] ; do
 
 
-awk '
+sed 's/\r/\n/g' $1 | awk '
 function clear_variables(){
 	output_index+=1;
 	rank=0;
@@ -157,8 +157,7 @@ BEGIN {
 	mod3=(length(a) > 4) ? a[4] : "NA"
 	print output_index,spec_index,observed_MW,charge_state,scan_number,rank,calculated_MW,delta_mass,score,probability,peptide,protein,pept_position,mod1,mod2,mod3
 }
-
-' $1 > $1.OUTPUT.tsv
+' > $1.OUTPUT.tsv
 
 	shift
 

@@ -152,7 +152,8 @@ BEGIN {
 	peptide=$5
 	protein=$6
 	pept_position=$7
-	split($5,a,/[[:alpha:]+.]*/)
+#	split($5,a,/[[:alpha:]+.]*/)
+	split($5,a,/[A-Z+.]*/)
 	mod1=(length(a) > 2) ? a[2] : "NA"
 	mod2=(length(a) > 3) ? a[3] : "NA"
 	mod3=(length(a) > 4) ? a[4] : "NA"

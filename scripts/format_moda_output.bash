@@ -115,7 +115,8 @@ done
 while [ $# -ne 0 ] ; do
 
 
-sed 's/\r/\n/g' $1 | awk '
+#sed 's/\r/\n/g' $1 | awk '
+perl -pe 's/\r/\n/g' $1 | awk '
 function clear_variables(){
 	output_index+=1;
 	rank=0;

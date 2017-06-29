@@ -12,7 +12,7 @@ script_dir=`dirname $0`
 
 function usage(){
 	echo
-	echo "Takes tab-separated file formatted like ..."
+	echo "Takes complex tab-separated file formatted like ..."
 	echo
 	echo ">>K:/Phospho_Goodlett/raw/140521_EOC_MCis_T2_3.mgf	14	2869.4179	6	0		"
 	echo "2870.6817	-1.2638	22	0.0004	R.A+5RVILGSPRPRVIVSSPWPAVVVASPR.P	sp|P0DI83	72~98"
@@ -119,7 +119,9 @@ while [ $# -ne 0 ] ; do
 #	doesn't work on older versions of sed.
 #sed 's/\r/\n/g' $1 | awk '
 
-perl -pe 's/\r/\n/g' $1 | awk '
+#perl -pe 's/\r/\n/g' $1 | awk '
+
+perl -pe 's/\r//g' $1 | awk '
 function clear_variables(){
 	output_index+=1;
 	rank=0;
@@ -135,11 +137,13 @@ BEGIN {
 	clear_variables();
 	print "output_index	spec_index	observed_MW	charge_state	scan_number	rank	calculated_MW	delta_mass	score	probability	peptide	protein	pept_position	mod1	mod2	mod3	PlainPeptide"
 }
+( /MODa v1.51/ ){ next }
 ( /^[[:blank:]]*$/ ) {
 	clear_variables();
 	next;
 }
-( $6 == "" && $7 == "" ){
+#( $6 == "" && $7 == "" ){
+( /^>>/ ){
 	spec_index=$2;
 	observed_MW=$3;
 	charge_state=$4;

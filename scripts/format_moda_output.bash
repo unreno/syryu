@@ -110,12 +110,15 @@ done
 
 
 
+# Modify your “format_moda_output.bash” to add one more column (i.e. “PlainPeptide”)  to the output file. For example, if the peptide sequence is “K.T+128NDKDEKKE.S”, then “PlainPeptide” column will have any sequence between “.” w/o modification information. Thus, the it will contain “TNDKDEKKE”. The example input file is attached (out_param_140521_EOC_MCis_T2_3.SCANS.mgf.txt).
+
 
 
 while [ $# -ne 0 ] ; do
 
-
+#	doesn't work on older versions of sed.
 #sed 's/\r/\n/g' $1 | awk '
+
 perl -pe 's/\r/\n/g' $1 | awk '
 function clear_variables(){
 	output_index+=1;
@@ -130,7 +133,7 @@ BEGIN {
 	OFS="\t";
 	output_index=0;
 	clear_variables();
-	print "output_index	spec_index	observed_MW	charge_state	scan_number	rank	calculated_MW	delta_mass	score	probability	peptide	protein	pept_position	mod1	mod2	mod3"
+	print "output_index	spec_index	observed_MW	charge_state	scan_number	rank	calculated_MW	delta_mass	score	probability	peptide	protein	pept_position	mod1	mod2	mod3	PlainPeptide"
 }
 ( /^[[:blank:]]*$/ ) {
 	clear_variables();
@@ -150,6 +153,11 @@ BEGIN {
 	score=$3
 	probability=$4
 	peptide=$5
+
+	split($5,a,".")
+	PlainPeptide=a[2]
+	gsub(/[0-9+-]*/,"",PlainPeptide)
+
 	protein=$6
 	pept_position=$7
 #	split($5,a,/[[:alpha:]+.]*/)
@@ -157,7 +165,7 @@ BEGIN {
 	mod1=(length(a) > 2) ? a[2] : "NA"
 	mod2=(length(a) > 3) ? a[3] : "NA"
 	mod3=(length(a) > 4) ? a[4] : "NA"
-	print output_index,spec_index,observed_MW,charge_state,scan_number,rank,calculated_MW,delta_mass,score,probability,peptide,protein,pept_position,mod1,mod2,mod3
+	print output_index,spec_index,observed_MW,charge_state,scan_number,rank,calculated_MW,delta_mass,score,probability,peptide,protein,pept_position,mod1,mod2,mod3,PlainPeptide
 }
 ' > $1.OUTPUT.tsv
 

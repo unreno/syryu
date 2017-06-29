@@ -20,7 +20,7 @@ function usage(){
 	echo
 	echo "And adds 10 columns: 'mod1', 'mod2', ... , 'mod10'"
 	echo "These will contain the mass shift numbers for the modifications."
-	echo "Also adds Another column "PlainPeptide", which contain the peptide sequence without modification."
+	echo "Also adds Another column 'PlainPeptide', which contain the peptide sequence without modification."
 	echo "For example, 'SLDS+79.966DES+79.966EDEEDDYQQKR', mod1 has +79.966, mod2 has +79.966, and NA for the rest of mod columns."
 	echo "For 'PlainPeptide' column, it will contain 'SLDSDESEDEEDDYQQKR'."
 	echo
@@ -98,7 +98,7 @@ BEGIN {
 ( NR == 1 ){
 	printf $0
 	for(i=1;i<=10;i++) printf "\tmod%i", i
-	printf "\n"
+	printf "\tPlainPeptide\n"
 	next
 }
 {

@@ -28,7 +28,7 @@ function usage(){
 	echo "3094.5495	-0.0845	46	0.0083	K.VLL-33AWSGGPSSS+55SMVWQVLEGLSQDSAKR-2.L	sp|Q2VPK5	75~103"
 	echo "3093.4716	0.9933	45	0.0137	K.KTL-41SQMSLSSDNSHATQNISP+78KKDD+50FK.N	sp|Q6ZP01	731~757"
 	echo
-	echo "Each group starts with a line containing a filename in column 1 (ignored)"
+	echo "Each group starts with a line beginning with >> and containing a filename in column 1 (ignored)"
 	echo "	column 2 : spec_index"
 	echo "	column 3 : observed_MW"
 	echo "	column 4 : charge_state"

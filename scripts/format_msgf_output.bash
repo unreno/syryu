@@ -96,9 +96,7 @@ BEGIN {
 	OFS="\t";
 }
 ( NR == 1 ){
-	printf $0
-	for(i=1;i<=10;i++) printf "\tmod%i", i
-	printf "\tPlainPeptide\n"
+	print $0,"mod1","mod2","mod3","mod4","mod5","mod6","mod7","mod8","mod9","mod10","PlainPeptide"
 	next
 }
 {

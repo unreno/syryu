@@ -40,15 +40,12 @@ while [ $# -ne 0 ] ; do
 done
 
 #	Basically, this is TRUE AND DO ...
-#[ $# -eq 0 ] && usage
-[ $# -ne 1 ] && usage
-
-
-
+[ $# -eq 0 ] && usage
 
 
 #
 jar_file=$1
+shift
 
 
 #	set CLASSPATH=D:\myprogram;D:\myprogram\lib\supportLib.jar
@@ -70,7 +67,7 @@ jar_file=$1
 jar_file_with_path=$( find ${CLASSPATH//;/ } -name "${jar_file}" 2>/dev/null | head -1 )
 
 
-cmd="java -jar \"$jar_file_with_path\""
+cmd="java -jar \"$jar_file_with_path\" $@"
 
 if $verbose ; then
 	echo "Calling ${cmd}"

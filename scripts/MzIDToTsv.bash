@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-java -cp C:\ryulab\MSGFPlus\MSGFPlus.jar edu.ucsd.msjava.ui.MzIDToTsv "$@"
+java -cp $(cygpath /cygdrive/c/ryulab/MSGFPlus/MSGFPlus.jar) edu.ucsd.msjava.ui.MzIDToTsv "$@"

@@ -1,5 +1,5 @@
 
-export CLASSPATH=$(cygpath /cygwin/c/ryulab/MSGFPlus)
+export CLASSPATH=$(cygpath /cygdrive/c/ryulab/MSGFPlus)
 alias ll="\ls -lG --color=auto"
 
 

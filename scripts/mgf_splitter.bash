@@ -81,7 +81,7 @@ while [ $# -ne 0 ] ; do
 		i++
 	}
 	{
-		print >> dir"/"basename"."sprintf("%0"length(scan_count)"d", i)"."ext
+		print >> dir"/"basename"."sprintf("%0"length(int(scan_count/max))"d", i)"."ext
 	}' $1
 
 	echo $dir

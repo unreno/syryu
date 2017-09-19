@@ -43,12 +43,27 @@ done
 [ $# -eq 0 ] && usage
 
 
+MSGFPlus=/Users/jakewendt/Downloads/MSGFPlus/MSGFPlus.jar
+#MSGFPlus=$(cygpath -w /cygdrive/c/ryulab/MSGFPlus/MSGFPlus.jar)
+
+
+echo $OSTYPE 
+case "$OSTYPE" in
+#	solaris*) echo "SOLARIS" ;;
+	darwin*)  MSGFPlus=/Users/jakewendt/Downloads/MSGFPlus/MSGFPlus.jar ;;
+#	linux*)   echo "LINUX" ;;
+#	bsd*)     echo "BSD" ;;
+#	msys*)    echo "WINDOWS" ;;
+	cygwin*)  MSGFPlus=$(cygpath -w /cygdrive/c/ryulab/MSGFPlus/MSGFPlus.jar) ;;
+#	*)        echo "unknown: $OSTYPE" ;;
+esac
+
 
 while [ $# -ne 0 ] ; do
 	echo $1
 
-	base=${1%.*}		#	drop the extension
-	echo $base
+#	base=${1%.*}		#	drop the extension
+#	echo $base
 
 
 #	
@@ -59,20 +74,27 @@ while [ $# -ne 0 ] ; do
 #	Break mgf files into smaller files (5 scans per file)
 #	 
 #	ex) The beginning of scan is "BEGIN IONS" and the end of scan is "END IONS".
+
+	split_mgf_dir=$(mgf_splitter.bash --max 5 $1)
+
 #	 
 #	 
 #	2
 #	Run MSGFPlus.jar with 10000M
 #	Use Mods2.txt instead of Mods.txt for this search.
 #	 
-	java -Xmx10000M -jar /Users/jakewendt/Downloads/MSGFPlus/MSGFPlus.jar -s $1 -o $base.mzid -d uniprot_reviewed_April2016.fasta -t 500Da -ti 0,1 -inst 1 -protocol 1 -mod Mods2.txt -n 10 -addFeatures 1
-#	java -Xmx10000M -jar $(cygpath -w /cygdrive/c/ryulab/MSGFPlus/MSGFPlus.jar) -s <INPUTFILENAME>.mgf -o <OUTPUTFILENAME>.mzid -d uniprot_reviewed_April2016.fasta -t 500Da -ti 0,1 -inst 1 -protocol 1 -mod Mods2.txt -n 10 -addFeatures 1
-#	 
-#	 
-#	3
-#	Convert output file to tsv files (INPUTFILENAME is the same as OUTPUTFILENAME in step 2. >
-#	 
-#	java -cp $(cygpath -w /cygdrive/c/ryulab/MSGFPlus/MSGFPlus.jar) edu.ucsd.msjava.ui.MzIDToTsv  -i  <INPUTFILENAME>.mzid -showFormula 1
+
+	for file in $( find $split_mgf_dir -name \*mgf	); do
+		
+		base=${file%.*}		#	drop the extension
+
+		echo java -Xmx10G -jar $MSGFPlus -s $file -o $base.mzid -d uniprot_reviewed_April2016.fasta -t 500Da -ti 0,1 -inst 1 -protocol 1 -mod Mods2.txt -n 10 -addFeatures 1
+		java -Xmx10G -jar $MSGFPlus -s $file -o $base.mzid -d uniprot_reviewed_April2016.fasta -t 500Da -ti 0,1 -inst 1 -protocol 1 -mod Mods2.txt -n 10 -addFeatures 1
+
+		echo java -cp $MSGFPlus edu.ucsd.msjava.ui.MzIDToTsv -i $base.mzid -showFormula 1
+		java -cp $MSGFPlus edu.ucsd.msjava.ui.MzIDToTsv -i $base.mzid -showFormula 1
+
+	done
 #	 
 #	 
 #	4

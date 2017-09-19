@@ -75,7 +75,8 @@ while [ $# -ne 0 ] ; do
 #	 
 #	ex) The beginning of scan is "BEGIN IONS" and the end of scan is "END IONS".
 
-	split_mgf_dir=$(mgf_splitter.bash --max 5 $1)
+#	split_mgf_dir=$(mgf_splitter.bash --max 5 $1)
+	split_mgf_dir=$(mgf_splitter.bash --max 10 $1)
 
 #	 
 #	 
@@ -88,11 +89,14 @@ while [ $# -ne 0 ] ; do
 		
 		base=${file%.*}		#	drop the extension
 
-		echo java -Xmx10G -jar $MSGFPlus -s $file -o $base.mzid -d uniprot_reviewed_April2016.fasta -t 500Da -ti 0,1 -inst 1 -protocol 1 -mod Mods2.txt -n 10 -addFeatures 1
-		java -Xmx10G -jar $MSGFPlus -s $file -o $base.mzid -d uniprot_reviewed_April2016.fasta -t 500Da -ti 0,1 -inst 1 -protocol 1 -mod Mods2.txt -n 10 -addFeatures 1
+#		cmd="java -Xmx10G -jar $MSGFPlus -s $file -o $base.mzid -d uniprot_reviewed_April2016.fasta -t 500Da -ti 0,1 -inst 1 -protocol 1 -mod Mods2.txt -n 10 -addFeatures 1"
+		cmd="java -Xmx16G -jar $MSGFPlus -s $file -o $base.mzid -d uniprot_reviewed_April2016.fasta -t 500Da -ti 0,1 -inst 1 -protocol 1 -mod Mods2.txt -n 10 -addFeatures 1"
+		echo $cmd
+		$cmd
 
-		echo java -cp $MSGFPlus edu.ucsd.msjava.ui.MzIDToTsv -i $base.mzid -showFormula 1
-		java -cp $MSGFPlus edu.ucsd.msjava.ui.MzIDToTsv -i $base.mzid -showFormula 1
+		cmd="java -cp $MSGFPlus edu.ucsd.msjava.ui.MzIDToTsv -i $base.mzid -showFormula 1"
+		echo $cmd
+		$cmd
 
 	done
 #	 

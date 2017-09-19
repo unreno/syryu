@@ -49,25 +49,42 @@ done
 
 
 while [ $# -ne 0 ] ; do
-	echo $1
+#	echo $1
 
 	base=${1%.*}		#	drop the extension
 	ext=${1##*.}		#	drop the base
 
-	echo $base
-	echo $ext
+#	echo $base
+#	echo $ext
 
+	basename=$(basename $base)
 
+	scan_count=$(grep -c "^BEGIN IONS" $1)
+#	echo $scan_count
 
-#	awk 
+	date=$(date "+%Y%m%d%H%M%S")
+#	echo $date
 
-	echo "THIS IS STILL UNDEVELOPED."
+	dir="${base}_${date}"
+	mkdir -p "$dir"
 
+	awk -v max=$max -v dir=$dir -v basename=$basename -v ext=$ext -v scan_count=$scan_count '
+	BEGIN {
+		i=0
+		scans=0
+	}
+	( /^BEGIN IONS/ ){
+		scans++
+	}
+	( /^BEGIN IONS/ && ( scans >= max ) ){
+		scans=0
+		i++
+	}
+	{
+		print >> dir"/"basename"."sprintf("%0"length(scan_count)"d", i)"."ext
+	}' $1
 
-
-
-
-
+	echo $dir
 
 	shift
 done

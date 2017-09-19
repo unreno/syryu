@@ -4,6 +4,7 @@ script=`basename $0`
 
 #	Defaults:
 verbose=false
+java_mem=
 
 function usage(){
 	echo
@@ -14,13 +15,14 @@ function usage(){
 	echo "$script <OPTIONS> just_one_jar_file"
 	echo
 	echo "Options:"
-	echo "	--verbose .................. NO VALUE, just boolean flag"
+	echo "	-X???? .............. Java memory requirements (MUST BE FIRST ARGUMENT)"
+	echo "	--verbose ........... NO VALUE, just boolean flag"
 	echo
 	echo "Default option values:"
 	echo "	--verbose .......... ${verbose}"
 	echo
 	echo "Examples:"
-	echo "	$script "
+	echo "	$script -Xmx3500M MSGFPlus.jar"
 	echo
 	echo
 	exit 1
@@ -30,6 +32,8 @@ while [ $# -ne 0 ] ; do
 	case $1 in
 #		-m|--m*)
 #			shift; min=$1; shift;;
+		-X*)
+			java_mem=$1; shift;;
 		-v|--v*)
 			verbose=true; shift;;
 		-*)
@@ -67,7 +71,7 @@ shift
 jar_file_with_path=$( find ${CLASSPATH//;/ } -name "${jar_file}" 2>/dev/null | head -1 )
 
 
-cmd="java -jar \"$jar_file_with_path\" $@"
+cmd="java $java_mem -jar \"$jar_file_with_path\" $@"
 
 if $verbose ; then
 	echo "Calling ${cmd}"

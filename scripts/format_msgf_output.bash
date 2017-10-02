@@ -94,27 +94,30 @@ perl -pe 's/\r//g' $1 | awk '
 BEGIN {
 	FS="\t";
 	OFS="\t";
+	mods=10;
 }
 ( NR == 1 ){
-	print $0,"mod1","mod2","mod3","mod4","mod5","mod6","mod7","mod8","mod9","mod10","PlainPeptide"
+	out=$0
+	for(i=1;i<=mods;i++){ out=out OFS "modAA"i OFS "mod"i }
+	print out,"PlainPeptide"
 	next
 }
 {
+	out=$0
+
 	split($10,a,/[A-Z+]*/)
-	mod1=(length(a) > 2) ? a[2] : "NA"
-	mod2=(length(a) > 3) ? a[3] : "NA"
-	mod3=(length(a) > 4) ? a[4] : "NA"
-	mod4=(length(a) > 5) ? a[5] : "NA"
-	mod5=(length(a) > 6) ? a[6] : "NA"
-	mod6=(length(a) > 7) ? a[7] : "NA"
-	mod7=(length(a) > 8) ? a[8] : "NA"
-	mod8=(length(a) > 9) ? a[9] : "NA"
-	mod9=(length(a) > 10) ? a[10] : "NA"
-	mod10=(length(a) > 11) ? a[11] : "NA"
+	split($10,b,/[0-9+-.]*/)
+	for(i=1;i<=mods;i++){
+		modAA=(length(b) > i) ? substr(b[i],length(b[i]),1) : "NA"
+		mod=(length(a) > i+1) ? a[i+1] : "NA"
+		out=out OFS modAA OFS mod
+	}
 
 	PlainPeptide=$10
 	gsub(/[0-9+-.]*/,"",PlainPeptide)
-	print $0,mod1,mod2,mod3,mod4,mod5,mod6,mod7,mod8,mod9,mod10,PlainPeptide
+	out=out OFS PlainPeptide
+	
+	print out
 }
 ' > $1.WITH_MODS.tsv
 

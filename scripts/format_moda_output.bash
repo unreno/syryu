@@ -135,7 +135,7 @@ BEGIN {
 	OFS="\t";
 	output_index=0;
 	clear_variables();
-	print "output_index	spec_index	observed_MW	charge_state	scan_number	rank	calculated_MW	delta_mass	score	probability	peptide	protein	pept_position	mod1	mod2	mod3	PlainPeptide"
+	print "output_index	spec_index	observed_MW	charge_state	scan_number	rank	calculated_MW	delta_mass	score	probability	peptide	protein	pept_position	modAA1	mod1	modAA2	mod2	modAA3	mod3	PlainPeptide"
 }
 ( /MODa v1.51/ ){ next }
 ( /^[[:blank:]]*$/ ) {
@@ -158,18 +158,25 @@ BEGIN {
 	probability=$4
 	peptide=$5
 
+	#	these peptide mods DO NOT contain .s as in format msgf output script files.
 	split($5,a,".")
 	PlainPeptide=a[2]
-	gsub(/[0-9+-]*/,"",PlainPeptide)
 
 	protein=$6
 	pept_position=$7
-#	split($5,a,/[[:alpha:]+.]*/)
-	split($5,a,/[A-Z+.]*/)
-	mod1=(length(a) > 2) ? a[2] : "NA"
-	mod2=(length(a) > 3) ? a[3] : "NA"
-	mod3=(length(a) > 4) ? a[4] : "NA"
-	print output_index,spec_index,observed_MW,charge_state,scan_number,rank,calculated_MW,delta_mass,score,probability,peptide,protein,pept_position,mod1,mod2,mod3,PlainPeptide
+	split(PlainPeptide,a,/[A-Z+]*/)
+	mod1=(length(a[2]) > 0) ? a[2] : "NA"
+	mod2=(length(a[3]) > 0) ? a[3] : "NA"
+	mod3=(length(a[4]) > 0) ? a[4] : "NA"
+
+	split(PlainPeptide,b,/[0-9.+-]*/)
+	modAA1=(length(b) > 1) ? substr(b[1],length(b[1]),1) : "NA"
+	modAA2=(length(b) > 2) ? substr(b[2],length(b[2]),1) : "NA"
+	modAA3=(length(b) > 3) ? substr(b[3],length(b[3]),1) : "NA"
+
+	gsub(/[0-9+-]*/,"",PlainPeptide)
+
+	print output_index,spec_index,observed_MW,charge_state,scan_number,rank,calculated_MW,delta_mass,score,probability,peptide,protein,pept_position,modAA1,mod1,modAA2,mod2,modAA3,mod3,PlainPeptide
 }
 ' > $1.OUTPUT.tsv
 

@@ -43,7 +43,9 @@ done
 [ $# -eq 0 ] && usage
 
 
-MSGFPlus=/Users/jakewendt/Downloads/MSGFPlus/MSGFPlus.jar
+MSGFPlus=MSGFPlus.jar
+
+#MSGFPlus=/Users/jakewendt/Downloads/MSGFPlus/MSGFPlus.jar
 #MSGFPlus=$(cygpath -w /cygdrive/c/ryulab/MSGFPlus/MSGFPlus.jar)
 
 

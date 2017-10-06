@@ -89,6 +89,7 @@ while [ $# -ne 0 ] ; do
 
 
 #	NOTE THAT THIS TIME THE mods can INCLUDE DECIMAL POINTS
+#	BUT there are no prefixes or suffixes
 
 #	why not have -F"\t"?
 
@@ -107,7 +108,7 @@ BEGIN {
 {
 	out=$0
 
-	split($10,a,/[A-Z+]*/)
+	split($10,a,/[A-Z]*/)
 	split($10,b,/[0-9+-.]*/)
 	for(i=1;i<=mods;i++){
 		modAA=(length(b) > i) ? substr(b[i],length(b[i]),1) : "NA"

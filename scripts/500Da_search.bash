@@ -70,7 +70,7 @@ while [ $# -ne 0 ] ; do
 		
 		base=${file%.*}		#	drop the extension
 
-		cmd="java -Xmx16G -jar $MSGFPlus -s $file -o $base.500Da.mzid -d uniprot_reviewed_April2016.fasta -t 500Da -ti 0,1 -inst 1 -protocol 1 -mod Mods2.txt -n 10 -addFeatures 1"
+		cmd="java -Xmx32G -jar $MSGFPlus -s $file -o $base.500Da.mzid -d uniprot_reviewed_April2016.fasta -t 500Da -ti 0,1 -inst 1 -protocol 1 -mod Mods2.txt -n 10 -addFeatures 1"
 		echo $cmd
 		$cmd
 		if [ $? -ne 0 ] ; then

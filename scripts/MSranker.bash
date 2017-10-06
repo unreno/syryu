@@ -112,14 +112,35 @@ while [ $# -ne 0 ] ; do
 		b=join(parts,2,length(parts)-1,".");
 		c=parts[length(parts)];
 
-#		split($11,numbers,/[A-Z+]+/)
-#		split($11,letters,/[0-9.+-]+/)
-#		print $11, length(numbers), length(letters)
-#		theospec_command="theospec -z"$4
+#	parse middle extracting numbers and replacing them with codes passed to theospec
+
+		split(b,numbers,/[A-Z]+/)
+		split(b,letters,/[0-9\.\+\-]+/)
+
+#		print b, length(numbers), numbers[1], length(letters), letters[1]
+
+		outpeptide=""
+		max=(length(letters)+length(numbers))/2
+		for(i=1;i<=max;i++){
+			outpeptide=sprintf("%s%s",outpeptide,letters[i])
+			if( length(numbers[i+1]) > 0 )
+				outpeptide=sprintf("%s%d",outpeptide,i)
+		}
+print b, outpeptide
+
+		theospec_command="theospec -z"$4
+		for(i=2;i<length(numbers);i++){
+			theospec_command=sprintf("%s -c%d=%s",theospec_command,i-1,numbers[i])
+		}
+		theospec_command=sprintf("%s %s.%s.%s",theospec_command,a,outpeptide,c)
+		print theospec_command
 #		print $11,$4,theospec_command
 	}'
 # > $1.peptide_and_charge.tsv
 #' > $1.MSranker.tsv
+
+#	theospec > scan number . rank .theospec.txt
+#	theospec ....... > $5.$6.theospec.txt
 
 
 #	These peptide sequences can start with a "-"??? Splitting on . and parse the middle.

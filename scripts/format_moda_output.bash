@@ -121,6 +121,8 @@ while [ $# -ne 0 ] ; do
 
 #perl -pe 's/\r/\n/g' $1 | awk '
 
+#	why not have -F"\t"?
+
 perl -pe 's/\r//g' $1 | awk '
 function clear_variables(){
 	output_index+=1;

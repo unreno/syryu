@@ -90,6 +90,8 @@ while [ $# -ne 0 ] ; do
 
 #	NOTE THAT THIS TIME THE mods can INCLUDE DECIMAL POINTS
 
+#	why not have -F"\t"?
+
 perl -pe 's/\r//g' $1 | awk '
 BEGIN {
 	FS="\t";

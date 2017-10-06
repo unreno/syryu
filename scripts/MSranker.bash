@@ -97,14 +97,21 @@ done
 #	Basically, this is TRUE AND DO ...
 [ $# -eq 0 ] && usage
 
+date=$(date "+%Y%m%d%H%M%S")
 
 while [ $# -ne 0 ] ; do
 
+	dir="${1}_${date}/"
+	mkdir -p "$dir"
+
 #	gawk -F"\t" '
 #	MUST use gawk to use join
-	perl -pe 's/\r//g' $1 | gawk -F"\t" '
+	perl -pe 's/\r//g' $1 | gawk -v dir=$dir '
 	@include "join"
-	BEGIN{ OFS="\t" }
+	BEGIN{ 
+		FS="\t";
+		OFS="\t";
+	}
 	( NR == 1 ){ next }
 	{
 		split($11,parts,/\./);
@@ -117,25 +124,20 @@ while [ $# -ne 0 ] ; do
 		split(b,numbers,/[A-Z]+/)
 		split(b,letters,/[0-9\.\+\-]+/)
 
-#		print b, length(numbers), numbers[1], length(letters), letters[1]
-
 		outpeptide=""
-		max=(length(letters)+length(numbers))/2
-		for(i=1;i<=max;i++){
+		for(i=1;i<=length(letters);i++){
 			outpeptide=sprintf("%s%s",outpeptide,letters[i])
 			if( length(numbers[i+1]) > 0 )
 				outpeptide=sprintf("%s%d",outpeptide,i)
 		}
-print b, outpeptide
 
 		theospec_command="theospec -z"$4
 		for(i=2;i<length(numbers);i++){
 			theospec_command=sprintf("%s -c%d=%s",theospec_command,i-1,numbers[i])
 		}
-		theospec_command=sprintf("%s %s.%s.%s",theospec_command,a,outpeptide,c)
+		theospec_command=sprintf("%s %s.%s.%s > %s%s.%s.theospec.txt 2> %s%s.%s.theospec.err",theospec_command,a,outpeptide,c,dir,$5,$6,dir,$5,$6)
 		print theospec_command
-#		print $11,$4,theospec_command
-	}'
+	}' | bash
 # > $1.peptide_and_charge.tsv
 #' > $1.MSranker.tsv
 

@@ -74,10 +74,10 @@ while [ $# -ne 0 ] ; do
 
 			cmd="java -Xmx32G -jar $MSGFPlus -s $file -o $base.500Da.mzid -d uniprot_reviewed_April2016.fasta -t 500Da -ti 0,1 -inst 1 -protocol 1 -mod Mods2.txt -n 10 -addFeatures 1"
 			echo $cmd
-#			$cmd
-#			if [ $? -ne 0 ] ; then
-#				echo $cmd >> failed_commands
-#			fi
+			$cmd
+			if [ $? -ne 0 ] ; then
+				echo $cmd >> failed_commands
+			fi
 
 		fi
 
@@ -90,10 +90,10 @@ while [ $# -ne 0 ] ; do
 
 			cmd="java -cp $MSGFPlus edu.ucsd.msjava.ui.MzIDToTsv -i $base.500Da.mzid -showFormula 1"
 			echo $cmd
-#			$cmd
-#			if [ $? -ne 0 ] ; then
-#				echo $cmd >> failed_commands
-#			fi
+			$cmd
+			if [ $? -ne 0 ] ; then
+				echo $cmd >> failed_commands
+			fi
 
 		fi
 

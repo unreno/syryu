@@ -67,9 +67,27 @@ while [ $# -ne 0 ] ; do
 	echo $cmd
 	$cmd
 
+	if [ $? -ne 0 ] ; then
+		echo $cmd >> failed_commands
+	fi
+
+#	check return status?
+#	check presence of expected output file?
+#	Do what if fails?
+
+
 	cmd="java -cp $MSGFPlus edu.ucsd.msjava.ui.MzIDToTsv -i ${base}.5ppm.mzid -showFormula 1"
 	echo $cmd
 	$cmd
+	if [ $? -ne 0 ] ; then
+		echo $cmd >> failed_commands
+	fi
+
+
+#	check return status?
+#	check presence of expected output file?
+#	Do what if fails?
+
 
 	shift
 done

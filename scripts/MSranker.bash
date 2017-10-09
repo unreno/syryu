@@ -101,7 +101,7 @@ date=$(date "+%Y%m%d%H%M%S")
 
 while [ $# -ne 0 ] ; do
 
-	dir="${1}_${date}/"
+	dir="${1}_theospec_${date}/"
 	mkdir -p "$dir"
 
 #	gawk -F"\t" '
@@ -109,20 +109,20 @@ while [ $# -ne 0 ] ; do
 	perl -pe 's/\r//g' $1 | gawk -v dir=$dir '
 	@include "join"
 	BEGIN{ 
-		FS="\t";
-		OFS="\t";
+		FS="\t"
+		OFS="\t"
 	}
 	( NR == 1 ){ next }
 	{
-		split($11,parts,/\./);
-		a=parts[1];
-		b=join(parts,2,length(parts)-1,".");
-		c=parts[length(parts)];
+		split($11,parts,/\./)
+		a=parts[1]
+		b=join(parts,2,length(parts)-1,".")
+		c=parts[length(parts)]
 
 #	parse middle extracting numbers and replacing them with codes passed to theospec
 
 		split(b,numbers,/[A-Z]+/)
-		split(b,letters,/[0-9\.\+\-]+/)
+		split(b,letters,/[0-9.+-]+/)
 
 		outpeptide=""
 		for(i=1;i<=length(letters);i++){
@@ -131,13 +131,18 @@ while [ $# -ne 0 ] ; do
 				outpeptide=sprintf("%s%d",outpeptide,i)
 		}
 
-		theospec_command="theospec -z"$4
+#		z=$4
+#		if(z > 5) z=5 
+		z=( $4 > 5 ) ? 5 : $4
+
+		theospec_command="theospec -z"z
 		for(i=2;i<length(numbers);i++){
 			theospec_command=sprintf("%s -c%d=%s",theospec_command,i-1,numbers[i])
 		}
-		theospec_command=sprintf("%s %s.%s.%s > %s%s.%s.theospec.txt 2> %s%s.%s.theospec.err",theospec_command,a,outpeptide,c,dir,$5,$6,dir,$5,$6)
+		theospec_command=sprintf("%s %s.%s.%s > %s%s.%s.theospec.txt",theospec_command,a,outpeptide,c,dir,$5,$6)
+#		theospec_command=sprintf("%s %s.%s.%s > %s%s.%s.theospec.txt 2> %s%s.%s.theospec.errors",theospec_command,a,outpeptide,c,dir,$5,$6,dir,$5,$6)
 		print theospec_command
-	}' | bash
+	}' | tee $dir/theospec_command_list.txt | bash
 # > $1.peptide_and_charge.tsv
 #' > $1.MSranker.tsv
 
@@ -145,16 +150,15 @@ while [ $# -ne 0 ] ; do
 #	theospec ....... > $5.$6.theospec.txt
 
 
-#	These peptide sequences can start with a "-"??? Splitting on . and parse the middle.
-
-#	I think that I could pipe the output from awk to bash to execute
-
 #	For the final output file, appending MSranker.tsv will be good. For intermediate output files for step 1 and 2, filename_theoSpec.tsv will be good.
 
 
-
-
-
+#	#	remove any empty error files
+#	for f in $(find $dir -name *errors) ; do
+#		if [ ! -s $f ] ; then
+#			rm $f
+#		fi
+#	done
 
 #' > $1.MSranker.tsv
 

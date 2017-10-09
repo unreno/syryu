@@ -8,20 +8,8 @@ script_dir=`dirname $0`
 
 
 function usage(){
-#	echo
-#	echo "Takes tab-separated file formatted like ..."
-#	echo
-#	echo "#SpecFile	SpecID	ScanNum	Title	FragMethod	Precursor	IsotopeError	PrecursorError(Da)	ChargePeptide	Protein	DeNovoScore	MSGFScore	SpecEValue	EValue	QValue	PepQValue"
-#	echo "140521_EOC_MCis_T2_3.SCANS.mgf	index=5524	8449	140521_EOC_MCis_T2_3.8449.8449.2 File:\"140521_EOC_MCis_T2_3.raw\", NativeID:\"controllerType=0 controllerNumber=1 scan=8449\"	CID	1223.4911	0	0.0014648438	2	KVVDYSQFQES+79.966DDADEDYGR	sp|Q9H1E3|NUCKS_HUMAN(pre=R,post=D)	32	22	2.001993E-20	4.3754356E-13	0.0	0.0"
-#	echo "140521_EOC_MCis_T2_3.SCANS.mgf	index=6007	9114	140521_EOC_MCis_T2_3.9114.9114.2 File:\"140521_EOC_MCis_T2_3.raw\", NativeID:\"controllerType=0 controllerNumber=1 scan=9114\"	CID	1159.4442	0	0.0020751953	2	VVDYS+79.966QFQESDDADEDYGR	sp|Q9H1E3|NUCKS_HUMAN(pre=K,post=D)	23	9	2.3498118E-16	5.1284723E-9	0.0	0.0"
-#	echo "140521_EOC_MCis_T2_3.SCANS.mgf	index=6007	9114	140521_EOC_MCis_T2_3.9114.9114.2 File:\"140521_EOC_MCis_T2_3.raw\", NativeID:\"controllerType=0 controllerNumber=1 scan=9114\"	CID	1159.4442	0	0.0020751953	2	VVDY+79.966SQFQESDDADEDYGR	sp|Q9H1E3|NUCKS_HUMAN(pre=K,post=D)	23	9	2.3498118E-16	5.1284723E-9	0.0	0.0"
-#	echo
-#	echo "And adds 10 columns: 'mod1', 'mod2', ... , 'mod10'"
-#	echo "These will contain the mass shift numbers for the modifications."
-#	echo "Also adds Another column 'PlainPeptide', which contain the peptide sequence without modification."
-#	echo "For example, 'SLDS+79.966DES+79.966EDEEDDYQQKR', mod1 has +79.966, mod2 has +79.966, and NA for the rest of mod columns."
-#	echo "For 'PlainPeptide' column, it will contain 'SLDSDESEDEEDDYQQKR'."
 	echo
+	echo $script
 	echo
 	echo "1.    Read a peptide sequence and charge state from a formatted MODa’s output file (“out_blind_140521….txt.OUTPUT.tsv”)."
 	echo "2.    For each sequence, calculate theoretical m/z values."
@@ -53,6 +41,7 @@ function usage(){
 	echo
 	echo "$script <OPTIONS> input_file(s)"
 	echo
+	echo "Will create a folder containing all of the theospec call output."
 	echo "Will create each input file with the added extension .MSranker.tsv"
 	echo
 #	echo "Options:"

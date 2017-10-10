@@ -208,6 +208,8 @@ formatted_moda_output.each do |row|
 
 
 
+#	m/z error = observed m/z minus theoretical m/z
+
 	b_error = 0
 #-m/z errors between observed and theoretical m/z values for b-ion matches – separated by semicolon
 

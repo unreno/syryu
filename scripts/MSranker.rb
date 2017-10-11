@@ -37,12 +37,11 @@ usage if ARGV.length < 2
 
 
 #date=$(date "+%Y%m%d%H%M%S")
+#date=Time.now.strftime("%Y%m%d%H%M%S")
 #date="TESTING"
 date=options[:suffix]
 theodir="#{ARGV[0]}_theospec_#{date}/"
 Dir.mkdir(theodir) unless Dir.exists?(theodir)
-#obsdir="#{ARGV[0]}_obsspec_#{date}/"
-#Dir.mkdir(obsdir) unless Dir.exists?(obsdir)
 
 
 marshaled_observed_spectra="#{ARGV[1]}.#{date}.marshal"
@@ -51,10 +50,8 @@ if File.exists?( marshaled_observed_spectra )
 else
 	observed_spectra=[]
 	File.open( ARGV[1], 'r' ).each do |line|
-	#	@spectrum={} if @spectrum.nil?
 		if line =~ /BEGIN IONS/
 			@spectrum={}
-			#	nothing
 		elsif line =~ /^TITLE=(.*)$/
 			@spectrum['title'] = $1
 		elsif line =~ /^RTINSECONDS=(.*)$/
@@ -118,13 +115,8 @@ else
 		theospec_output="#{theodir}#{row['scan_number']}.#{row['rank']}.theospec.txt"
 	
 		theospec_command="#{theospec_command} #{a}.#{outpeptide}.#{c} > #{theospec_output}"
-	#	puts theospec_command
-		unless File.exists?( theospec_output )
-	#		puts "Running theospec"
-			system(theospec_command)
-		end
+		system(theospec_command) unless File.exists?( theospec_output )
 	
-#		row['theospec']=File.readlines( theospec_output ).collect{|l|l.chomp}
 		row['theospec_comments']=""
 		row['theospec']=[]
 		File.open( theospec_output, 'r' ).each do |line|
@@ -144,10 +136,6 @@ else
 				row['theospec_comments'] << "#{line}\n"
 			end
 		end
-	
-	#	row['theospec']=`#{theospec_command} #{a}.#{outpeptide}.#{c}`
-	#	puts row['theospec'].inspect
-	#	puts theospec_command
 	
 	end
 	

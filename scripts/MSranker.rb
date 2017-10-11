@@ -204,17 +204,17 @@ formatted_moda_output.each do |row|
 	puts "The list of matched observed y-ion intensities (in mgf files) – separated by semicolon : #{y_i}"
 
 	intensity_y_i = yions.collect{|i|i[:int]*100/max_intensity}.join(';')
-	puts "The list of matched observed y-ion intensities divided by the largest intensity in spectrum, and times 100. Let’s call it “Intensity_y_i” for each ith observed peak. – separated by semicolon : #{yions.collect{|i|i[:int]*100/max_intensity}.join(';')}"
+	puts "The list of matched observed y-ion intensities divided by the largest intensity in spectrum, and times 100. Let’s call it “Intensity_y_i” for each ith observed peak. – separated by semicolon : #{intensity_y_i}"
 
 
 
 #	m/z error = observed m/z minus theoretical m/z
 
-	b_error = 0
-#-m/z errors between observed and theoretical m/z values for b-ion matches – separated by semicolon
+	b_error = bions.collect{|i| i[:mz] - i[:matched][:mz] }.join(';')
+	puts "m/z errors between observed and theoretical m/z values for b-ion matches – separated by semicolon : #{b_error}"
 
-	y_error = 0
-#-m/z errors between observed and theoretical m/z values for y-ion matches – separated by semicolon
+	y_error = yions.collect{|i| i[:mz] - i[:matched][:mz] }.join(';')
+	puts "m/z errors between observed and theoretical m/z values for y-ion matches – separated by semicolon : #{y_error}"
 
 
 

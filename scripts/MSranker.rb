@@ -7,10 +7,16 @@ def usage
 	puts
 	puts "Usage"
 	puts
+	puts "Uses a date(eventually) suffix for all created files."
+	puts "If going to run multiple times, for whatever reason, can use the same suffix with suffix option"
+	puts "This way, most of the parsing and the theospec calls won't need rerun."
 	puts
-	puts
+	puts "Currently, the suffix is 'TESTING'"
+	puts "but could change this with --suffix MY_SUFFIX"
 	puts
 	puts "#{$0} <formatted moda output file> <observed spectra mgf file>"
+	puts
+	puts "MSranker.rb out_blind_140521_EOC_MCis_T2_3.txt.OUTPUT.tsv 140521_EOC_MCis_T2_3.SCANS.mgf"
 	puts
 	exit
 end
@@ -20,7 +26,7 @@ options = { suffix: 'TESTING'}
 OptionParser.new do |opt|
 #	opt.on('--first_name FIRSTNAME') { |o| options[:first_name] = o }
 #	opt.on('--last_name LASTNAME') { |o| options[:last_name] = o }
-	opt.on('--suffix TESTING3') { |o| options[:suffix] = o }
+	opt.on('--suffix TESTING') { |o| options[:suffix] = o }
 end.parse!
 
 #puts options

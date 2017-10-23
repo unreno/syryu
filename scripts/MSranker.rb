@@ -22,7 +22,8 @@ def usage
 end
 
 
-options = { suffix: 'TESTING'}
+#options = { suffix: 'TESTING'}
+options = { suffix: Time.now.strftime("%Y%m%d%H%M%S") }
 OptionParser.new do |opt|
 #	opt.on('--first_name FIRSTNAME') { |o| options[:first_name] = o }
 #	opt.on('--last_name LASTNAME') { |o| options[:last_name] = o }
@@ -34,17 +35,11 @@ end.parse!
 usage if ARGV.length < 2
 
 
-
-
-#date=$(date "+%Y%m%d%H%M%S")
-#date=Time.now.strftime("%Y%m%d%H%M%S")
-#date="TESTING"
-date=options[:suffix]
-theodir="#{ARGV[0]}_theospec_#{date}/"
+theodir="#{ARGV[0]}_theospec_#{options[:suffix]}/"
 Dir.mkdir(theodir) unless Dir.exists?(theodir)
 
 
-marshaled_observed_spectra="#{ARGV[1]}.#{date}.marshal"
+marshaled_observed_spectra="#{ARGV[1]}.#{options[:suffix]}.marshal"
 if File.exists?( marshaled_observed_spectra )
 	observed_spectra=Marshal.load(File.binread(marshaled_observed_spectra))
 else
@@ -75,7 +70,7 @@ end
 
 
 
-marshaled_formatted_moda_output="#{ARGV[0]}.#{date}.marshal"
+marshaled_formatted_moda_output="#{ARGV[0]}.#{options[:suffix]}.marshal"
 if File.exists?( marshaled_formatted_moda_output )
 	formatted_moda_output=Marshal.load(File.binread(marshaled_formatted_moda_output))
 else
@@ -144,9 +139,9 @@ end
 
 
 
-csvout = CSV.open( "#{ARGV[0]}.#{date}.ion_statistics",'w',{ col_sep: "\t" })
+csvout = CSV.open( "#{ARGV[0]}.#{options[:suffix]}.ion_statistics",'w',{ col_sep: "\t" })
 
-csvout.puts %w{scan_number rank number_observed_mz number_theoretical_mz max_intensity nb ny b_i intensity_b_i y_i intensity_y_i b_error y_error}
+csvout.puts %w{scan_number rank peptide number_observed_mz number_theoretical_mz max_intensity nb ny mz_b_i mz_y_i theo_mz_b_i theo_mz_y_i b_i intensity_b_i y_i intensity_y_i b_error y_error}
 
 formatted_moda_output.each do |row|
 	#<CSV::Row "output_index":"2" "spec_index":"19" "observed_MW":"3094.4649" "charge_state":"5" "scan_number":"1535" "rank":"1" "calculated_MW":"3094.4650" "delta_mass":"-0.0001" "score":"46" "probability":"0.3989" "peptide":"R.KTNDKDEKKEDGKQAENDSSNDDKTKK.S" "protein":"sp|Q9BXP5" "pept_position":"301~327" "mod1":"NA" "mod2":"NA" "mod3":"NA" "PlainPeptide":"KTNDKDEKKEDGKQAENDSSNDDKTKK">
@@ -159,6 +154,12 @@ formatted_moda_output.each do |row|
 	puts "The total number of theoretical m/z values : #{number_theoretical_mz}"
 	max_intensity=observed['mzis'].collect{|o|o[1]}.max
 	puts "The largest intensity in spectrum whether it is matched or not : #{max_intensity}"
+
+
+
+
+
+#	This part could use some fine tuning.
 
 	puts "Matching ..."
 	omt = observed['mzis'].collect do |o|
@@ -178,6 +179,11 @@ formatted_moda_output.each do |row|
 #		puts matches.inspect
 	end
 	puts omt.inspect
+
+
+
+
+
 
 	bions = omt.select{|o| o[:matched][:ion] =~ /^b/ }
 	yions = omt.select{|o| o[:matched][:ion] =~ /^y/ }
@@ -211,8 +217,25 @@ formatted_moda_output.each do |row|
 	puts "m/z errors between observed and theoretical m/z values for y-ion matches – separated by semicolon : #{y_error}"
 
 
+	mz_b_i = bions.collect{|i| i[:mz] }.join(';')
+	puts "Observed matched m/z values (separated by semicolon) for b-ions (col name: mz_b_i) : #{mz_b_i}"
 
-	csvout.puts [row['scan_number'], row['rank'], number_observed_mz, number_theoretical_mz, max_intensity, nb, ny, b_i, intensity_b_i, y_i, intensity_y_i,b_error,y_error]
+
+	mz_y_i = yions.collect{|i| i[:mz] }.join(';')
+	puts "Observed matched m/z values for y-ions (col name: mz_y_i) : #{mz_y_i}"
+
+
+	theo_mz_b_i = bions.collect{|i| i[:matched][:mz] }.join(';')
+	puts "Theoretical matched m/z values (separated by semicolon) for b-ions (col name: theo_mz_b_i) : #{theo_mz_b_i}"
+
+
+	theo_mz_y_i = yions.collect{|i| i[:matched][:mz] }.join(';')
+	puts "Theoretical matched m/z values for y-ions (col name: theo_mz_y_i) : #{theo_mz_y_i}"
+
+	csvout.puts [row['scan_number'], row['rank'], row['peptide'],
+		number_observed_mz, number_theoretical_mz, max_intensity, nb, ny, 
+		mz_b_i, mz_y_i, theo_mz_b_i, theo_mz_y_i,
+		b_i, intensity_b_i, y_i, intensity_y_i, b_error, y_error]
 
 	puts
 	puts

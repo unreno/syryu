@@ -33,9 +33,12 @@ puts "Using suffix '#{options[:suffix]}'"
 usage if ARGV.length < 2
 
 #moda_base = File.basename( ARGV[0], ".*" )	#	loses path
-moda_base = ARGV[0].sub(/#{File.extname(ARGV[0])}$/,'')
+#moda_base = ARGV[0].sub(/#{File.extname(ARGV[0])}$/,'')
+moda_base = ARGV[0].chomp(File.extname(ARGV[0]))
 #mgf_base = File.basename( ARGV[1], ".*" )	#	loses path
-mgf_base = ARGV[1].sub(/#{File.extname(ARGV[1])}$/,'')
+#mgf_base = ARGV[1].sub(/#{File.extname(ARGV[1])}$/,'')
+mgf_base = ARGV[1].chomp(File.extname(ARGV[1]))
+
 
 theodir="#{ARGV[0]}_theospec_#{options[:suffix]}/"
 Dir.mkdir(theodir) unless Dir.exists?(theodir)

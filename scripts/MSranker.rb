@@ -32,6 +32,9 @@ puts "Using suffix '#{options[:suffix]}'"
 
 usage if ARGV.length < 2
 
+
+#	This gets ugly if the filename begins with a dot and has no extension.
+#
 #moda_base = File.basename( ARGV[0], ".*" )	#	loses path
 #moda_base = ARGV[0].sub(/#{File.extname(ARGV[0])}$/,'')
 moda_base = ARGV[0].chomp(File.extname(ARGV[0]))

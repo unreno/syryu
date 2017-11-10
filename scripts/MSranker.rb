@@ -343,13 +343,23 @@ formatted_moda_output.each do |row|
 
 
 	nbfactorial = (1..nb).inject(1,:*)
+	puts "Nb! : #{nbfactorial}"
+
 	nyfactorial = (1..ny).inject(1,:*)
-	b_i_sum = bions.collect{|i|i[:int]}.inject(0){|sum,x| sum + x }
-	y_i_sum = yions.collect{|i|i[:int]}.inject(0){|sum,x| sum + x }
+	puts "Ny! : #{nyfactorial}"
+
+#	b_i_sum = bions.collect{|i|i[:int]}.inject(0){|sum,x| sum + x }
+#	y_i_sum = yions.collect{|i|i[:int]}.inject(0){|sum,x| sum + x }
+
 	intensity_b_i_sum = bions.collect{|i|i[:int]*100/max_intensity}.inject(0){|sum,x| sum + x }
+	puts "intensity_b_i_sum : #{intensity_b_i_sum}"
+
 	intensity_y_i_sum = yions.collect{|i|i[:int]*100/max_intensity}.inject(0){|sum,x| sum + x }
+	puts "intensity_y_i_sum : #{intensity_y_i_sum}"
+
 #	hyperscore = Math.log( nbfactorial * nyfactorial * b_i_sum * y_i_sum )
 	intensity_hyperscore = Math.log( nbfactorial * nyfactorial * intensity_b_i_sum * intensity_y_i_sum )
+	puts "Hyperscore : #{intensity_hyperscore}"
 
 
 	hyperout.puts initial_formatted_moda_output_headers.collect{|x|row[x]} + [ intensity_hyperscore ]

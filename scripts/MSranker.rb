@@ -358,9 +358,16 @@ formatted_moda_output.each do |row|
 	puts "intensity_y_i_sum : #{intensity_y_i_sum}"
 
 #	hyperscore = Math.log( nbfactorial * nyfactorial * b_i_sum * y_i_sum )
-	intensity_hyperscore = Math.log( nbfactorial * nyfactorial * intensity_b_i_sum * intensity_y_i_sum )
-	puts "Hyperscore : #{intensity_hyperscore}"
+	pre_hyperscore_sum = nbfactorial * nyfactorial * intensity_b_i_sum * intensity_y_i_sum
 
+	intensity_hyperscore = if pre_hyperscore_sum == 0
+		puts "Pre Hyperscore Sum is 0 so Hyperscore will be -Infinity. Setting it to -9999 instead."
+		-9999
+	else
+		Math.log( nbfactorial * nyfactorial * intensity_b_i_sum * intensity_y_i_sum )
+	end
+
+	puts "Hyperscore : #{intensity_hyperscore}"
 
 	hyperout.puts initial_formatted_moda_output_headers.collect{|x|row[x]} + [ intensity_hyperscore ]
 

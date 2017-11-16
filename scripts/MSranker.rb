@@ -48,8 +48,10 @@ Dir.mkdir(theodir) unless Dir.exists?(theodir)
 
 
 #	Let’s set the default m/z error as tol=0.5. (this is used when matching observed to theoretical)
-default_tol = 0.5
+matching_default_tol = 0.5
 
+xcorr_bin_size = 2
+xcorr_max_mass = 2500
 
 ##################################################
 
@@ -159,6 +161,8 @@ end
 initial_formatted_moda_output_headers = formatted_moda_output.headers.dup
 initial_formatted_moda_output_headers.delete('theospec_comments')
 initial_formatted_moda_output_headers.delete('theospec')
+#	output_index	spec_index	observed_MW	charge_state	scan_number	rank	calculated_MW	delta_mass	score	probability	peptide	protein	pept_position	mod1	mod2	mod3	PlainPeptide
+
 
 
 
@@ -171,8 +175,8 @@ csvout = CSV.open( "#{moda_base}.#{options[:suffix]}.ion_statistics.tsv",'w',{ c
 
 csvout.puts %w{scan_number rank peptide number_observed_mz number_theoretical_mz max_intensity nb ny mz_b_i mz_y_i theo_mz_b_i theo_mz_y_i b_i intensity_b_i y_i intensity_y_i b_error y_error hyperscore}
 
-hyperout = CSV.open( "#{moda_base}.#{options[:suffix]}.hyper.tsv",'w',{ col_sep: "\t" })
-hyperout.puts initial_formatted_moda_output_headers + %w{hyperscore}
+new_moda = CSV.open( "#{moda_base}.#{options[:suffix]}.hyper.tsv",'w',{ col_sep: "\t" })
+new_moda.puts initial_formatted_moda_output_headers + %w{hyperscore xcorr}
 
 
 
@@ -205,13 +209,16 @@ formatted_moda_output.each do |row|
 
 	puts "Matching ..."
 	omt = []
-	mzis = observed['mzis'].dup	#	likely unnecessary as not used after this
-#	puts mzis.inspect
-	(0..10).to_a.reverse.collect{|v|default_tol/(2**v)}.each do |actual_tol|
-#	[default_tol].each do |actual_tol|
-		puts "... with tolerance of #{actual_tol}"
-		mzis.delete_if do |o|
+	observed_mzis = observed['mzis'].dup	#	likely unnecessary as not used after this
+	theospec_mzis = row['theospec'].dup	#	needed when computing xcorr
 
+#	puts mzis.inspect
+	(0..10).to_a.reverse.collect{|v|matching_default_tol/(2**v)}.each do |actual_tol|
+#	[matching_default_tol].each do |actual_tol|
+		puts "... with tolerance of #{actual_tol}"
+		observed_mzis.delete_if do |o|
+
+			#	Need to do it this way so have indices which can delete 
 			indices = row['theospec'].each_index.select{|i|
 				( row['theospec'][i][:mz] > ( o[0] - actual_tol ) ) &&
 				( row['theospec'][i][:mz] < ( o[0] + actual_tol ) ) }
@@ -277,10 +284,11 @@ formatted_moda_output.each do |row|
 			omt.delete_if{|x| x[:mz] == o[0] && x[:int] == o[1] }
 			omt.push({ mz: o[0], int: o[1], matched: matched })
 
+			#	Flags the deletion if match is found
 			!matched.empty?
 		end
 		puts "Observed match count: #{omt.select{|x|!x[:matched].empty?}.length}"
-		puts "Remaining unmatched observed count: #{mzis.length}"
+		puts "Remaining unmatched observed count: #{observed_mzis.length}"
 	end
 	omt.sort_by!{|o|o[:mz]}
 
@@ -369,7 +377,129 @@ formatted_moda_output.each do |row|
 
 	puts "Hyperscore : #{intensity_hyperscore}"
 
-	hyperout.puts initial_formatted_moda_output_headers.collect{|x|row[x]} + [ intensity_hyperscore ]
+
+
+
+
+
+
+
+#	The following is how to calculate the second score “xcorr” for MODa.
+#	1.      For each sequence in MODa, compute theoretical m/z (you already have codes)
+#	2.      For each input in #1, you can find the corresponding scan in mgf file. (you already have codes)
+
+
+#	3.      Binning theoretical m/z from #1 using bin.size=2 (by default) and max.mass=2500 (by default)
+#	a.      Create a vector (or array) x0 with its size max.mass/bin.size=2500/2=1250
+#	b.      A vector will contain zero or one. If there exists at least one peak corresponding to bin location, then x0[bin.location]=1. Otherwise, x0[bin.location]=0.
+#	(Not sure if a programming language you use has array (or vector) number starting from 0 or 1, but assuming it starts from 1.)
+#	Note that x0[1] represents peaks with their 0 < m/z value <= bin.size.
+#	                                Note that x0[2] represents peaks with their bin.size < m/z value <= 2*bin.size.
+#	Thus, if we have only theoretical m/z value 2.5 (unrealistic example), then all are zero except x0[2]=1.
+#	If we have only theoretical m/z values 2.5 and 2.3, then we have the same vector with all zero except x0[2]=1.  
+#	If there is peak larger than max.mass, ignore this (just give a warning to increase max.mass).
+
+
+	x0 = (0...(xcorr_max_mass/xcorr_bin_size)).to_a.collect{|b|
+		( theospec_mzis.select{|p| 
+				p[:mz] > b*xcorr_bin_size && p[:mz] <= (b+1)*xcorr_bin_size }.empty? ) ? 0 : 1
+	}
+
+	puts "x0 :#{x0}:"
+
+	greater_than_max_mass = theospec_mzis.select{|t| t[:mz] > xcorr_max_mass }
+	if greater_than_max_mass.length > 0 then
+		puts "WARNING: #{greater_than_max_mass.length} theoretical peaks greater than #{xcorr_max_mass}"
+		puts "greater_than_max_mass:#{greater_than_max_mass}"
+	end
+
+
+
+
+#	4.      Binning observed m/z from #2 using the same bin.size and max.mass as above.
+#	a.      First, observed intensity (named as intensity.one) will range from 0 to 1. So for hyperscore, we divided peak intensity by the largest peak times 100. But for Xcorr, we will not multiply by 100. Thus, peak intensity/the largest peak intensity is the intensity we will use. Let’s call this intensity as intensity.one.
+
+
+
+#	b.      Create a vector (or array) (same as 2a) y0 with the same bin.size and max.mass.
+#	c.       A vector (or array) will contain total intensities of peaks belong to that bin.
+#	For example y0[1] is the total intensities with their peak m/z between 0 and bin.size (including bin.size).
+#	If we have only observed peaks with their m/z values 2.5 (with intensity 0.5) and m/z value 2.3 (with intensity 0.4), then y0[2]=0.9 and others are zero.
+
+
+#	max_intensity=observed['mzis'].collect{|o|o[1]}.max
+	y0 = (0...(xcorr_max_mass/xcorr_bin_size)).to_a.collect{|b|
+#		observed['mzis']
+		omt.select{|p| p[:mz] > b*xcorr_bin_size && p[:mz] <= (b+1)*xcorr_bin_size }.collect{|b|
+			b[:int]/max_intensity
+		}.inject(0){|sum,x| sum + x }
+	}
+
+	puts "y0 :#{y0}:"
+
+
+
+#	5.      Finally, calculate Xcorr. Complicated! But let me explain.
+#	a.      sum.off and y.dash are vectors (or arrays) with the same size as ones created in #2 and #3. Create these.
+#	b.      Initially, all zero in sum.off vector and y.dash.
+
+	xcorr_sum_off = Array.new(xcorr_max_mass/xcorr_bin_size,0)
+	xcorr_y_dash  = Array.new(xcorr_max_mass/xcorr_bin_size,0)
+
+#	c.       Calculate sum.off and y.dash. I assume that an array (or vector) starts from location one, again.
+#	For j in 1:(size of sum.off){
+#		For k in -75:75 {
+#			If (k is not 0){
+#				If (j+k >0 AND j+k <= (size of y0)){  
+#					sum.off[j] = sum.off[j] + y0[j+k]
+#				}
+#			}
+#		}
+#		y.dash[j] = y0[j] – (sum.off[j] / 150)
+#	}
+
+	(0...(xcorr_max_mass/xcorr_bin_size)).to_a.each do |j| # 0-1249
+		(-75..75).to_a.each do |k|	#	-75-75
+			if k != 0 then
+				if( j+k >= 0 && j+k < y0.length ) then
+					xcorr_sum_off[j] = xcorr_sum_off[j] + y0[j+k]
+				end
+			end
+		end
+		xcorr_y_dash[j] = y0[j] - ( xcorr_sum_off[j] / 150 )
+	end
+
+	puts "xcorr_sum_off: #{xcorr_sum_off}"
+	puts "xcorr_y_dash: #{xcorr_y_dash}"
+
+
+
+#	d.      Compute dot product between x0 and y.dash. If your program language does not have dot product function, then you can do the following.
+#	Initialize xcorr=0
+#	For j in (1: size of x0){
+#	                xcorr=xcorr+ x0[j] * y.dash[j]
+#	}
+#	                                Here, * is a regular multiplication.                
+ 
+
+	xcorr = 0
+	(0...(xcorr_max_mass/xcorr_bin_size)).to_a.each do |j| # 0-1249
+		xcorr += ( x0[j] * xcorr_y_dash[j] )
+	end
+
+	puts "xcorr :#{xcorr}"
+
+
+
+
+
+
+
+
+
+
+
+	new_moda.puts initial_formatted_moda_output_headers.collect{|x|row[x]} + [ intensity_hyperscore, xcorr ]
 
 	csvout.puts [row['scan_number'], row['rank'], row['peptide'],
 		number_observed_mz, number_theoretical_mz, max_intensity, nb, ny,

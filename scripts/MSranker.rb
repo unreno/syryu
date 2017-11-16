@@ -461,16 +461,16 @@ formatted_moda_output.each do |row|
 
 
 #	The following is how to calculate the second score “xcorr” for MODa.
-#	1.      For each sequence in MODa, compute theoretical m/z (you already have codes)
-#	2.      For each input in #1, you can find the corresponding scan in mgf file. (you already have codes)
+#	1. For each sequence in MODa, compute theoretical m/z (you already have codes)
+#	2. For each input in #1, you can find the corresponding scan in mgf file. (you already have codes)
 
 
-#	3.      Binning theoretical m/z from #1 using bin.size=2 (by default) and max.mass=2500 (by default)
-#	a.      Create a vector (or array) x0 with its size max.mass/bin.size=2500/2=1250
-#	b.      A vector will contain zero or one. If there exists at least one peak corresponding to bin location, then x0[bin.location]=1. Otherwise, x0[bin.location]=0.
+#	3. Binning theoretical m/z from #1 using bin.size=2 (by default) and max.mass=2500 (by default)
+#	a. Create a vector (or array) x0 with its size max.mass/bin.size=2500/2=1250
+#	b. A vector will contain zero or one. If there exists at least one peak corresponding to bin location, then x0[bin.location]=1. Otherwise, x0[bin.location]=0.
 #	(Not sure if a programming language you use has array (or vector) number starting from 0 or 1, but assuming it starts from 1.)
 #	Note that x0[1] represents peaks with their 0 < m/z value <= bin.size.
-#	                                Note that x0[2] represents peaks with their bin.size < m/z value <= 2*bin.size.
+#	Note that x0[2] represents peaks with their bin.size < m/z value <= 2*bin.size.
 #	Thus, if we have only theoretical m/z value 2.5 (unrealistic example), then all are zero except x0[2]=1.
 #	If we have only theoretical m/z values 2.5 and 2.3, then we have the same vector with all zero except x0[2]=1.
 #	If there is peak larger than max.mass, ignore this (just give a warning to increase max.mass).
@@ -494,13 +494,13 @@ formatted_moda_output.each do |row|
 
 
 
-#	4.      Binning observed m/z from #2 using the same bin.size and max.mass as above.
-#	a.      First, observed intensity (named as intensity.one) will range from 0 to 1. So for hyperscore, we divided peak intensity by the largest peak times 100. But for Xcorr, we will not multiply by 100. Thus, peak intensity/the largest peak intensity is the intensity we will use. Let’s call this intensity as intensity.one.
+#	4. Binning observed m/z from #2 using the same bin.size and max.mass as above.
+#	a. First, observed intensity (named as intensity.one) will range from 0 to 1. So for hyperscore, we divided peak intensity by the largest peak times 100. But for Xcorr, we will not multiply by 100. Thus, peak intensity/the largest peak intensity is the intensity we will use. Let’s call this intensity as intensity.one.
 
 
 
-#	b.      Create a vector (or array) (same as 2a) y0 with the same bin.size and max.mass.
-#	c.       A vector (or array) will contain total intensities of peaks belong to that bin.
+#	b. Create a vector (or array) (same as 2a) y0 with the same bin.size and max.mass.
+#	c. A vector (or array) will contain total intensities of peaks belong to that bin.
 #	For example y0[1] is the total intensities with their peak m/z between 0 and bin.size (including bin.size).
 #	If we have only observed peaks with their m/z values 2.5 (with intensity 0.5) and m/z value 2.3 (with intensity 0.4), then y0[2]=0.9 and others are zero.
 
@@ -519,14 +519,14 @@ formatted_moda_output.each do |row|
 
 
 
-#	5.      Finally, calculate Xcorr. Complicated! But let me explain.
-#	a.      sum.off and y.dash are vectors (or arrays) with the same size as ones created in #2 and #3. Create these.
-#	b.      Initially, all zero in sum.off vector and y.dash.
+#	5. Finally, calculate Xcorr. Complicated! But let me explain.
+#	a. sum.off and y.dash are vectors (or arrays) with the same size as ones created in #2 and #3. Create these.
+#	b. Initially, all zero in sum.off vector and y.dash.
 
 	xcorr_sum_off = Array.new(xcorr_max_mass/xcorr_bin_size,0)
 	xcorr_y_dash  = Array.new(xcorr_max_mass/xcorr_bin_size,0)
 
-#	c.       Calculate sum.off and y.dash. I assume that an array (or vector) starts from location one, again.
+#	c. Calculate sum.off and y.dash. I assume that an array (or vector) starts from location one, again.
 #	For j in 1:(size of sum.off){
 #		For k in -75:75 {
 #			If (k is not 0){
@@ -554,15 +554,20 @@ formatted_moda_output.each do |row|
 
 
 
-#	d.      Compute dot product between x0 and y.dash. If your program language does not have dot product function, then you can do the following.
+#	d. Compute dot product between x0 and y.dash. If your program language does not have dot product function, then you can do the following.
 #	Initialize xcorr=0
 #	For j in (1: size of x0){
-#	                xcorr=xcorr+ x0[j] * y.dash[j]
+#		xcorr=xcorr+ x0[j] * y.dash[j]
 #	}
-#	                                Here, * is a regular multiplication.
+#	Here, * is a regular multiplication.
 
 
 	xcorr = 0
+	
+	#	could do the following, but oddly benchmarks show it slower.
+	#	require 'matrix'
+	#	Vector[*x0].dot(Vector[*xcorr_y_dash])
+
 	(0...(xcorr_max_mass/xcorr_bin_size)).to_a.each do |j| # 0-1249
 		xcorr += ( x0[j] * xcorr_y_dash[j] )
 	end

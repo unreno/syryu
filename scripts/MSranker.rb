@@ -3,7 +3,8 @@
 require 'csv'
 require 'optparse'
 
-def usage
+
+def usage(options={})
 	puts
 	puts "Usage"
 	puts
@@ -11,12 +12,28 @@ def usage
 	puts "If going to run multiple times, for whatever reason, you can specify the same suffix with suffix option."
 	puts "This way, most of the parsing and the theospec calls won't need rerun."
 	puts
-	puts "#{$0} <formatted moda output file> <observed spectra mgf file>"
+	puts "#{$0} [options] <formatted moda output file> <observed spectra mgf file>"
 	puts
-	puts "MSranker.rb out_blind_140521_EOC_MCis_T2_3.txt.OUTPUT.tsv 140521_EOC_MCis_T2_3.SCANS.mgf"
+	puts "Options:"
+	puts "	--suffix STRING ...... output file and directory suffixes"
+	puts "	--log_count INTEGER .. number of records logged before silencing output"
+	puts
+	puts "Defaults/current values:"
+	puts "	--suffix #{options[:suffix]}"
+	puts
+	puts "#{$0} out_blind_140521_EOC_MCis_T2_3.txt.OUTPUT.tsv 140521_EOC_MCis_T2_3.SCANS.mgf"
 	puts
 	exit
 end
+
+
+stdout_redirected = false
+original_stdout = $stdout.clone
+#	$stdout.reopen("/dev/null", "a")
+
+
+#	Must be called before option parsing as they remove the items.
+puts "Command: #{$0} #{$*.join(' ')}"
 
 
 #options = { suffix: 'TESTING'}
@@ -25,12 +42,14 @@ OptionParser.new do |opt|
 #	opt.on('--first_name FIRSTNAME') { |o| options[:first_name] = o }
 #	opt.on('--last_name LASTNAME') { |o| options[:last_name] = o }
 	opt.on('--suffix TESTING') { |o| options[:suffix] = o }
+	opt.on('--log_count 10') { |o| options[:log_count] = o }
 end.parse!
 
 #puts options
+
 puts "Using suffix '#{options[:suffix]}'"
 
-usage if ARGV.length < 2
+usage(options) if ARGV.length < 2
 
 
 #	This gets ugly if the filename begins with a dot and has no extension.
@@ -100,6 +119,7 @@ else
 		elsif line =~ /^PEPMASS=(.*)$/
 			@spectrum['pepmass'] = $1
 		elsif line =~ /^SCANS=(.*)$/
+			puts "Processing MGF block for scans #{$1.to_i}"
 			@spectrum['scans'] = $1.to_i
 		elsif line =~ /^CHARGE=(.*)$/
 			@spectrum['charge'] = $1
@@ -138,6 +158,8 @@ if File.exists?( marshaled_formatted_moda_filename )
 else
 	formatted_moda_output = CSV.read( ARGV[0],'rb',{ col_sep: "\t", headers: true })
 	formatted_moda_output.each do |row|
+
+		puts "Processing MODa row #{row['scan_number']}:#{row['rank']}"
 
 	#<CSV::Row "output_index":"2" "spec_index":"19" "observed_MW":"3094.4649" "charge_state":"5" "scan_number":"1535" "rank":"1" "calculated_MW":"3094.4650" "delta_mass":"-0.0001" "score":"46" "probability":"0.3989" "peptide":"R.KTNDKDEKKEDGKQAENDSSNDDKTKK.S" "protein":"sp|Q9BXP5" "pept_position":"301~327" "mod1":"NA" "mod2":"NA" "mod3":"NA" "PlainPeptide":"KTNDKDEKKEDGKQAENDSSNDDKTKK">
 
@@ -188,8 +210,8 @@ else
 					ion: parts[2],      #	y1
 					d: parts[3],        #	0
 					e: parts[4].rstrip, #	(-NH3)
-				})
-			else
+								})
+							else
 				row['theospec_comments'] << "#{line}\n"
 			end
 		end
@@ -228,11 +250,18 @@ extended_moda_file.puts initial_formatted_moda_output_headers + %w{hyperscore xc
 
 
 #	I'm kinda surprised that I can just read this file again without some type of reset?
-formatted_moda_output.each do |row|
+formatted_moda_output.each_with_index do |row,record_number|
+
+	if !stdout_redirected && options.has_key?(:log_count) && record_number > options[:log_count].to_i
+		puts "Record number(#{record_number}) has exceeded requested log count(#{options[:log_count]})."
+		puts "Redirecting the rest of the output to /dev/null."
+		stdout_redirected = true
+		$stdout.reopen("/dev/null", "a")
+	end
 
 	#<CSV::Row "output_index":"2" "spec_index":"19" "observed_MW":"3094.4649" "charge_state":"5" "scan_number":"1535" "rank":"1" "calculated_MW":"3094.4650" "delta_mass":"-0.0001" "score":"46" "probability":"0.3989" "peptide":"R.KTNDKDEKKEDGKQAENDSSNDDKTKK.S" "protein":"sp|Q9BXP5" "pept_position":"301~327" "mod1":"NA" "mod2":"NA" "mod3":"NA" "PlainPeptide":"KTNDKDEKKEDGKQAENDSSNDDKTKK">
 
-	puts "#{row['scan_number']} : #{row['rank']}"
+	puts "SCAN:MODa_RANK => #{row['scan_number']} : #{row['rank']}"
 	#	find returns only FIRST, but there should only be 1 match
 	observed = observed_spectra.find{|s| s['scans'] == row['scan_number'].to_i }
 	number_observed_mz = observed['mzis'].length
@@ -362,7 +391,8 @@ formatted_moda_output.each do |row|
 	puts observed_matched_to_theoretical.inspect
 
 
-
+	puts
+	puts "HYPERSCORE CALCULATION"
 
 	bions = observed_matched_to_theoretical.select{|o| o[:matched][:ion] =~ /^b/ }
 	yions = observed_matched_to_theoretical.select{|o| o[:matched][:ion] =~ /^y/ }
@@ -457,8 +487,8 @@ formatted_moda_output.each do |row|
 
 
 
-
-
+	puts
+	puts "XCORR CALCULATION"
 
 #	The following is how to calculate the second score “xcorr” for MODa.
 #	1. For each sequence in MODa, compute theoretical m/z (you already have codes)
@@ -541,6 +571,7 @@ formatted_moda_output.each do |row|
 	(0...(xcorr_max_mass/xcorr_bin_size)).to_a.each do |j| # 0-1249
 		(-75..75).to_a.each do |k|	#	-75-75
 			if k != 0 then
+				#	make sure that the subscript will be within the bounds of these arrays.
 				if( j+k >= 0 && j+k < y0.length ) then
 					xcorr_sum_off[j] = xcorr_sum_off[j] + y0[j+k]
 				end

@@ -123,7 +123,7 @@ class PeakMatch
 		@observed_matched_to_theoretical = []
 	
 		#	We will be deleting items so make a duplicate and use that instead.
-#	duping unecessary inside a method or class due to scoping.
+#	duping unnecessary inside a method or class due to scoping.	YES, I THINK IT STILL IS!
 #		working_observed_mzis = observed['mzis'].dup	#	likely unnecessary as not used after this
 #		working_theospec_mzis = row['theospec'].dup	#	needed when computing xcorr
 	
@@ -835,7 +835,7 @@ formatted_moda_output.each_with_index do |row,record_number|
 #
 #	puts observed_matched_to_theoretical.inspect
 
-	p=PeakMatch.new( observed['mzis'], row['theospec'] )
+	p=PeakMatch.new( observed['mzis'].dup, row['theospec'].dup )
 
 	puts
 	puts "HYPERSCORE CALCULATION (ALL)"

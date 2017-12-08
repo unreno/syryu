@@ -27,6 +27,215 @@ def usage(options={})
 end
 
 
+class Theospec
+
+	@@theodir = ""
+	attr_reader :theospecs
+
+	def self.dir=(value)
+		@@theodir = value
+		Dir.mkdir(@@theodir) unless Dir.exists?(@@theodir)
+	end
+
+	def initialize(peptide,charge_state)
+
+		#	as peptide could include decimals,
+		#	split on decimals to pick off the first and last and then parse the middle
+		parts = peptide.split(/\./); #	-.QWLPKD-123EESFLQFKYQALQVP+117.P	(theoretically could include decimals)
+		a=parts[0]               #	-
+		b=parts[1..-2].join('.') #	QWLPKD-123EESFLQFKYQALQVP+117
+		c=parts[-1]              #	P
+
+		#	parse middle extracting numbers and replacing them with codes passed to theospec
+		numbers=b.split(/[A-Z]+/)    #	["",-123,+117]
+		letters=b.split(/[0-9.+-]+/) #	[ "QWLPKD","EESFLQFKYQALQVP"]
+
+		outpeptide=""
+
+		letters.each_index do |i|
+			outpeptide="#{outpeptide}#{letters[i]}"
+			outpeptide="#{outpeptide}#{i}" unless( numbers[i+1].to_s.empty? )
+		end
+
+		#	"QWLPKD1EESFLQFKYQALQVP2"
+
+#		z=( row['charge_state'].to_i > 5 ) ? 5 : row['charge_state']
+		z=( charge_state.to_i > 5 ) ? 5 : charge_state
+
+		theospec_command="theospec -z#{z}"
+		numbers.delete_if{|n|n.empty?}.each_with_index do |number,i|
+			theospec_command="#{theospec_command} -c#{i}=#{number}"
+		end
+		#	-c0=-123 -c1=+117
+
+		#theospec_output="#{theodir}#{row['scan_number']}.#{row['rank']}.theospec.txt"
+		theospec_output="#{@@theodir}#{peptide}.#{charge_state}.theospec.txt"
+
+		theospec_command="#{theospec_command} #{a}.#{outpeptide}.#{c} > #{theospec_output}"
+		system(theospec_command) unless File.exists?( theospec_output )
+
+#		row['theospec_comments']=""
+#		row['theospec']=[]
+		@theospecs=[]
+		File.open( theospec_output, 'r' ).each do |line|
+			next if line.empty?
+			if line =~ /^[[:digit:]]/
+				#	Not sure what these all are, nevertheless, split on the semicolon
+				##############################################
+				#Form of one element:
+				#m;z;n;y;c with
+				#m = m/z (mass including protons over charge) in concise form
+				#z = charge
+				#n = name, e.g. `b5'
+				#y = currently 0
+				#c = neutral changes, e.g. (-H2O)
+				##############################################
+				#158.092403080(10);+1;y1;0;(-NH3)
+				parts=line.split(';')
+#				row['theospec'].push({
+				@theospecs.push({
+					mz: parts[0].to_f,  #	158.092403080(10) to_f -> 158.092403080
+					charge_state: parts[1],        #	+1
+					ion: parts[2],      #	y1
+					d: parts[3],        #	0
+					e: parts[4].rstrip, #	(-NH3)
+				})
+			else
+				#row['theospec_comments'] << "#{line}\n"
+			end
+		end
+
+	end
+end	#	Theospec
+
+
+class PeakMatch
+	attr_reader :observed_matched_to_theoretical
+
+	def self.matching_default_tol=(value)
+		@@matching_default_tol = value
+	end
+
+	def initialize(working_observed_mzis,working_theospec_mzis)
+		#	Attempt to match each observed peak to a theoretical peak
+	
+		puts "Matching ..."
+		@observed_matched_to_theoretical = []
+	
+		#	We will be deleting items so make a duplicate and use that instead.
+#	duping unecessary inside a method or class due to scoping.
+#		working_observed_mzis = observed['mzis'].dup	#	likely unnecessary as not used after this
+#		working_theospec_mzis = row['theospec'].dup	#	needed when computing xcorr
+	
+		#	puts mzis.inspect
+	
+		#	> (10..0).to_a
+		#	=> []	(ranges MUST increase apparently, so ...)
+		#	> (0..10).to_a.reverse
+		#	=> [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+		(0..10).to_a.reverse.collect{|v|
+			#	> tol=0.5
+			#	(0..10).to_a.reverse.collect{|v|tol/(2**v)}
+			#	=> [0.00048828125, 0.0009765625, 0.001953125, 0.00390625, 0.0078125,
+			#		0.015625, 0.03125, 0.0625, 0.125, 0.25, 0.5]
+			@@matching_default_tol/(2**v)
+		}.each do |actual_tol|
+	
+			puts "... with tolerance of #{actual_tol}"
+			working_observed_mzis.delete_if do |observed_mzi|
+	
+				#	Need to do it this way so have indices which can delete
+				indices = working_theospec_mzis.each_index.select{|i|
+					( working_theospec_mzis[i][:mz] > ( observed_mzi[0] - actual_tol ) ) &&
+					( working_theospec_mzis[i][:mz] < ( observed_mzi[0] + actual_tol ) ) }
+	
+				if indices.length == 0
+					matched = {}
+				elsif indices.length == 1
+					matched = working_theospec_mzis.delete_at(indices[0])
+				else
+	
+					puts
+					puts "MULTIPLE MATCH COUNT: #{indices.length}"
+					puts "MULTIPLE MATCHES : #{working_theospec_mzis.values_at(*indices)}"
+					puts
+	
+					# If there are more than one matched theoretical m/z per one observed m/z,
+					#	then pick the closest theoretical m/z value to the observed one.
+					#	This observed peak is matched.
+					#	Ties
+					#	Use lowest charge.
+					#	Then b ion over y ion
+					#	Then higher number ion over lower ion
+	
+					#MULTIPLE : [
+					#		{:mz=>636.29876704, :charge_state=>"+1", :ion=>"y6", :d=>"0", :e=>"()"},
+					#		{:mz=>636.299101391, :charge_state=>"+2", :ion=>"b11", :d=>"0", :e=>"()"}]
+	
+					#	[{:mz=>230.149917959, :b=>"+1", :ion=>"b2", :d=>"0", :e=>"()", :index=>43, :diff=>0.0012038589},
+					#  {:mz=>230.149917959, :b=>"+1", :ion=>"y2", :d=>"0", :e=>"(-H2O)", :index=>44, :diff=>0.0012038589}]
+	
+					#	Prefer b ion (starting with b) than y ion, so ion => “b7”
+					#		([{:mz=>831.347173796, :b=>"+1", :ion=>"b7", :d=>"0", :e=>"(-NH3)"}
+					#	If both are the same type of ions (both b ions and both y ions),
+					#		then prefer higher number. (For b6 and b7, prefer b7).
+	
+	
+					#	by default sorting is ascending... [1,2,3], [a,b,c], ...
+					#	Add - before integer for force descending.
+					matches = indices.collect{ |i|
+						v = working_theospec_mzis[i].dup
+						v[:index] = i		#	NEED this so know what to delete if matches
+						v[:diff] = v[:mz] - observed_mzi[0]
+						v
+					}.sort_by{|x| [
+						x[:diff].abs,
+						x[:charge_state].to_i,
+						x[:ion][/([A-z]+)/],
+						-x[:ion][/([0-9]+)/].to_i
+					] }
+	
+					puts "Matches sorted by abs diff, charge state, ion letter, ion number(desc). Selecting the first."
+					puts matches.inspect
+					puts
+	
+					matched = working_theospec_mzis.delete_at(matches.first[:index])
+	
+					puts matched.inspect
+	
+				end
+	
+				#	Remove existing non-match if exists.
+				@observed_matched_to_theoretical.delete_if do |observed_peak|
+					observed_peak[:mz] == observed_mzi[0] &&
+																observed_peak[:int] == observed_mzi[1] &&
+																observed_peak[:matched] == {}
+				end
+	
+				@observed_matched_to_theoretical.push({
+					mz: observed_mzi[0], int: observed_mzi[1], matched: matched })
+	
+				#	Flags the deletion if match is found
+				!matched.empty?
+			end
+			puts "Observed match count: #{@observed_matched_to_theoretical.select{|x|!x[:matched].empty?}.length}"
+			puts "Remaining unmatched observed count: #{working_observed_mzis.length}"
+		end
+		@observed_matched_to_theoretical.sort_by!{|o|o[:mz]}
+	
+		puts @observed_matched_to_theoretical.inspect
+	end
+end	#	PeakMatch
+
+
+
+
+
+
+
+
+
+
 stdout_redirected = false
 original_stdout = $stdout.clone
 #	$stdout.reopen("/dev/null", "a")
@@ -64,12 +273,13 @@ in_moda_filename_without_extension = ARGV[0].chomp(File.extname(ARGV[0]))
 #in_mgf_filename_without_extension = ARGV[1].chomp(File.extname(ARGV[1]))
 
 
-theodir="#{ARGV[0]}_theospec_#{options[:suffix]}/"
-Dir.mkdir(theodir) unless Dir.exists?(theodir)
+#theodir="#{ARGV[0]}_theospec_#{options[:suffix]}/"
+#Dir.mkdir(theodir) unless Dir.exists?(theodir)
+Theospec.dir="#{ARGV[0]}_theospec_#{options[:suffix]}/"
 
 
 #	Let’s set the default m/z error as tol=0.5. (this is used when matching observed to theoretical)
-matching_default_tol = 0.5
+PeakMatch.matching_default_tol = 0.5
 
 #	Default settings when computing xcorr
 xcorr_bin_size = 2
@@ -137,8 +347,6 @@ end
 
 
 
-
-
 ##################################################
 
 #	Read and parse moda output, then compute and store theoretical spectra.
@@ -163,58 +371,70 @@ else
 
 	#<CSV::Row "output_index":"2" "spec_index":"19" "observed_MW":"3094.4649" "charge_state":"5" "scan_number":"1535" "rank":"1" "calculated_MW":"3094.4650" "delta_mass":"-0.0001" "score":"46" "probability":"0.3989" "peptide":"R.KTNDKDEKKEDGKQAENDSSNDDKTKK.S" "protein":"sp|Q9BXP5" "pept_position":"301~327" "mod1":"NA" "mod2":"NA" "mod3":"NA" "PlainPeptide":"KTNDKDEKKEDGKQAENDSSNDDKTKK">
 
-		#	as peptide could include decimals,
-		#	split on decimals to pick off the first and last and then parse the middle
-		parts = row['peptide'].split(/\./); #	-.QWLPKD-123EESFLQFKYQALQVP+117.P	(theoretically could include decimals)
-		a=parts[0]               #	-
-		b=parts[1..-2].join('.') #	QWLPKD-123EESFLQFKYQALQVP+117
-		c=parts[-1]              #	P
+#		#	as peptide could include decimals,
+#		#	split on decimals to pick off the first and last and then parse the middle
+#		parts = row['peptide'].split(/\./); #	-.QWLPKD-123EESFLQFKYQALQVP+117.P	(theoretically could include decimals)
+#		a=parts[0]               #	-
+#		b=parts[1..-2].join('.') #	QWLPKD-123EESFLQFKYQALQVP+117
+#		c=parts[-1]              #	P
+#
+#		#	parse middle extracting numbers and replacing them with codes passed to theospec
+#		numbers=b.split(/[A-Z]+/)    #	["",-123,+117]
+#		letters=b.split(/[0-9.+-]+/) #	[ "QWLPKD","EESFLQFKYQALQVP"]
+#
+#		outpeptide=""
+#
+#		letters.each_index do |i|
+#			outpeptide="#{outpeptide}#{letters[i]}"
+#			outpeptide="#{outpeptide}#{i}" unless( numbers[i+1].to_s.empty? )
+#		end
+#
+#		#	"QWLPKD1EESFLQFKYQALQVP2"
+#
+#		z=( row['charge_state'].to_i > 5 ) ? 5 : row['charge_state']
+#
+#		theospec_command="theospec -z#{z}"
+#		numbers.delete_if{|n|n.empty?}.each_with_index do |number,i|
+#			theospec_command="#{theospec_command} -c#{i}=#{number}"
+#		end
+#		#	-c0=-123 -c1=+117
+#
+#		theospec_output="#{theodir}#{row['scan_number']}.#{row['rank']}.theospec.txt"
+#
+#		theospec_command="#{theospec_command} #{a}.#{outpeptide}.#{c} > #{theospec_output}"
+#		system(theospec_command) unless File.exists?( theospec_output )
+#
+#		row['theospec_comments']=""
+#		row['theospec']=[]
+#		File.open( theospec_output, 'r' ).each do |line|
+#			next if line.empty?
+#			if line =~ /^[[:digit:]]/
+#				#	Not sure what these all are, nevertheless, split on the semicolon
+#				##############################################
+#				#Form of one element:
+#				#m;z;n;y;c with
+#				#m = m/z (mass including protons over charge) in concise form
+#				#z = charge
+#				#n = name, e.g. `b5'
+#				#y = currently 0
+#				#c = neutral changes, e.g. (-H2O)
+#				##############################################
+#				#158.092403080(10);+1;y1;0;(-NH3)
+#				parts=line.split(';')
+#				row['theospec'].push({
+#					mz: parts[0].to_f,  #	158.092403080(10) to_f -> 158.092403080
+#					charge_state: parts[1],        #	+1
+#					ion: parts[2],      #	y1
+#					d: parts[3],        #	0
+#					e: parts[4].rstrip, #	(-NH3)
+#				})
+#			else
+#				row['theospec_comments'] << "#{line}\n"
+#			end
+#		end
 
-		#	parse middle extracting numbers and replacing them with codes passed to theospec
-		numbers=b.split(/[A-Z]+/)    #	["",-123,+117]
-		letters=b.split(/[0-9.+-]+/) #	[ "QWLPKD","EESFLQFKYQALQVP"]
 
-		outpeptide=""
-
-		letters.each_index do |i|
-			outpeptide="#{outpeptide}#{letters[i]}"
-			outpeptide="#{outpeptide}#{i}" unless( numbers[i+1].to_s.empty? )
-		end
-
-		#	"QWLPKD1EESFLQFKYQALQVP2"
-
-		z=( row['charge_state'].to_i > 5 ) ? 5 : row['charge_state']
-
-		theospec_command="theospec -z#{z}"
-		numbers.delete_if{|n|n.empty?}.each_with_index do |number,i|
-			theospec_command="#{theospec_command} -c#{i}=#{number}"
-		end
-		#	-c0=-123 -c1=+117
-
-		theospec_output="#{theodir}#{row['scan_number']}.#{row['rank']}.theospec.txt"
-
-		theospec_command="#{theospec_command} #{a}.#{outpeptide}.#{c} > #{theospec_output}"
-		system(theospec_command) unless File.exists?( theospec_output )
-
-		row['theospec_comments']=""
-		row['theospec']=[]
-		File.open( theospec_output, 'r' ).each do |line|
-			next if line.empty?
-			if line =~ /^[[:digit:]]/
-				#	Not sure what these all are, nevertheless, split on the semicolon
-				#158.092403080(10);+1;y1;0;(-NH3)
-				parts=line.split(';')
-				row['theospec'].push({
-					mz: parts[0].to_f,  #	158.092403080(10) to_f -> 158.092403080
-					charge_state: parts[1],        #	+1
-					ion: parts[2],      #	y1
-					d: parts[3],        #	0
-					e: parts[4].rstrip, #	(-NH3)
-								})
-							else
-				row['theospec_comments'] << "#{line}\n"
-			end
-		end
+		row['theospec'] = Theospec.new( row['peptide'], row['charge_state'] ).theospecs
 
 	end
 
@@ -222,10 +442,12 @@ else
 end
 
 
-initial_formatted_moda_output_headers = formatted_moda_output.headers.dup
-initial_formatted_moda_output_headers.delete('theospec_comments')
-initial_formatted_moda_output_headers.delete('theospec')
+#initial_formatted_moda_output_headers = formatted_moda_output.headers.dup
+#initial_formatted_moda_output_headers.delete('theospec_comments')
+#initial_formatted_moda_output_headers.delete('theospec')
 #	output_index	spec_index	observed_MW	charge_state	scan_number	rank	calculated_MW	delta_mass	score	probability	peptide	protein	pept_position	mod1	mod2	mod3	PlainPeptide
+
+initial_formatted_moda_output_headers = %w{output_index	spec_index	observed_MW	charge_state	scan_number	rank	calculated_MW	delta_mass	score	probability	peptide	protein	pept_position	mod1	mod2	mod3	PlainPeptide}
 
 
 
@@ -234,34 +456,39 @@ initial_formatted_moda_output_headers.delete('theospec')
 
 #	Match theoretical spectra peaks to observed spectra peaks and output to csv/tsv
 
+ion_statistics_columns = %w{scan_number rank peptide number_observed_mz number_theoretical_mz max_intensity nb ny mz_b_i mz_y_i theo_mz_b_i theo_mz_y_i b_i intensity_b_i y_i intensity_y_i b_error y_error hyperscore}
 
 ion_statistics_file = CSV.open(
 	"#{in_moda_filename_without_extension}.#{options[:suffix]}.ion_statistics.tsv",
 	'w',{ col_sep: "\t" })
 
-ion_statistics_file.puts %w{scan_number rank peptide number_observed_mz number_theoretical_mz max_intensity nb ny mz_b_i mz_y_i theo_mz_b_i theo_mz_y_i b_i intensity_b_i y_i intensity_y_i b_error y_error hyperscore}
+ion_statistics_file.puts ion_statistics_columns
 
 basic_ion_statistics_file = CSV.open(
 	"#{in_moda_filename_without_extension}.#{options[:suffix]}.basic_ion_statistics.tsv",
 	'w',{ col_sep: "\t" })
 
-basic_ion_statistics_file.puts %w{scan_number rank peptide number_observed_mz number_theoretical_mz max_intensity nb ny mz_b_i mz_y_i theo_mz_b_i theo_mz_y_i b_i intensity_b_i y_i intensity_y_i b_error y_error hyperscore}
+basic_ion_statistics_file.puts ion_statistics_columns
 
 extended_moda_file = CSV.open(
 	"#{in_moda_filename_without_extension}.#{options[:suffix]}.hyper.tsv",
 	'w',{ col_sep: "\t" })
 
-extended_moda_file.puts initial_formatted_moda_output_headers + %w{hyperscore xcorr hyperscore.basic xcorr.basic hyperscore.basic.with.shift xcorr.basic.with.shift}
+extended_moda_file.puts initial_formatted_moda_output_headers + %w{hyperscore xcorr hyperscore.basic xcorr.basic peptide.hyperscore.basic.with.shift hyperscore.basic.with.shift peptide.xcorr.basic.with.shift xcorr.basic.with.shift}
 
 
 
 
 class Hyperscore
 
-	attr_reader :nb, :ny, :b_i, :y_i, :intensity_b_i, :intensity_y_i, :b_error, :y_error
-	attr_reader :mz_b_i, :mz_y_i, :theo_mz_b_i, :theo_mz_y_i, :hyperscore
+	attr_reader :nb, :ny, :b_i, :y_i, :intensity_b_i, :intensity_y_i, :b_error, :y_error,
+		:mz_b_i, :mz_y_i, :theo_mz_b_i, :theo_mz_y_i, :hyperscore
 
 	def initialize(bions,yions,max_intensity)
+		puts "bions :#{bions}:"
+		puts "yions :#{yions}:"
+		puts "max_intensity : #{max_intensity}"
+
 		@nb = bions.length
 		puts "# of observed b-ion m/z values matched (b-ion is starting with b in theoretical spec; for example, b2, b3, b4, ….) Let’s call it as “Nb” : #{nb}"
 
@@ -320,14 +547,12 @@ class Hyperscore
 		intensity_y_i_sum = yions.collect{|i|i[:int]*100/max_intensity}.inject(0,:+)	#	sum
 		puts "intensity_y_i_sum : #{intensity_y_i_sum}"
 
-	#	hyperscore = Math.log( nbfactorial * nyfactorial * b_i_sum * y_i_sum )
 		pre_hyperscore_product = nbfactorial * nyfactorial * intensity_b_i_sum * intensity_y_i_sum
 
 		@hyperscore = if pre_hyperscore_product == 0
 			puts "Pre Hyperscore Product is 0 so Hyperscore will be -Infinity. Setting it to -9999 instead."
 			-9999
 		else
-	#		Math.log( nbfactorial * nyfactorial * intensity_b_i_sum * intensity_y_i_sum )
 			Math.log( pre_hyperscore_product )
 		end
 
@@ -347,7 +572,7 @@ class Xcorr
 		#	The following is how to calculate the second score “xcorr” for MODa.
 		#	1. For each sequence in MODa, compute theoretical m/z (you already have codes)
 		#	2. For each input in #1, you can find the corresponding scan in mgf file. (you already have codes)
-	
+
 		#	3. Binning theoretical m/z from #1 using bin.size=2 (by default) and max.mass=2500 (by default)
 		#	a. Create a vector (or array) x0 with its size max.mass/bin.size=2500/2=1250
 		#	b. A vector will contain zero or one. If there exists at least one peak corresponding to bin location,
@@ -359,36 +584,36 @@ class Xcorr
 		#	Thus, if we have only theoretical m/z value 2.5 (unrealistic example), then all are zero except x0[2]=1.
 		#	If we have only theoretical m/z values 2.5 and 2.3, then we have the same vector with all zero except x0[2]=1.
 		#	If there is peak larger than max.mass, ignore this (just give a warning to increase max.mass).
-	
+
 #		x0 = (0...(xcorr_max_mass/xcorr_bin_size)).to_a.collect{|bin|	#	0-1249
 #			( row['theospec'].select{ |theoretical_peak|
 #					theoretical_peak[:mz] > bin*xcorr_bin_size &&
 #					theoretical_peak[:mz] <= (bin+1)*xcorr_bin_size
 #				}.empty? ) ? 0 : 1
 #		}
-	
+
 		puts "x0 :#{x0}:"
-	
+
 #		greater_than_max_mass = working_theospec_mzis.select{|t| t[:mz] > xcorr_max_mass }
 #		if greater_than_max_mass.length > 0 then
 #			puts "WARNING: #{greater_than_max_mass.length} theoretical peaks greater than #{xcorr_max_mass}"
 #			puts "greater_than_max_mass:#{greater_than_max_mass}"
 #		end
-	
+
 		#	4. Binning observed m/z from #2 using the same bin.size and max.mass as above.
 		#	a. First, observed intensity (named as intensity.one) will range from 0 to 1. So for hyperscore,
 		#		we divided peak intensity by the largest peak times 100. But for Xcorr, we will not multiply by
 		#		100. Thus, peak intensity/the largest peak intensity is the intensity we will use. Let’s call
 		#		this intensity as intensity.one.
-	
+
 		#	b. Create a vector (or array) (same as 2a) y0 with the same bin.size and max.mass.
 		#	c. A vector (or array) will contain total intensities of peaks belong to that bin.
 		#	For example y0[1] is the total intensities with their peak m/z between 0 and bin.size (including bin.size).
 		#	If we have only observed peaks with their m/z values 2.5 (with intensity 0.5) and m/z value 2.3
 		#		(with intensity 0.4), then y0[2]=0.9 and others are zero.
-	
+
 		#	max_intensity=observed['mzis'].collect{|o|o[1]}.max	(computed above)
-	
+
 #		y0 = (0...(xcorr_max_mass/xcorr_bin_size)).to_a.collect{|bin|	#	0-1249
 #			observed_matched_to_theoretical.select{|observed_peak|
 #				observed_peak[:mz] > bin*xcorr_bin_size && observed_peak[:mz] <= (bin+1)*xcorr_bin_size
@@ -396,17 +621,17 @@ class Xcorr
 #				observed_peak[:int]/max_intensity
 #			}.inject(0,:+) #	sums array (set 0 as initial value for empty arrays otherwise returns nil)
 #		}
-	
+
 		puts "y0 :#{y0}:"
-	
-	
+
+
 		#	5. Finally, calculate Xcorr. Complicated! But let me explain.
 		#	a. sum.off and y.dash are vectors (or arrays) with the same size as ones created in #2 and #3. Create these.
 		#	b. Initially, all zero in sum.off vector and y.dash.
-	
+
 		xcorr_sum_off = Array.new(xcorr_max_mass/xcorr_bin_size,0)
 		xcorr_y_dash  = Array.new(xcorr_max_mass/xcorr_bin_size,0)
-	
+
 		#	c. Calculate sum.off and y.dash. I assume that an array (or vector) starts from location one, again.
 		#	For j in 1:(size of sum.off){
 		#		For k in -75:75 {
@@ -418,7 +643,7 @@ class Xcorr
 		#		}
 		#		y.dash[j] = y0[j] – (sum.off[j] / 150)
 		#	}
-	
+
 		(0...(xcorr_max_mass/xcorr_bin_size)).to_a.each do |j| # 0-1249
 			(-75..75).to_a.each do |k|	#	-75-75
 				if k != 0 then
@@ -430,12 +655,12 @@ class Xcorr
 			end
 			xcorr_y_dash[j] = y0[j] - ( xcorr_sum_off[j] / 150 )
 		end
-	
+
 		puts "xcorr_sum_off: #{xcorr_sum_off}"
 		puts "xcorr_y_dash: #{xcorr_y_dash}"
-	
-	
-	
+
+
+
 		#	d. Compute dot product between x0 and y.dash. If your program language does not have dot
 		#		product function, then you can do the following.
 		#	Initialize xcorr=0
@@ -443,18 +668,17 @@ class Xcorr
 		#		xcorr=xcorr+ x0[j] * y.dash[j]
 		#	}
 		#	Here, * is a regular multiplication.
-	
-	
+
 		@xcorr = 0
-		
+
 		#	could do the following, but oddly benchmarks show it slower.
 		#	require 'matrix'
 		#	Vector[*x0].dot(Vector[*xcorr_y_dash])
-	
+
 		(0...(xcorr_max_mass/xcorr_bin_size)).to_a.each do |j| # 0-1249
 			@xcorr += ( x0[j] * xcorr_y_dash[j] )
 		end
-	
+
 		puts "xcorr :#{@xcorr}"
 	end
 
@@ -467,6 +691,7 @@ end	#	Xcorr
 
 
 #	I'm kinda surprised that I can just read this file again without some type of reset?
+#	I guess having been fully read makes it ok.
 formatted_moda_output.each_with_index do |row,record_number|
 
 	if !stdout_redirected && options.has_key?(:log_count) && record_number > options[:log_count].to_i
@@ -476,14 +701,10 @@ formatted_moda_output.each_with_index do |row,record_number|
 		$stdout.reopen("/dev/null", "a")
 	end
 
-
-
-
+	#	Not sure if "row" would preserve order so ...
 	extended_moda_file_array = initial_formatted_moda_output_headers.collect{|x|row[x]}
-	ion_statistics_file_array = [row['scan_number'], row['rank'], row['peptide'] ]
 
-
-
+	ion_statistics_file_array = [ row['scan_number'], row['rank'], row['peptide'] ]
 
 	#<CSV::Row "output_index":"2" "spec_index":"19" "observed_MW":"3094.4649" "charge_state":"5" "scan_number":"1535" "rank":"1" "calculated_MW":"3094.4650" "delta_mass":"-0.0001" "score":"46" "probability":"0.3989" "peptide":"R.KTNDKDEKKEDGKQAENDSSNDDKTKK.S" "protein":"sp|Q9BXP5" "pept_position":"301~327" "mod1":"NA" "mod2":"NA" "mod3":"NA" "PlainPeptide":"KTNDKDEKKEDGKQAENDSSNDDKTKK">
 
@@ -502,143 +723,152 @@ formatted_moda_output.each_with_index do |row,record_number|
 
 
 
-	#	Attempt to match each observed peak to a theoretical peak
-
-	puts "Matching ..."
-	observed_matched_to_theoretical = []
-
-	#	We will be deleting items so make a duplicate and use that instead.
-	working_observed_mzis = observed['mzis'].dup	#	likely unnecessary as not used after this
-	working_theospec_mzis = row['theospec'].dup	#	needed when computing xcorr
-
-	#	puts mzis.inspect
-
-	#	> (10..0).to_a
-	#	=> []	(ranges MUST increase apparently, so ...)
-	#	> (0..10).to_a.reverse
-	#	=> [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
-	(0..10).to_a.reverse.collect{|v|
-		#	> tol=0.5
-		#	(0..10).to_a.reverse.collect{|v|tol/(2**v)}
-		#	=> [0.00048828125, 0.0009765625, 0.001953125, 0.00390625, 0.0078125,
-		#		0.015625, 0.03125, 0.0625, 0.125, 0.25, 0.5]
-		matching_default_tol/(2**v)
-	}.each do |actual_tol|
-
-		puts "... with tolerance of #{actual_tol}"
-		working_observed_mzis.delete_if do |observed_mzi|
-
-			#	Need to do it this way so have indices which can delete
-			indices = working_theospec_mzis.each_index.select{|i|
-				( working_theospec_mzis[i][:mz] > ( observed_mzi[0] - actual_tol ) ) &&
-				( working_theospec_mzis[i][:mz] < ( observed_mzi[0] + actual_tol ) ) }
-
-			if indices.length == 0
-				matched = {}
-			elsif indices.length == 1
-				matched = working_theospec_mzis.delete_at(indices[0])
-			else
-
-				puts
-				puts "MULTIPLE MATCH COUNT: #{indices.length}"
-				puts "MULTIPLE MATCHES : #{working_theospec_mzis.values_at(*indices)}"
-				puts
-
-				# If there are more than one matched theoretical m/z per one observed m/z,
-				#	then pick the closest theoretical m/z value to the observed one.
-				#	This observed peak is matched.
-				#	Ties
-				#	Use lowest charge.
-				#	Then b ion over y ion
-				#	Then higher number ion over lower ion
-
-				#MULTIPLE : [
-				#		{:mz=>636.29876704, :charge_state=>"+1", :ion=>"y6", :d=>"0", :e=>"()"},
-				#		{:mz=>636.299101391, :charge_state=>"+2", :ion=>"b11", :d=>"0", :e=>"()"}]
-
-				#	[{:mz=>230.149917959, :b=>"+1", :ion=>"b2", :d=>"0", :e=>"()", :index=>43, :diff=>0.0012038589},
-				#  {:mz=>230.149917959, :b=>"+1", :ion=>"y2", :d=>"0", :e=>"(-H2O)", :index=>44, :diff=>0.0012038589}]
-
-				#	Prefer b ion (starting with b) than y ion, so ion => “b7”
-				#		([{:mz=>831.347173796, :b=>"+1", :ion=>"b7", :d=>"0", :e=>"(-NH3)"}
-				#	If both are the same type of ions (both b ions and both y ions),
-				#		then prefer higher number. (For b6 and b7, prefer b7).
 
 
-				#	by default sorting is ascending... [1,2,3], [a,b,c], ...
-				#	Add - before integer for force descending.
-				matches = indices.collect{ |i|
-					v = working_theospec_mzis[i].dup
-					v[:index] = i		#	NEED this so know what to delete if matches
-					v[:diff] = v[:mz] - observed_mzi[0]
-					v
-				}.sort_by{|x| [
-					x[:diff].abs,
-					x[:charge_state].to_i,
-					x[:ion][/([A-z]+)/],
-					-x[:ion][/([0-9]+)/].to_i
-				] }
 
-				puts "Matches sorted by abs diff, charge state, ion letter, ion number(desc). Selecting the first."
-				puts matches.inspect
-				puts
 
-				matched = working_theospec_mzis.delete_at(matches.first[:index])
 
-				puts matched.inspect
+#	#	Attempt to match each observed peak to a theoretical peak
+#
+#	puts "Matching ..."
+#	observed_matched_to_theoretical = []
+#
+#	#	We will be deleting items so make a duplicate and use that instead.
+#	working_observed_mzis = observed['mzis'].dup	#	likely unnecessary as not used after this
+#	working_theospec_mzis = row['theospec'].dup	#	needed when computing xcorr
+#
+#	#	puts mzis.inspect
+#
+#	#	> (10..0).to_a
+#	#	=> []	(ranges MUST increase apparently, so ...)
+#	#	> (0..10).to_a.reverse
+#	#	=> [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+#	(0..10).to_a.reverse.collect{|v|
+#		#	> tol=0.5
+#		#	(0..10).to_a.reverse.collect{|v|tol/(2**v)}
+#		#	=> [0.00048828125, 0.0009765625, 0.001953125, 0.00390625, 0.0078125,
+#		#		0.015625, 0.03125, 0.0625, 0.125, 0.25, 0.5]
+#		matching_default_tol/(2**v)
+#	}.each do |actual_tol|
+#
+#		puts "... with tolerance of #{actual_tol}"
+#		working_observed_mzis.delete_if do |observed_mzi|
+#
+#			#	Need to do it this way so have indices which can delete
+#			indices = working_theospec_mzis.each_index.select{|i|
+#				( working_theospec_mzis[i][:mz] > ( observed_mzi[0] - actual_tol ) ) &&
+#				( working_theospec_mzis[i][:mz] < ( observed_mzi[0] + actual_tol ) ) }
+#
+#			if indices.length == 0
+#				matched = {}
+#			elsif indices.length == 1
+#				matched = working_theospec_mzis.delete_at(indices[0])
+#			else
+#
+#				puts
+#				puts "MULTIPLE MATCH COUNT: #{indices.length}"
+#				puts "MULTIPLE MATCHES : #{working_theospec_mzis.values_at(*indices)}"
+#				puts
+#
+#				# If there are more than one matched theoretical m/z per one observed m/z,
+#				#	then pick the closest theoretical m/z value to the observed one.
+#				#	This observed peak is matched.
+#				#	Ties
+#				#	Use lowest charge.
+#				#	Then b ion over y ion
+#				#	Then higher number ion over lower ion
+#
+#				#MULTIPLE : [
+#				#		{:mz=>636.29876704, :charge_state=>"+1", :ion=>"y6", :d=>"0", :e=>"()"},
+#				#		{:mz=>636.299101391, :charge_state=>"+2", :ion=>"b11", :d=>"0", :e=>"()"}]
+#
+#				#	[{:mz=>230.149917959, :b=>"+1", :ion=>"b2", :d=>"0", :e=>"()", :index=>43, :diff=>0.0012038589},
+#				#  {:mz=>230.149917959, :b=>"+1", :ion=>"y2", :d=>"0", :e=>"(-H2O)", :index=>44, :diff=>0.0012038589}]
+#
+#				#	Prefer b ion (starting with b) than y ion, so ion => “b7”
+#				#		([{:mz=>831.347173796, :b=>"+1", :ion=>"b7", :d=>"0", :e=>"(-NH3)"}
+#				#	If both are the same type of ions (both b ions and both y ions),
+#				#		then prefer higher number. (For b6 and b7, prefer b7).
+#
+#
+#				#	by default sorting is ascending... [1,2,3], [a,b,c], ...
+#				#	Add - before integer for force descending.
+#				matches = indices.collect{ |i|
+#					v = working_theospec_mzis[i].dup
+#					v[:index] = i		#	NEED this so know what to delete if matches
+#					v[:diff] = v[:mz] - observed_mzi[0]
+#					v
+#				}.sort_by{|x| [
+#					x[:diff].abs,
+#					x[:charge_state].to_i,
+#					x[:ion][/([A-z]+)/],
+#					-x[:ion][/([0-9]+)/].to_i
+#				] }
+#
+#				puts "Matches sorted by abs diff, charge state, ion letter, ion number(desc). Selecting the first."
+#				puts matches.inspect
+#				puts
+#
+#				matched = working_theospec_mzis.delete_at(matches.first[:index])
+#
+#				puts matched.inspect
+#
+#			end
+#
+#			#	Remove existing non-match if exists.
+#			observed_matched_to_theoretical.delete_if do |observed_peak|
+#				observed_peak[:mz] == observed_mzi[0] &&
+#															observed_peak[:int] == observed_mzi[1] &&
+#															observed_peak[:matched] == {}
+#			end
+#
+#			observed_matched_to_theoretical.push({
+#				mz: observed_mzi[0], int: observed_mzi[1], matched: matched })
+#
+#			#	Flags the deletion if match is found
+#			!matched.empty?
+#		end
+#		puts "Observed match count: #{observed_matched_to_theoretical.select{|x|!x[:matched].empty?}.length}"
+#		puts "Remaining unmatched observed count: #{working_observed_mzis.length}"
+#	end
+#	observed_matched_to_theoretical.sort_by!{|o|o[:mz]}
+#
+#	puts observed_matched_to_theoretical.inspect
 
-			end
-
-			#	Remove existing non-match if exists.
-			observed_matched_to_theoretical.delete_if do |observed_peak|
-				observed_peak[:mz] == observed_mzi[0] &&
-															observed_peak[:int] == observed_mzi[1] &&
-															observed_peak[:matched] == {}
-			end
-
-			observed_matched_to_theoretical.push({
-				mz: observed_mzi[0], int: observed_mzi[1], matched: matched })
-
-			#	Flags the deletion if match is found
-			!matched.empty?
-		end
-		puts "Observed match count: #{observed_matched_to_theoretical.select{|x|!x[:matched].empty?}.length}"
-		puts "Remaining unmatched observed count: #{working_observed_mzis.length}"
-	end
-	observed_matched_to_theoretical.sort_by!{|o|o[:mz]}
-
-	puts observed_matched_to_theoretical.inspect
-
+	p=PeakMatch.new( observed['mzis'], row['theospec'] )
 
 	puts
 	puts "HYPERSCORE CALCULATION (ALL)"
 
 	h1 = Hyperscore.new(
-		observed_matched_to_theoretical.select{|o| o[:matched][:ion] =~ /^b/ },
-		observed_matched_to_theoretical.select{|o| o[:matched][:ion] =~ /^y/ },
+		p.observed_matched_to_theoretical.select{|o| o[:matched][:ion] =~ /^b/ },
+		p.observed_matched_to_theoretical.select{|o| o[:matched][:ion] =~ /^y/ },
 		max_intensity)
 
 	puts
 	puts "HYPERSCORE CALCULATION (BASIC EMPTY PARENS)"
 
 	h2 = Hyperscore.new(
-		observed_matched_to_theoretical.select{|o| o[:matched][:ion] =~ /^b/ && o[:matched][:e] == "()" },
-		observed_matched_to_theoretical.select{|o| o[:matched][:ion] =~ /^y/ && o[:matched][:e] == "()" },
+		p.observed_matched_to_theoretical.select{|o| o[:matched][:ion] =~ /^b/ && o[:matched][:e] == "()" },
+		p.observed_matched_to_theoretical.select{|o| o[:matched][:ion] =~ /^y/ && o[:matched][:e] == "()" },
 		max_intensity)
 
 
 	puts
 	puts "XCORR CALCULATION"
 
-	greater_than_max_mass = working_theospec_mzis.select{|t| t[:mz] > xcorr_max_mass }
+	#
+	#	working_theospec_mzis should have less as matches deleted? Hmm. Why am I using? Just logging. Testing.
+	#	I ran with both and no difference in log output. Trying with full log. Difference!
+	#	If different, row is always bigger.
+	#
+	#	greater_than_max_mass = working_theospec_mzis.select{|t| t[:mz] > xcorr_max_mass }
+	greater_than_max_mass = row['theospec'].select{|t| t[:mz] > xcorr_max_mass }
+
 	if greater_than_max_mass.length > 0 then
 		puts "WARNING: #{greater_than_max_mass.length} theoretical peaks greater than #{xcorr_max_mass}"
 		puts "greater_than_max_mass:#{greater_than_max_mass}"
 	end
-
-#
-#	Why working_theospec_mzis above and row['theospec'] below? CONSISTENCY!
-#
 
 	x1 = Xcorr.new(
 		(0...(xcorr_max_mass/xcorr_bin_size)).to_a.collect{|bin|	#	0-1249
@@ -648,7 +878,23 @@ formatted_moda_output.each_with_index do |row,record_number|
 				}.empty? ) ? 0 : 1
 		},
 		(0...(xcorr_max_mass/xcorr_bin_size)).to_a.collect{|bin|	#	0-1249
-			observed_matched_to_theoretical.select{|observed_peak|
+			p.observed_matched_to_theoretical.select{|observed_peak|
+				observed_peak[:mz] > bin*xcorr_bin_size && observed_peak[:mz] <= (bin+1)*xcorr_bin_size
+			}.collect{|observed_peak|
+				observed_peak[:int]/max_intensity
+			}.inject(0,:+) #	sums array (set 0 as initial value for empty arrays otherwise returns nil)
+		},xcorr_max_mass,xcorr_bin_size )
+
+	x2 = Xcorr.new(
+		(0...(xcorr_max_mass/xcorr_bin_size)).to_a.collect{|bin|	#	0-1249
+			( row['theospec'].select{ |theoretical_peak|
+					theoretical_peak[:e] == "()" &&
+					theoretical_peak[:mz] > bin*xcorr_bin_size &&
+					theoretical_peak[:mz] <= (bin+1)*xcorr_bin_size
+				}.empty? ) ? 0 : 1
+		},
+		(0...(xcorr_max_mass/xcorr_bin_size)).to_a.collect{|bin|	#	0-1249
+			p.observed_matched_to_theoretical.select{|observed_peak|
 				observed_peak[:mz] > bin*xcorr_bin_size && observed_peak[:mz] <= (bin+1)*xcorr_bin_size
 			}.collect{|observed_peak|
 				observed_peak[:int]/max_intensity
@@ -662,10 +908,10 @@ formatted_moda_output.each_with_index do |row,record_number|
 	#		include any ions with empty parentheses.
 	#	For example, we include 98.0600403189(54);+1;b1;0;().
 	#	But we don’t include a mass with something in (). For example, (-NH3) or (-H2O).
-	
+
 	#	2.       score name: xcorr.basic
 	#	Calculate xcorr with the same mass list used in #1.
-	
+
 	#	3.       Score name: hyperscore.basic.with.shift
 	#	Additional column: peptide.hyperscore.basic.with.shift
 	#	Top hyperscore of peptides with varying mass shift. We will use mass list only including
@@ -678,7 +924,7 @@ formatted_moda_output.each_with_index do |row,record_number|
 	#		(Keep all hyperscores in processing.txt files)
 	#	Then, take the highest hyperscore and record the corresponding peptide sequence with modification.
 	#		If there is a tie, then we can record their sequences separated by semicolon.
-	
+
 	#	4.       Score name: xcorr.basic.with.shift
 	#	Additional column: peptide.xcorr.basic.with.shift
 	#	Same as #3 except that we use xcorr score. We will use mass list only including empty () like #1 and #2.
@@ -692,15 +938,10 @@ formatted_moda_output.each_with_index do |row,record_number|
 
 
 
-	extended_moda_file.puts extended_moda_file_array + [ h1.hyperscore, x1.xcorr ]	#, h2.hyperscore ]
-
-#	extended_moda_file.puts initial_formatted_moda_output_headers.collect{|x|row[x]} + [ intensity_hyperscore, xcorr ]
+	extended_moda_file.puts extended_moda_file_array + [ h1.hyperscore, x1.xcorr, h2.hyperscore, x2.xcorr ]
 
 
 	#	for initial hyperscore
-#	ion_statistics_file.puts ion_statistics_file_array + [ nb, ny,
-#		mz_b_i, mz_y_i, theo_mz_b_i, theo_mz_y_i,
-#		b_i, intensity_b_i, y_i, intensity_y_i, b_error, y_error, intensity_hyperscore]
 	ion_statistics_file.puts ion_statistics_file_array + [ h1.nb, h1.ny,
 		h1.mz_b_i, h1.mz_y_i, h1.theo_mz_b_i, h1.theo_mz_y_i,
 		h1.b_i, h1.intensity_b_i, h1.y_i, h1.intensity_y_i, h1.b_error, h1.y_error, h1.hyperscore]
@@ -709,14 +950,6 @@ formatted_moda_output.each_with_index do |row,record_number|
 	basic_ion_statistics_file.puts ion_statistics_file_array + [ h2.nb, h2.ny,
 		h2.mz_b_i, h2.mz_y_i, h2.theo_mz_b_i, h2.theo_mz_y_i,
 		h2.b_i, h2.intensity_b_i, h2.y_i, h2.intensity_y_i, h2.b_error, h2.y_error, h2.hyperscore]
-
-
-
-
-#	ion_statistics_file.puts [row['scan_number'], row['rank'], row['peptide'],
-#		number_observed_mz, number_theoretical_mz, max_intensity, nb, ny,
-#		mz_b_i, mz_y_i, theo_mz_b_i, theo_mz_y_i,
-#		b_i, intensity_b_i, y_i, intensity_y_i, b_error, y_error, intensity_hyperscore]
 
 	puts
 	puts

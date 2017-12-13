@@ -66,6 +66,26 @@ class Peptide
 		#	-c0=-123 -c1=+117 QWLPKD0EESFLQFKYQALQVP1
 		args
 	end
+	def sum_shifts
+		#
+		#	Instead, can you make it like this?
+		#
+		#	Please use sum instead of individual modification for any number of modifications.
+		#
+		#	For example, if there is P+1EP+1TID+1E, then try +3 modification for each amino acid (P+3EPTIDE, PE+3PTIDE, PEP+3TIDE, PEPT+3IDE, so on).
+		#
+		#	For example, if there is P+1EPTID+1E, then try +2 modification for each amino acid (P+2EPTIDE, PE+2PTIDE, PEP+2TIDE, PEPT+2IDE, so on).
+		#
+		if @numbers.empty?
+			[]
+		else
+			sum = @numbers.collect{|n|n.to_i}.inject(0,:+)
+			out = @letters.join
+			@letters.join.length.times.collect do |i|
+				"#{@pre}.#{out.dup.insert(i+1,sum.to_s)}.#{@post}"
+			end
+		end
+	end
 	def shifts
 		#	@letters = ["QEWR","ASDFASDFASDF"]
 		#	@numbers = ["-123", "117"]
@@ -185,17 +205,17 @@ class PeakMatch
 
 	def initialize(working_observed_mzis,working_theospec_mzis)
 		#	Attempt to match each observed peak to a theoretical peak
-	
+
 		puts "Matching ..."
 		@observed_matched_to_theoretical = []
-	
+
 		#	We will be deleting items so make a duplicate and use that instead.
 #	duping unnecessary inside a method or class due to scoping.	YES, I THINK IT STILL IS!
 #		working_observed_mzis = observed['mzis'].dup	#	likely unnecessary as not used after this
 #		working_theospec_mzis = row['theospec'].dup	#	needed when computing xcorr
-	
+
 		#	puts mzis.inspect
-	
+
 		#	> (10..0).to_a
 		#	=> []	(ranges MUST increase apparently, so ...)
 		#	> (0..10).to_a.reverse
@@ -207,26 +227,26 @@ class PeakMatch
 			#		0.015625, 0.03125, 0.0625, 0.125, 0.25, 0.5]
 			@@matching_default_tol/(2**v)
 		}.each do |actual_tol|
-	
+
 			puts "... with tolerance of #{actual_tol}"
 			working_observed_mzis.delete_if do |observed_mzi|
-	
+
 				#	Need to do it this way so have indices which can delete
 				indices = working_theospec_mzis.each_index.select{|i|
 					( working_theospec_mzis[i][:mz] > ( observed_mzi[0] - actual_tol ) ) &&
 					( working_theospec_mzis[i][:mz] < ( observed_mzi[0] + actual_tol ) ) }
-	
+
 				if indices.length == 0
 					matched = {}
 				elsif indices.length == 1
 					matched = working_theospec_mzis.delete_at(indices[0])
 				else
-	
+
 					puts
 					puts "MULTIPLE MATCH COUNT: #{indices.length}"
 					puts "MULTIPLE MATCHES : #{working_theospec_mzis.values_at(*indices)}"
 					puts
-	
+
 					# If there are more than one matched theoretical m/z per one observed m/z,
 					#	then pick the closest theoretical m/z value to the observed one.
 					#	This observed peak is matched.
@@ -234,20 +254,20 @@ class PeakMatch
 					#	Use lowest charge.
 					#	Then b ion over y ion
 					#	Then higher number ion over lower ion
-	
+
 					#MULTIPLE : [
 					#		{:mz=>636.29876704, :charge_state=>"+1", :ion=>"y6", :d=>"0", :e=>"()"},
 					#		{:mz=>636.299101391, :charge_state=>"+2", :ion=>"b11", :d=>"0", :e=>"()"}]
-	
+
 					#	[{:mz=>230.149917959, :b=>"+1", :ion=>"b2", :d=>"0", :e=>"()", :index=>43, :diff=>0.0012038589},
 					#  {:mz=>230.149917959, :b=>"+1", :ion=>"y2", :d=>"0", :e=>"(-H2O)", :index=>44, :diff=>0.0012038589}]
-	
+
 					#	Prefer b ion (starting with b) than y ion, so ion => “b7”
 					#		([{:mz=>831.347173796, :b=>"+1", :ion=>"b7", :d=>"0", :e=>"(-NH3)"}
 					#	If both are the same type of ions (both b ions and both y ions),
 					#		then prefer higher number. (For b6 and b7, prefer b7).
-	
-	
+
+
 					#	by default sorting is ascending... [1,2,3], [a,b,c], ...
 					#	Add - before integer for force descending.
 					matches = indices.collect{ |i|
@@ -261,27 +281,27 @@ class PeakMatch
 						x[:ion][/([A-z]+)/],
 						-x[:ion][/([0-9]+)/].to_i
 					] }
-	
+
 					puts "Matches sorted by abs diff, charge state, ion letter, ion number(desc). Selecting the first."
 					puts matches.inspect
 					puts
-	
+
 					matched = working_theospec_mzis.delete_at(matches.first[:index])
-	
+
 					puts matched.inspect
-	
+
 				end
-	
+
 				#	Remove existing non-match if exists.
 				@observed_matched_to_theoretical.delete_if do |observed_peak|
 					observed_peak[:mz] == observed_mzi[0] &&
 																observed_peak[:int] == observed_mzi[1] &&
 																observed_peak[:matched] == {}
 				end
-	
+
 				@observed_matched_to_theoretical.push({
 					mz: observed_mzi[0], int: observed_mzi[1], matched: matched })
-	
+
 				#	Flags the deletion if match is found
 				!matched.empty?
 			end
@@ -289,7 +309,7 @@ class PeakMatch
 			puts "Remaining unmatched observed count: #{working_observed_mzis.length}"
 		end
 		@observed_matched_to_theoretical.sort_by!{|o|o[:mz]}
-	
+
 		puts @observed_matched_to_theoretical.inspect
 	end
 end	#	PeakMatch
@@ -523,7 +543,7 @@ Theospec.dir="#{ARGV[0]}_theospec_#{options[:suffix]}/"
 #PeakMatch.matching_default_tol = 0.5
 
 #	Default settings when computing xcorr
-xcorr_bin_size = 2
+xcorr_bin_size = 1	#	2
 xcorr_max_mass = 2500
 
 ##################################################
@@ -849,7 +869,7 @@ formatted_moda_output.each_with_index do |row,record_number|
 
 	end #	Peptide.new(row['peptide']).shifts.each do |shifted_peptide|
 
-	extended_moda_file.puts extended_moda_file_array + [ 
+	extended_moda_file.puts extended_moda_file_array + [
 		h1.hyperscore, x1.xcorr, h2.hyperscore, x2.xcorr, hshiftpeptide, hshiftmax, xshiftpeptide, xshiftmax ]
 
 	#	for initial hyperscore

@@ -782,7 +782,7 @@ formatted_moda_output.each_with_index do |row,record_number|
 
 	puts "A Whole lotta Shifting (may be) about to happen ..."
 
-	uniq_shifts = Peptide.new(row['peptide']).shifts.uniq  - [row['peptide']]
+	uniq_shifts = Peptide.new(row['peptide']).sum_shifts.uniq  - [row['peptide']]
 
 	puts "Uniq Shifts :#{uniq_shifts}:"
 

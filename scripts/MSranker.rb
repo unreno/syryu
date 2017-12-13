@@ -124,43 +124,14 @@ class Theospec
 
 		p = Peptide.new(peptide)
 
-#		#	as peptide could include decimals,
-#		#	split on decimals to pick off the first and last and then parse the middle
-#		parts = peptide.split(/\./); #	-.QWLPKD-123EESFLQFKYQALQVP+117.P	(theoretically could include decimals)
-#		a=parts[0]               #	-
-#		b=parts[1..-2].join('.') #	QWLPKD-123EESFLQFKYQALQVP+117
-#		c=parts[-1]              #	P
-#
-#		#	parse middle extracting numbers and replacing them with codes passed to theospec
-#		numbers=b.split(/[A-Z]+/)    #	["",-123,+117]
-#		letters=b.split(/[0-9.+-]+/) #	[ "QWLPKD","EESFLQFKYQALQVP"]
-#
-#		outpeptide=""
-#
-#		letters.each_index do |i|
-#			outpeptide="#{outpeptide}#{letters[i]}"
-#			outpeptide="#{outpeptide}#{i}" unless( numbers[i+1].to_s.empty? )
-#		end
-#
-#		#	"QWLPKD1EESFLQFKYQALQVP2"	(this is actually 0 and 1, not 1 and 2
-#
 		z=( charge_state.to_i > 5 ) ? 5 : charge_state
 
 		theospec_command="theospec -z#{z}"
-#		numbers.delete_if{|n|n.empty?}.each_with_index do |number,i|
-#			theospec_command="#{theospec_command} -c#{i}=#{number}"
-#		end
-#		#	-c0=-123 -c1=+117
-#
-#		#theospec_output="#{theodir}#{row['scan_number']}.#{row['rank']}.theospec.txt"
 		theospec_output="#{@@theodir}#{peptide}.#{charge_state}.theospec.txt"
 
-#		theospec_command="#{theospec_command} #{a}.#{outpeptide}.#{c} > #{theospec_output}"
 		theospec_command="#{theospec_command} #{p.args_for_theospec} > #{theospec_output}"
 		system(theospec_command) unless File.exists?( theospec_output )
 
-#		row['theospec_comments']=""
-#		row['theospec']=[]
 		@theospecs=[]
 		File.open( theospec_output, 'r' ).each do |line|
 			next if line.empty?
@@ -177,7 +148,6 @@ class Theospec
 				##############################################
 				#158.092403080(10);+1;y1;0;(-NH3)
 				parts=line.split(';')
-#				row['theospec'].push({
 				@theospecs.push({
 					mz: parts[0].to_f,  #	158.092403080(10) to_f -> 158.092403080
 					charge_state: parts[1],        #	+1
@@ -185,8 +155,6 @@ class Theospec
 					d: parts[3],        #	0
 					e: parts[4].rstrip, #	(-NH3)
 				})
-			else
-				#row['theospec_comments'] << "#{line}\n"
 			end
 		end
 

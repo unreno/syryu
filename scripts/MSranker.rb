@@ -784,6 +784,7 @@ formatted_moda_output.each_with_index do |row,record_number|
 
 	uniq_shifts = Peptide.new(row['peptide']).sum_shifts.uniq  - [row['peptide']]
 
+	puts "Number of Uniq Shifts :#{uniq_shifts.length}:"
 	puts "Uniq Shifts :#{uniq_shifts}:"
 
 	uniq_shifts.each do |shifted_peptide|

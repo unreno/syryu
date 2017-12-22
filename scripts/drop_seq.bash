@@ -100,5 +100,6 @@ while [ $# -ne 0 ] ; do
 	echo $cmd
 	$cmd
 
+	echo
 	shift
 done

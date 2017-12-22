@@ -66,6 +66,8 @@ while [ $# -ne 0 ] ; do
 	bam_base=${bam_base##*/}
 	mkdir "${bam_base}"
 	
+	tmp=${bam_base}/tmp
+	mkdir "${tmp}"
 
 	#	prototype script for AWS AMI so many hard coded values
 	#		
@@ -80,13 +82,20 @@ while [ $# -ne 0 ] ; do
 	#		-e                  : Echo commands instead of executing them.  Cannot use with -p.
 	#		
 
+#	Last line of Drop-seq_alignment deletes all tmp files, so I commented that line out to see if useful.
+#	Should be an option
+
+#	Once STAR in path, can remove from here.
+#	Once DropSeq in path, can remove path from command
+#	Add options for mm10 star ref dir and mm10 fasta dir
+
 	~/Drop-seq_tools-1.13/Drop-seq_alignment.sh \
 		-g ~/working/mm10_star/ \
 		-r ~/mm10/mm10.fasta \
 		-n ${num_cells} \
 		-o "${bam_base}" \
+		-t "${tmp}" \
 		-s ~/STAR-2.5.3a/bin/Linux_x86_64/STAR \
-		-e \
 		"${bam_file_with_path}"
 
 	shift

@@ -1,0 +1,111 @@
+
+
+Downloaded
+
+STAR - STAR-2.5.3a.tar.gz  ( https://github.com/alexdobin/STAR/releases )
+Picard - picard.jar ( http://broadinstitute.github.io/picard/ )
+Drop_seq - Drop-seq_tools-1.13-3.zip ( http://mccarrolllab.com/dropseq/ )
+Mouse reference files ... GSE63472_mm10_reference_metadata.tar.gz
+
+
+Converted all fastq files to unaligned bams with picard
+( my script convert_fastq_files_to_bams.bash )
+
+	java -jar $basedir/picard.jar FastqToSam \
+		F1=$fastq1 \
+		F2=$fastq2 \
+		O=$basename.bam \
+		SM=$basename
+
+
+Generated STAR reference from mm10.fasta
+
+mkdir mm10_star
+~/singlecell/STAR-2.5.3a/bin/MacOSX_x86_64/STAR --genomeFastaFiles mm10.fasta  --runMode genomeGenerate --genomeDir $PWD/mm10_star --runThreadN 8 --sjdbGTFfile mm10.gtf
+
+This seemed to do nothing for a while, but used quite a bit of the CPU.
+Then started producing files.
+Eventually it crashed on my laptop.
+
+Update Amazon AMI to include needed software and reference files.
+
+
+
+create_ec2_instance.bash --profile syryu --key ~/.aws/JakeSYRyu.pem --instance-type c4.large 
+sudo yum update
+wget https://github.com/alexdobin/STAR/archive/2.5.3a.tar.gz
+wget https://github.com/broadinstitute/picard/releases/download/2.17.0/picard.jar
+wget -O Drop-seq_tools.zip http://mccarrolllab.com/download/1276/
+wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE63nnn/GSE63472/suppl/GSE63472_mm10_reference_metadata.tar.gz
+removed java-1.7.0 and installed java-1.8.0 (picard needed)
+
+created new ami with 12GB volume as needed more space.
+
+c4.large (2,8,3.75)
+  what():  std::bad_alloc
+
+
+Need more memory. Trying m4.xlarge (4,13,16) with --volume-size 100
+4 vCPU, 13 ECU, 16GB memory. Trying with 13 threads. (shoulda used 4 instead)
+It seems that STAR will "continue" if the files are there. AWESOME SAUCE!
+
+mkdir ~/working/mm10_star
+cd ~/working/
+~/STAR-2.5.3a/bin/Linux_x86_64/STAR --genomeFastaFiles ~/mm10/mm10.fasta  --runMode genomeGenerate --genomeDir ~/working/mm10_star --runThreadN 13 --sjdbGTFfile ~/mm10/mm10.gtf
+
+Installed htop. STAR PEGS the processors. Runs out of memory. Then crashes! (even with just 2 threads)
+Trying m4.2xlarge (8,26,32)
+
+create_ec2_instance.bash --profile syryu --key ~/.aws/JakeSYRyu.pem --instance-type m4.2xlarge --volume-size 100 --NOT-DRY-RUN
+
+cd ~/working/
+~/STAR-2.5.3a/bin/Linux_x86_64/STAR --genomeFastaFiles ~/mm10/mm10.fasta  --runMode genomeGenerate --genomeDir ~/working/mm10_star --runThreadN 8 --sjdbGTFfile ~/mm10/mm10.gtf
+
+Pegged 8 processors. Memory seems to have stopped at 23GB. Phew. 26GB! Ehh. 27GB!! Up and down. Still going.
+Done in about an hour. Not too bad. Final reference is about 25GB so rather than store, I'll regenerate if needed.
+
+
+
+Copy up bam file for test run.
+
+
+scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  /Users/jakewendt/BaseSpace/Minkyung_1763-56931876/FASTQ_Generation_2017-12-13_15_11_00Z-67441595/1763_03_L003-ds.ee0be2f1073b47d083679a1b81232597/2A_S2_L003.bam ec2-user@$ip:working/
+
+
+
+
+Running drop-seq's alignment script ...
+
+mkdir ~/working/2A_S2_L003.dropseq.4000
+cd ~/working/2A_S2_L003.dropseq.4000
+~/Drop-seq_tools-1.13/Drop-seq_alignment.sh -g ~/working/mm10_star/ -s ~/STAR-2.5.3a/bin/Linux_x86_64/STAR -n 4000 -r ~/mm10/mm10.fasta ~/working/2A_S2_L003.bam
+tar cfv - 2A_S2_L003.dropseq.4000 | gzip --best > 2A_S2_L003.dropseq.4000.tar.gz
+
+GUESSED
+-n <estimated-num-cells> : estimate of number of cells in experiment.  Required.  ( ~4000 from researcher )
+
+
+
+
+
+This generated a lot of error bam data.
+
+
+
+
+
+So Young recommends trying ... (150GB! - 44,808 cells )
+https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE63473&format=file
+
+
+TOMORROW
+
+Need to 
+	recreate STAR reference
+	download this monster
+	write a script to iterate over all bams and run DropSeq
+
+
+
+
+

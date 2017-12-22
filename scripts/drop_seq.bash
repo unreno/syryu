@@ -59,7 +59,7 @@ done
 
 
 while [ $# -ne 0 ] ; do
-	echo $1
+	echo "Processing :${1}:"
 
 	bam_file_with_path=$1
 	bam_base=${bam_file_with_path%%.*}
@@ -89,14 +89,16 @@ while [ $# -ne 0 ] ; do
 #	Once DropSeq in path, can remove path from command
 #	Add options for mm10 star ref dir and mm10 fasta dir
 
-	~/Drop-seq_tools-1.13/Drop-seq_alignment.sh \
+	cmd="~/Drop-seq_tools-1.13/Drop-seq_alignment.sh \
 		-g ~/working/mm10_star/ \
 		-r ~/mm10/mm10.fasta \
 		-n ${num_cells} \
-		-o "${bam_base}" \
-		-t "${tmp}" \
+		-o \"${bam_base}\" \
+		-t \"${tmp}\" \
 		-s ~/STAR-2.5.3a/bin/Linux_x86_64/STAR \
-		"${bam_file_with_path}"
+		\"${bam_file_with_path}\""
+	echo $cmd
+	$cmd
 
 	shift
 done

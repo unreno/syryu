@@ -115,6 +115,8 @@ Need to
 scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  /Users/jakewendt/BaseSpace/Minkyung_1763-56931876/FASTQ*/*/*.bam ec2-user@$ip:
 
 
+rsync --delete-excluded --exclude snappy-1.0.33-libsnappyjava.so --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem" --progress --delete ec2-user@52.38.200.220:working/dropseq/ ./
+
 
 
 

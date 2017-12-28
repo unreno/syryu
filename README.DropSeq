@@ -86,9 +86,24 @@ GUESSED
 
 
 
+This generated a lot of error bam data. (Apparently this is good.)
 
 
-This generated a lot of error bam data.
+
+
+So Young recommends testing with ... (150GB! - 44,808 cells )
+https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE63473&format=file
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE63nnn/GSE63473/suppl/GSE63473_RAW.tar
+
+Didn't seem to be any actual RAW data here.
+
+
+
+
+
+
+
+
 
 
 
@@ -99,33 +114,67 @@ This generated a lot of error bam data.
 
 
 
-So Young recommends trying ... (150GB! - 44,808 cells )
-https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE63473&format=file
-ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE63nnn/GSE63473/suppl/GSE63473_RAW.tar
 
 
-TOMORROW
-
-Need to 
-	recreate STAR reference
-	download this monster
-	write a script to iterate over all bams and run DropSeq
 
 
+20171228
+
+Need to ...
+
+create_ec2_instance.bash --profile syryu --key ~/.aws/JakeSYRyu.pem --instance-type m4.2xlarge
+
+
+cd github
+git pull
+
+include new sequence in mm10. New name mm10a
+chmod -w mm10/*
+mkdir ~/mm10a/
+cd mm10a
+cp ~/mm10/mm10.fasta mm10a.fasta
+chmod +w mm10a.fasta
+cat ~/github/misc/EGFP_SV40_polya.fasta >> mm10a.fasta
+chmod -w mm10a.fasta
+
+And create dict using Pcard’s CreateSequenceDictionary (page 3 in drop-seq cook book)? (Not sure why)
+java -jar ~/picard.jar CreateSequenceDictionary R=mm10a.fasta
+chmod -w mm10a.dict
+
+
+Create new gtf???? How?
+
+link all DropSeq scripts to ~/.local/bin/
+link STAR to ~/.local/bin/
+yum install htop
+yum update
+update and install github repo
+update R and install libraries needed for Seurat
+Create New AMI with syryu script installed
+sudo halt
+
+
+
+
+
+
+create_ec2_instance.bash --profile syryu --key ~/.aws/JakeSYRyu.pem --instance-type m4.2xlarge --volume-size 100
+
+create STAR reference for mm10a (with mm10 gtf, not sure if will work)
+cd ~/working/
+STAR --genomeFastaFiles ~/mm10a/mm10a.fasta  --runMode genomeGenerate --genomeDir ~/working/mm10a_star --runThreadN 8 --sjdbGTFfile ~/mm10/mm10.gtf
+
+
+Upload data
 scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  /Users/jakewendt/BaseSpace/Minkyung_1763-56931876/FASTQ*/*/*.bam ec2-user@$ip:
 
 
-rsync --delete-excluded --exclude snappy-1.0.33-libsnappyjava.so --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem" --progress --delete ec2-user@52.38.200.220:working/dropseq/ ./
+Download results
+rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem" --progress --delete ec2-user@52.38.200.220:working/dropseq/ ./
 
 
 
 
-ToDo
-
-	Create New AMI with syryu script installed
-	Link scripts in app dir's (star, drop-seq-alignment, etc.)
-	yum install htop
-	yum update
 
 
 

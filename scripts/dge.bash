@@ -13,7 +13,8 @@ echo
 
 
 
-~/singlecell/Drop-seq_tools-1.13/BAMTagHistogram \
+#~/singlecell/Drop-seq_tools-1.13/BAMTagHistogram \
+BAMTagHistogram \
 	INPUT=error_detected.bam \
 	OUTPUT=out_cell_readcounts.txt.gz \
 	TAG=XC
@@ -24,7 +25,8 @@ echo
 #zcat out_cell_readcounts.txt.gz | tail -n +2 | awk '( $1 > 1 ){print $2}' | gzip > cell_bc_file.txt.gz
 zcat out_cell_readcounts.txt.gz | tail -n +2 | awk '{print $2}' | gzip > cell_bc_file.txt.gz
 
-~/singlecell/Drop-seq_tools-1.13/DigitalExpression \
+#~/singlecell/Drop-seq_tools-1.13/DigitalExpression \
+DigitalExpression \
 	INPUT=error_detected.bam \
 	OUTPUT=error_detected.dge.txt.gz \
 	CELL_BC_FILE=cell_bc_file.txt.gz \
@@ -34,6 +36,6 @@ zcat out_cell_readcounts.txt.gz | tail -n +2 | awk '{print $2}' | gzip > cell_bc
 
 #	NUM_CORE_BARCODES=100 ... Doesn't seem to make any difference. (Maybe default value?)
 
-./seurat.R
+seurat.R
 
 echo

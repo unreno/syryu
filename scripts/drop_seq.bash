@@ -5,7 +5,7 @@ script=`basename $0`
 
 #	Defaults:
 #max=5
-num_cells=4000
+num_cells=20000
 
 function usage(){
 	echo
@@ -56,9 +56,10 @@ done
 
 
 
-
+calling_dir=$PWD
 
 while [ $# -ne 0 ] ; do
+	cd $calling_dir
 	echo "Processing :${1}:"
 
 	bam_file_with_path=$1
@@ -86,17 +87,25 @@ while [ $# -ne 0 ] ; do
 #	Should be an option
 
 #	Once STAR in path, can remove from here.
-#	Once DropSeq in path, can remove path from command
+#	Once DropSeq in path, can remove path from command (NEED TO MOVE (or link) ALL DROP SEQ SCRIPTS TO SAME DIR)
 #	Add options for mm10 star ref dir and mm10 fasta dir
 
-	cmd="~/Drop-seq_tools-1.13/Drop-seq_alignment.sh \
-		-g ~/working/mm10_star/ \
-		-r ~/mm10/mm10.fasta \
+#	cmd="~/Drop-seq_tools-1.13/Drop-seq_alignment.sh \
+#		-s ~/STAR-2.5.3a/bin/Linux_x86_64/STAR \
+#		-g ~/working/mm10_star/ \
+#		-r ~/mm10/mm10.fasta \
+	cmd="Drop-seq_alignment.sh \
+		-g ~/working/mm10x_star/ \
+		-r ~/mm10x/mm10x.fasta \
 		-n ${num_cells} \
 		-o \"${bam_base}\" \
 		-t \"${tmp}\" \
-		-s ~/STAR-2.5.3a/bin/Linux_x86_64/STAR \
 		\"${bam_file_with_path}\""
+	echo $cmd
+	$cmd
+
+	chdir "${bam_base}"
+	cmd="dge.bash"
 	echo $cmd
 	$cmd
 

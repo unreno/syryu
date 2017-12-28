@@ -147,6 +147,7 @@ cp ~/mm10/mm10.fasta mm10a.fasta
 chmod +w mm10a.fasta
 cat ~/syryu/misc/EGFP_SV40_polya.fasta >> mm10a.fasta
 chmod -w mm10a.fasta
+ln -s ~/mm10/mm10.refFlat mm10a.refFlat
 
 And create dict using Pcard’s CreateSequenceDictionary (page 3 in drop-seq cook book)? (Not sure why)
 java -jar ~/picard.jar CreateSequenceDictionary R=mm10a.fasta
@@ -162,7 +163,7 @@ install_github("igraph/rigraph")
 install.packages("Seurat")
 
 Had to manually edit "sudo vi /usr/lib64/R/etc/Makeconf"
-And copy 4 lines like CXX1X* to CXX11*
+	and copy 4 lines like CXX1X* to CXX11*
 
 Still didn't work.
 cd /usr/lib64/R/etc/; sudo cp Makeconf.rpmnew Makeconf

@@ -65,10 +65,10 @@ while [ $# -ne 0 ] ; do
 	bam_file_with_path=$1
 	bam_base=${bam_file_with_path%%.*}
 	bam_base=${bam_base##*/}
-	mkdir "${bam_base}"
+	mkdir -p "${bam_base}"
 	
-	tmp=${bam_base}/tmp
-	mkdir "${tmp}"
+#	tmp=${bam_base}/tmp
+#	mkdir -p "${tmp}"
 
 	#	prototype script for AWS AMI so many hard coded values
 	#		
@@ -94,13 +94,13 @@ while [ $# -ne 0 ] ; do
 #		-s ~/STAR-2.5.3a/bin/Linux_x86_64/STAR \
 #		-g ~/working/mm10_star/ \
 #		-r ~/mm10/mm10.fasta \
+#		-t "${tmp}" \
 	cmd="Drop-seq_alignment.sh \
 		-g ~/working/mm10a_star/ \
 		-r ~/mm10a/mm10a.fasta \
 		-n ${num_cells} \
-		-o "${bam_base}" \
-		-t "${tmp}" \
-		"${bam_file_with_path}""
+		-o ${bam_base} \
+		${bam_file_with_path}"
 	echo $cmd
 	$cmd
 

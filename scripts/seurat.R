@@ -13,7 +13,7 @@ print("Loading libraries")
 
 #install.packages("devtools")
 library(devtools)
-#install_github("satijalab/seurat", ref = "3bd092a")
+#install_github("satijalab/seurat", ref = "3bd092a")	#	No. Doesn't include CreateSeuratObject and likely others.
 #install.packages("httpuv")
 #install.packages("Seurat")
 library(Seurat)

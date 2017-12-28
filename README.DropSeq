@@ -120,13 +120,20 @@ Didn't seem to be any actual RAW data here.
 
 20171228
 
-Need to ...
+Need to / Doing / ...
 
 create_ec2_instance.bash --profile syryu --key ~/.aws/JakeSYRyu.pem --instance-type m4.2xlarge
 
 
-cd github
+sudo yum update
+sudo yum install htop
+
+
+git clone https://github.com/unreno/syryu/
+cd syryu
 git pull
+ln -s Makefile.example Makefile
+make install
 
 include new sequence in mm10. New name mm10a
 chmod -w mm10/*
@@ -146,8 +153,6 @@ Create new gtf???? How?
 
 link all DropSeq scripts to ~/.local/bin/
 link STAR to ~/.local/bin/
-yum install htop
-yum update
 update and install github repo
 update R and install libraries needed for Seurat
 Create New AMI with syryu script installed

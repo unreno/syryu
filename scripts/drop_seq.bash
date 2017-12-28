@@ -95,8 +95,8 @@ while [ $# -ne 0 ] ; do
 #		-g ~/working/mm10_star/ \
 #		-r ~/mm10/mm10.fasta \
 	cmd="Drop-seq_alignment.sh \
-		-g ~/working/mm10x_star/ \
-		-r ~/mm10x/mm10x.fasta \
+		-g ~/working/mm10a_star/ \
+		-r ~/mm10a/mm10a.fasta \
 		-n ${num_cells} \
 		-o \"${bam_base}\" \
 		-t \"${tmp}\" \

@@ -120,7 +120,7 @@ Didn't seem to be any actual RAW data here.
 
 20171228
 
-Need to / Doing / ...
+Need to do / Doing / Did ...
 
 create_ec2_instance.bash --profile syryu --key ~/.aws/JakeSYRyu.pem --instance-type m4.2xlarge
 
@@ -129,19 +129,20 @@ sudo yum update
 sudo yum install htop
 
 
+cd
 git clone https://github.com/unreno/syryu/
-cd syryu
+cd ~/syryu
 git pull
 ln -s Makefile.example Makefile
 make install
 
-link all DropSeq scripts to ~/.local/bin/
+link all DropSeq scripts, (as well as jar dir and 3rdparty dir), to ~/.local/bin/
 link STAR to ~/.local/bin/
 
 include new sequence in mm10. New name mm10a
 chmod 444 ~/mm10/*
 mkdir ~/mm10a/
-cd mm10a
+cd ~/mm10a
 cp ~/mm10/mm10.fasta mm10a.fasta
 chmod +w mm10a.fasta
 cat ~/syryu/misc/EGFP_SV40_polya.fasta >> mm10a.fasta
@@ -180,17 +181,36 @@ Create new mm10a.gtf???? How? Needed?
 
 create_ec2_instance.bash --profile syryu --key ~/.aws/JakeSYRyu.pem --instance-type m4.2xlarge --volume-size 100
 
+
+ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[0].Instances[0].PublicIpAddress' --instance-ids i-07b8dd50baee3a6cd | tr -d '"' )
+echo $ip
+ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
+
+
 create STAR reference for mm10a (with mm10 gtf, not sure if will work)
 cd ~/working/
+mkdir -p ~/working/mm10a_star
 STAR --genomeFastaFiles ~/mm10a/mm10a.fasta  --runMode genomeGenerate --genomeDir ~/working/mm10a_star --runThreadN 8 --sjdbGTFfile ~/mm10/mm10.gtf
+mkdir -p ~/working/dropseq
+mv ~/working/Log.out ~/working/dropseq/star_mm10a_creation.log
+
+
 
 
 Upload data
-scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  /Users/jakewendt/BaseSpace/Minkyung_1763-56931876/FASTQ*/*/*.bam ec2-user@$ip:
+scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  /Users/jakewendt/BaseSpace/Minkyung_1763-56931876/FASTQ*/*/*.bam ec2-user@$ip:working/
+
+
+
+RUN DATA
+
+ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
+drop_seq.bash ~/working/*bam > drop_seq.log 2>&1 &
+
 
 
 Download results
-rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem" --progress --delete ec2-user@52.38.200.220:working/dropseq/ ./
+rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem" --progress --delete ec2-user@$ip:working/dropseq/ ./
 
 
 

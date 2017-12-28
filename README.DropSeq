@@ -136,12 +136,12 @@ ln -s Makefile.example Makefile
 make install
 
 include new sequence in mm10. New name mm10a
-chmod -w mm10/*
+chmod 444 ~/mm10/*
 mkdir ~/mm10a/
 cd mm10a
 cp ~/mm10/mm10.fasta mm10a.fasta
 chmod +w mm10a.fasta
-cat ~/github/misc/EGFP_SV40_polya.fasta >> mm10a.fasta
+cat ~/syryu/misc/EGFP_SV40_polya.fasta >> mm10a.fasta
 chmod -w mm10a.fasta
 
 And create dict using Pcard’s CreateSequenceDictionary (page 3 in drop-seq cook book)? (Not sure why)

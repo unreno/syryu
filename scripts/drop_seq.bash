@@ -98,13 +98,13 @@ while [ $# -ne 0 ] ; do
 		-g ~/working/mm10a_star/ \
 		-r ~/mm10a/mm10a.fasta \
 		-n ${num_cells} \
-		-o \"${bam_base}\" \
-		-t \"${tmp}\" \
-		\"${bam_file_with_path}\""
+		-o "${bam_base}" \
+		-t "${tmp}" \
+		"${bam_file_with_path}""
 	echo $cmd
 	$cmd
 
-	chdir "${bam_base}"
+	cd "${bam_base}"
 	cmd="dge.bash"
 	echo $cmd
 	$cmd

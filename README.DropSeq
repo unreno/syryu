@@ -211,7 +211,7 @@ drop_seq.bash ~/working/*bam > drop_seq.log 2>&1 &
 
 
 Download results
-rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem" --progress --delete ec2-user@$ip:working/dropseq/ ./
+rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem" --progress --delete ec2-user@$ip:working/dropseq/ ~/syryu/20171228a.drop_seq_alignment/
 
 
 

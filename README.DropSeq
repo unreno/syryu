@@ -216,6 +216,47 @@ rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYR
 
 
 
+Several memory failures in R.
+
+
+
+
+
+
+
+
+----------------------------------------------------------------------
+
+
+Next time ...
+
+New AMI
+
+aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress'
+
+ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' | grep "\." | tr -d '"' | tr -d ' ' )
+echo $ip
+ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
+
+Add links to other mm10 files or simply rename and include them
+
+Update git repo and install updated scripts
+
+
+
+New processing machine with at least 10GB more memory (>45GB) (r4.2xlarge)
+
+m4.2xlarge   8   26   32   EBS Only      $0.4 per Hour (NEED MORE MEMORY)
+m5.4xlarge  16   61   64   EBS Only      $0.768 per Hour
+r3.2xlarge   8   26   61   1 x 160 SSD   $0.665 per Hour
+r4.2xlarge   8   27   61   EBS Only      $0.532 per Hour (TRY ME!)
+
+( and less processors? Change the STAR ref creation if number changes.)
+(	Can't seem to get more memory AND less vCPU )
+
+
+Any way to parallelize? Could run 2 at a time? Could run out of memory though if want it at the same time.
+
 
 
 

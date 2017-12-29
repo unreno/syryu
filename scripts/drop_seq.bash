@@ -6,6 +6,8 @@ script=`basename $0`
 #	Defaults:
 #max=5
 num_cells=20000
+genomedir="/home/ec2-user/working/mm10a_star"
+referencefasta="/home/ec2-user/mm10a/mm10a.fasta"
 
 function usage(){
 	echo
@@ -16,12 +18,16 @@ function usage(){
 	echo "$script <OPTIONS> bam_file(s)"
 	echo
 	echo "Options:"
-	echo "	--estimated-num-cells (-n) INTEGER"
+	echo "	--estimated-num-cells (-n) INTEGER : "
+	echo "	--genomedir (-g) STRING : Directory of STAR genome directory"
+	echo "	--referencefasta (-r) STRING : Reference fasta of the Drop-seq reference metadata bundle"
 #	echo "	--max INTEGER ......... Maximum number of scans per file"
 #	echo "	--verbose .................. NO VALUE, just boolean flag"
 	echo
 	echo "Default option values:"
 	echo "	--estimated-num-cells ... ${num_cells}"
+	echo "	--genomedir ............. ${genomedir}"
+	echo "	--referencefasta ........ ${referencefasta}"
 #	echo "	--max ........ ${max}"
 #	echo "	--verbose .......... ${verbose}"
 	echo
@@ -37,6 +43,10 @@ while [ $# -ne 0 ] ; do
 	case $1 in
 		-n|--estimated-num-cells)
 			shift; num_cells=$1; shift;;
+		-g|--genomedir)
+			shift; genomedir=$1; shift;;
+		-r|--referencefasta)
+			shift; referencefasta=$1; shift;;
 #		-m|--m*)
 #			shift; max=$1; shift;;
 #		-v|--v*)
@@ -95,9 +105,17 @@ while [ $# -ne 0 ] ; do
 #		-g ~/working/mm10_star/ \
 #		-r ~/mm10/mm10.fasta \
 #		-t "${tmp}" \
+
+
+#	EC2 no longer happy with ~ and absence of absolute STAR dir
+#	may have to re-add this, and with /home/ec2-user/ instead of ~/
+#
+#	Seems unneeded now
+#		-s ~/STAR-2.5.3a/bin/Linux_x86_64/STAR \
+
 	cmd="Drop-seq_alignment.sh \
-		-g ~/working/mm10a_star/ \
-		-r ~/mm10a/mm10a.fasta \
+		-g ${genomedir} \
+		-r ${referencefasta} \
 		-n ${num_cells} \
 		-o ${bam_base} \
 		${bam_file_with_path}"

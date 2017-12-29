@@ -253,6 +253,7 @@ m4.2xlarge   8   26   32   EBS Only      $0.4 per Hour (NEED MORE MEMORY)
 m5.4xlarge  16   61   64   EBS Only      $0.768 per Hour
 r3.2xlarge   8   26   61   1 x 160 SSD   $0.665 per Hour
 r4.2xlarge   8   27   61   EBS Only      $0.532 per Hour (TRY ME!)
+x1e.xlarge   4   12  122   1 x 120 SSD   $0.834 per Hour
 
 ( and less processors? Change the STAR ref creation if number changes.)
 (	Can't seem to get more memory AND less vCPU )
@@ -352,6 +353,21 @@ in seurat.R
 cd ~/working/dropseq
 drop_seq.bash ~/working/?.bam > drop_seq.log 2>&1 &
 
+I am expecting memory failure. The merging of 8 data sets has resulted in a 1GB bam file.
+While the dge is only 17MB, there is 59GB of 61GB memory used and it is still loading.
+
+Failed
+
+[1] "Loading data from error_detected.dge.txt.gz"
+Error: cannot allocate vector of size 18.1 Gb
+Execution halted
+Warning message:
+system call failed: Cannot allocate memory 
+
+
+
+
+Perhaps try x1e.xlarge. Only 4 CPUs so may need to modify STAR ref creation all
 
 
 
@@ -361,10 +377,116 @@ rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYR
 
 ----------------------------------------------------------------------
 
+Another memory failure. No new AMI. Just update existing
+
+20171229d
+
+
+New processing machine with at least 100GB memory
+
+m4.2xlarge   8   26   32   EBS Only      $0.4 per Hour (NEED MORE MEMORY)
+r4.2xlarge   8   27   61   EBS Only      $0.532 per Hour (NEED MORE)
+x1e.xlarge   4   12  122   1 x 120 SSD   $0.834 per Hour (TRY ME!)
+
+Not sure if 120 SSD is only available? Max? Min? Seems irrelevant.
+
+
+
+create_ec2_instance.bash --profile syryu --key ~/.aws/JakeSYRyu.pem --instance-type x1e.xlarge --volume-size 100
+
+
+ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' | grep "\." | tr -d '"' | tr -d ' ' )
+echo $ip
+ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
 
 
 
 
-Next time ...
+
+create STAR reference for mm10a (with mm10 gtf and other files) (takes about 40 minutes)
+
+cd ~/working/
+mkdir -p ~/working/mm10a_star
+STAR --genomeFastaFiles ~/mm10a/mm10a.fasta  --runMode genomeGenerate --genomeDir ~/working/mm10a_star --runThreadN 4 --sjdbGTFfile ~/mm10a/mm10a.gtf
 
 
+
+
+mkdir -p ~/working/dropseq
+mv ~/working/Log.out ~/working/dropseq/star_mm10a_creation.log
+chmod 444 ~/working/mm10a_star/*
+chmod 444 ~/working/dropseq/star_mm10a_creation.log
+
+
+
+
+Upload data (takes about 5 minutes)
+
+scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  /Users/jakewendt/BaseSpace/Minkyung_1763-56931876/FASTQ*/*/*.bam ec2-user@$ip:working/
+
+
+
+
+Merge (This takes about an hour)
+
+Merge all the 1*.bams into 1.bam AND SORT BY NAME
+Merge all the 2*.bams into 2.bam AND SORT BY NAME
+
+cd ~/working/
+java -jar ~/picard.jar MergeSamFiles \
+	INPUT=1A_S4_L001.bam \
+	INPUT=1A_S4_L002.bam \
+	INPUT=1A_S4_L003.bam \
+	INPUT=1A_S4_L004.bam \
+	INPUT=1B_S3_L001.bam \
+	INPUT=1B_S3_L002.bam \
+	INPUT=1B_S3_L003.bam \
+	INPUT=1B_S3_L004.bam \
+	ASSUME_SORTED=true \
+	SORT_ORDER=queryname \
+	OUTPUT=1.bam
+
+java -jar ~/picard.jar MergeSamFiles \
+	INPUT=2A_S2_L001.bam \
+	INPUT=2A_S2_L002.bam \
+	INPUT=2A_S2_L003.bam \
+	INPUT=2A_S2_L004.bam \
+	INPUT=2B_S1_L001.bam \
+	INPUT=2B_S1_L002.bam \
+	INPUT=2B_S1_L003.bam \
+	INPUT=2B_S1_L004.bam \
+	ASSUME_SORTED=true \
+	SORT_ORDER=queryname \
+	OUTPUT=2.bam
+
+
+Cleanup
+
+\rm -r *_*_*.bam
+
+ 
+Update!
+
+cd ~/syryu
+git pull
+make install
+
+
+
+RUN DATA (takes about 8 hours)
+
+ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
+cd ~/working/dropseq
+cd ~/working/dropseq
+drop_seq.bash ~/working/?.bam > drop_seq.log 2>&1 &
+
+
+
+
+
+
+
+
+
+Download results
+rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/syryu/20171229a.drop_seq_alignment/

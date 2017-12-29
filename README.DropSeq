@@ -298,12 +298,48 @@ drop_seq.bash ~/working/*bam > drop_seq.log 2>&1 &
 
 
 
-FULL STOP
+20171229c ... FULL STOP
 
 New updates
 
-Merge all the 1*.bams into 1.bam
-Merge all the 2*.bams into 2.bam
+Merge all the 1*.bams into 1.bam AND SORT BY NAME
+Merge all the 2*.bams into 2.bam AND SORT BY NAME
+
+samtools merge ~/singlecell/1.merged.bam */1*bam
+samtools merge ~/singlecell/2.merged.bam */2*bam
+
+Samtools sort -n will sort numbers numerically. Apparently DropSeq does not approve.
+samtools sort -n -@ 3 -o 1.bam 1.merged.bam 
+samtools sort -n -@ 3 -o 2.bam 2.merged.bam 
+
+Use picard so can correctly incorrectly sort
+
+cd ~/working/
+java -jar ~/picard.jar MergeSamFiles \
+	INPUT=1A_S4_L001.bam \
+	INPUT=1A_S4_L002.bam \
+	INPUT=1A_S4_L003.bam \
+	INPUT=1A_S4_L004.bam \
+	INPUT=1B_S3_L001.bam \
+	INPUT=1B_S3_L002.bam \
+	INPUT=1B_S3_L003.bam \
+	INPUT=1B_S3_L004.bam \
+	ASSUME_SORTED=true \
+	SORT_ORDER=queryname \
+	OUTPUT=1.bam
+
+java -jar ~/picard.jar MergeSamFiles \
+	INPUT=2A_S2_L001.bam \
+	INPUT=2A_S2_L002.bam \
+	INPUT=2A_S2_L003.bam \
+	INPUT=2A_S2_L004.bam \
+	INPUT=2B_S1_L001.bam \
+	INPUT=2B_S1_L002.bam \
+	INPUT=2B_S1_L003.bam \
+	INPUT=2B_S1_L004.bam \
+	ASSUME_SORTED=true \
+	SORT_ORDER=queryname \
+	OUTPUT=2.bam
 
 Add 
 	MIN_NUM_GENES_PER_CELL=100
@@ -325,7 +361,10 @@ rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYR
 
 ----------------------------------------------------------------------
 
+
+
+
+
 Next time ...
 
-Merge same sample data sets 1*.bam, 2*.bam
 

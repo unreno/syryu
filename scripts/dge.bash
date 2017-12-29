@@ -31,6 +31,7 @@ DigitalExpression \
 	OUTPUT=error_detected.dge.txt.gz \
 	CELL_BC_FILE=cell_bc_file.txt.gz \
 	SUMMARY=out_gene_exon_tagged.dge.summary.txt \
+	MIN_NUM_GENES_PER_CELL=100 \
 	NUM_CORE_BARCODES=100
 
 

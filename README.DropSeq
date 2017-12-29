@@ -223,7 +223,7 @@ Several memory failures in R.
 
 
 
-
+----------------------------------------------------------------------
 
 20171229a ...
 
@@ -245,8 +245,7 @@ Create new ami
 
 ----------------------------------------------------------------------
 
-
-Next time ...
+20171229b ...
 
 New processing machine with at least 10GB more memory (>45GB) (r4.2xlarge)
 
@@ -257,12 +256,76 @@ r4.2xlarge   8   27   61   EBS Only      $0.532 per Hour (TRY ME!)
 
 ( and less processors? Change the STAR ref creation if number changes.)
 (	Can't seem to get more memory AND less vCPU )
-
-
 Any way to parallelize? Could run 2 at a time? Could run out of memory though if want it at the same time.
 
 
 
+create_ec2_instance.bash --profile syryu --key ~/.aws/JakeSYRyu.pem --instance-type r4.2xlarge --volume-size 100
 
 
+ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' | grep "\." | tr -d '"' | tr -d ' ' )
+echo $ip
+ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
+
+
+
+
+
+create STAR reference for mm10a (with mm10 gtf and other files) (takes about 40 minutes)
+
+cd ~/working/
+mkdir -p ~/working/mm10a_star
+STAR --genomeFastaFiles ~/mm10a/mm10a.fasta  --runMode genomeGenerate --genomeDir ~/working/mm10a_star --runThreadN 8 --sjdbGTFfile ~/mm10a/mm10a.gtf
+
+mkdir -p ~/working/dropseq
+mv ~/working/Log.out ~/working/dropseq/star_mm10a_creation.log
+chmod 444 ~/working/mm10a_star/*
+chmod 444 ~/working/dropseq/star_mm10a_creation.log
+
+
+Upload data (takes about 5 minutes)
+
+scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  /Users/jakewendt/BaseSpace/Minkyung_1763-56931876/FASTQ*/*/*.bam ec2-user@$ip:working/
+
+
+RUN DATA (takes about 8 hours)
+
+ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
+cd ~/working/dropseq
+drop_seq.bash ~/working/*bam > drop_seq.log 2>&1 &
+
+
+
+
+
+FULL STOP
+
+New updates
+
+Merge all the 1*.bams into 1.bam
+Merge all the 2*.bams into 2.bam
+
+Add 
+	MIN_NUM_GENES_PER_CELL=100
+	NUM_CORE_BARCODES=100
+in DigitalExpression stage
+
+Use "ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200, is.expr=1)"
+in seurat.R
+ 
+cd ~/working/dropseq
+drop_seq.bash ~/working/?.bam > drop_seq.log 2>&1 &
+
+
+
+
+Download results
+rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/syryu/20171229a.drop_seq_alignment/
+
+
+----------------------------------------------------------------------
+
+Next time ...
+
+Merge same sample data sets 1*.bam, 2*.bam
 

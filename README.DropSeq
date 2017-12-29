@@ -225,12 +225,9 @@ Several memory failures in R.
 
 
 
-----------------------------------------------------------------------
+20171229a ...
 
-
-Next time ...
-
-New AMI
+create_ec2_instance.bash --profile syryu --key ~/.aws/JakeSYRyu.pem
 
 aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress'
 
@@ -238,11 +235,18 @@ ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instanc
 echo $ip
 ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
 
-Add links to other mm10 files or simply rename and include them
+Add links to other mm10 files or simply rename and include them (renamed them all)
 
 Update git repo and install updated scripts
 
+Create new ami
 
+
+
+----------------------------------------------------------------------
+
+
+Next time ...
 
 New processing machine with at least 10GB more memory (>45GB) (r4.2xlarge)
 

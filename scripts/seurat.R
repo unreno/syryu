@@ -1,8 +1,6 @@
 #!/usr/bin/env Rscript
 
 
-
-
 #	The main goal is to “Cluster the cells” and “Finding differentially expressed genes (cluster biomarkers)” as shown in pbmc-tutorial.Rmd.
 
 #	However, additional things like “a heatmap to examine heterogeneity within/between clusters” will be good.
@@ -18,6 +16,11 @@ library(devtools)
 #install.packages("Seurat")
 library(Seurat)
 
+#	install.packages("pryr")
+library(pryr)
+#	object_size(some_object)
+#	mem_used()
+
 
 
 #a=read.table("out_cell_readcounts.txt.gz", header=F, stringsAsFactors=F)
@@ -32,10 +35,16 @@ library(Seurat)
 date()
 print("Loading data from error_detected.dge.txt.gz")
 
+print("mem_used()")
+mem_used()
+
 # load data
 ds.data <- read.table("error_detected.dge.txt.gz",row.names=1,header=T)
 #	For 1, ( 17153128 Dec 30 01:52 error_detected.dge.txt.gz )
 #	Took over 1.5 hours and 76GB memory so far
+
+print("object_size(ds.data)")
+object_size(ds.data)
 
 
 #ds <- CreateSeuratObject(raw.data = ds.data)
@@ -57,9 +66,16 @@ ds.data <- read.table("error_detected.dge.txt.gz",row.names=1,header=T)
 #
 #	Trying removing is.expr=1
 
+print("mem_used()")
+mem_used()
 date()
 print("CreateSeuratObject")
 ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200)
+date()
+print("object_size(ds)")
+object_size(ds)
+print("mem_used()")
+mem_used()
 
 date()
 print("NormalizeData")
@@ -241,6 +257,8 @@ print(x = head(x = cluster5.markers, n = 5))
 
 
 date()
+print("mem_used()")
+mem_used()
 print("Ending R script")
 
 

@@ -29,11 +29,16 @@ library(Seurat)
 
 #	from http://satijalab.org/seurat/Seurat_AlignmentTutorial.html
 
+date()
 print("Loading data from error_detected.dge.txt.gz")
+
 # load data
 ds.data <- read.table("error_detected.dge.txt.gz",row.names=1,header=T)
-#ds <- CreateSeuratObject(raw.data = ds.data)
+#	For 1, ( 17153128 Dec 30 01:52 error_detected.dge.txt.gz )
+#	Took over 1.5 hours and 76GB memory so far
 
+
+#ds <- CreateSeuratObject(raw.data = ds.data)
 
 #ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200, is.expr=1)
 #
@@ -52,9 +57,20 @@ ds.data <- read.table("error_detected.dge.txt.gz",row.names=1,header=T)
 #
 #	Trying removing is.expr=1
 
+date()
+print("CreateSeuratObject")
 ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200)
+
+date()
+print("NormalizeData")
 ds <- NormalizeData(object = ds)
+
+date()
+print("ScaleDate")
 ds <- ScaleData(object = ds)
+
+date()
+print("FindVariableGenes")
 ds <- FindVariableGenes(object = ds, do.plot = FALSE)
 #ds@meta.data[, "protocol"] <- "Whatever"
 
@@ -63,14 +79,21 @@ ds <- FindVariableGenes(object = ds, do.plot = FALSE)
 
 #	from http://satijalab.org/seurat/pbmc3k_tutorial.html
 
-print("Running PCA")
+date()
+print("RunPCA")
 ds <- RunPCA(object = ds, pc.genes = ds@var.genes, do.print = TRUE, pcs.print = 1:5, genes.print = 5)
 
+date()
+print("PrintPCA")
 # Examine and visualize PCA results a few different ways
 PrintPCA(object = ds, pcs.print = 1:5, genes.print = 5, use.full = FALSE)
 
+date()
+print("VizPCA")
 VizPCA(object = ds, pcs.use = 1:2)
 
+date()
+print("PCAPlot")
 PCAPlot(object = ds, dim.1 = 1, dim.2 = 2)
 
 # ProjectPCA scores each gene in the dataset (including genes not included
@@ -79,11 +102,19 @@ PCAPlot(object = ds, dim.1 = 1, dim.2 = 2)
 # that are strongly correlated with cellular heterogeneity, but may not have
 # passed through variable gene selection.  The results of the projected PCA
 # can be explored by setting use.full=T in the functions above
+date()
+print("ProjectPCA")
 ds <- ProjectPCA(object = ds, do.print = FALSE)
 
+date()
 print("Making a couple Heat Maps")
+
+date()
+print("PCHeatmap")
 PCHeatmap(object = ds, pc.use = 1, cells.use = 500, do.balanced = TRUE, label.columns = FALSE)
 
+date()
+print("PCHeatmap")
 PCHeatmap(object = ds, pc.use = 1:12, cells.use = 500, do.balanced = TRUE, label.columns = FALSE, use.full = FALSE)
 
 # NOTE: This process can take a long time for big datasets, comment out for
@@ -124,26 +155,34 @@ PCHeatmap(object = ds, pc.use = 1:12, cells.use = 500, do.balanced = TRUE, label
 
 
 
+date()
 print("Finding Clusters")
 
 # save.SNN = T saves the SNN so that the clustering algorithm can be rerun
 # using the same graph but with a different resolution value (see docs for
 # full details)
+date()
+print("FindClusters")
 ds <- FindClusters(object = ds, reduction.type = "pca", dims.use = 1:10, resolution = 0.6, print.output = 0, save.SNN = TRUE)
 
+date()
+print("PrintFindClustersParams")
 PrintFindClustersParams(object = ds)
 
 # While we do provide function-specific printing functions, the more general
 # function to print calculation parameters is PrintCalcParams().
 
 
-print("Running TSNE")
+date()
+print("RunTSNE")
 ds <- RunTSNE(object = ds, dims.use = 1:10, do.fast = TRUE, check_duplicates = FALSE)
 #Error in Rtsne.default(X = as.matrix(x = data.use), dims = dim.embed,  : 
 #  Remove duplicates before running TSNE.
 
 # note that you can set do.label=T to help label individual clusters
 
+date()
+print("TSNEPlot")
 TSNEPlot(object = ds)
 
 
@@ -159,13 +198,18 @@ TSNEPlot(object = ds)
 #	Execution halted
 
 
+date()
 print("Finding Markers")
 
 # find all markers of cluster 1
+date()
+print("cluster1.markers")
 cluster1.markers <- FindMarkers(object = ds, ident.1 = 1, min.pct = 0.25)
 print(x = head(x = cluster1.markers, n = 5))
 
 # find all markers distinguishing cluster 5 from clusters 0 and 3
+date()
+print("cluster5.markers")
 cluster5.markers <- FindMarkers(object = ds, ident.1 = 5, ident.2 = c(0, 3), min.pct = 0.25)
 print(x = head(x = cluster5.markers, n = 5))
 
@@ -196,6 +240,7 @@ print(x = head(x = cluster5.markers, n = 5))
 
 
 
+date()
 print("Ending R script")
 
 

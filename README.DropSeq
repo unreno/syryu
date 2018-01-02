@@ -500,8 +500,9 @@ R crashed
 
 
 
-
 create_ec2_instance.bash --profile syryu --key ~/.aws/JakeSYRyu.pem --instance-type x1e.xlarge --volume-size 100
+
+
 
 
 ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' | grep "\." | tr -d '"' | tr -d ' ' )
@@ -519,7 +520,26 @@ rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYR
 
 Modify and run seurat.R
 
+cd ~/working/dropseq/1
+seurat.R > seurat.log 2>&1 &
+
+cd ~/working/dropseq/2
+seurat.R > seurat.log 2>&1 &
+
+
+
+
+---> BOOKMARK <---
+
 
 
 
 rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/syryu/20180102a.drop_seq_alignment/
+
+
+
+
+
+
+
+

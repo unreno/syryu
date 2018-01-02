@@ -1,16 +1,11 @@
 #!/usr/bin/env Rscript
 
 
-#	The main goal is to “Cluster the cells” and “Finding differentially expressed genes (cluster biomarkers)” as shown in pbmc-tutorial.Rmd.
-
-#	However, additional things like “a heatmap to examine heterogeneity within/between clusters” will be good.
-
- 
-
 print("Loading libraries")
 
 #install.packages("devtools")
 library(devtools)
+
 #install_github("satijalab/seurat", ref = "3bd092a")	#	No. Doesn't include CreateSeuratObject and likely others.
 #install.packages("httpuv")
 #install.packages("Seurat")
@@ -21,13 +16,6 @@ library(pryr)
 #	object_size(some_object)
 #	mem_used()
 
-
-
-#a=read.table("out_cell_readcounts.txt.gz", header=F, stringsAsFactors=F)
-#x=cumsum(a$V1)
-#x=x/max(x)
-#plot(1:length(x), x, type='l', col="blue", xlab="cell barcodes sorted by number of reads [descending]", ylab="cumulative fraction of reads", xlim=c(1,50000))
-#plot(1:length(x), x, type='l', col="blue", xlab="cell barcodes sorted by number of reads [descending]", ylab="cumulative fraction of reads", xlim=c(1,5000))
 
 
 #	from http://satijalab.org/seurat/Seurat_AlignmentTutorial.html
@@ -88,8 +76,6 @@ ds <- ScaleData(object = ds)
 date()
 print("FindVariableGenes")
 ds <- FindVariableGenes(object = ds, do.plot = FALSE)
-#ds@meta.data[, "protocol"] <- "Whatever"
-
 
 
 
@@ -217,17 +203,37 @@ TSNEPlot(object = ds)
 date()
 print("Finding Markers")
 
-# find all markers of cluster 1
-date()
-print("cluster1.markers")
-cluster1.markers <- FindMarkers(object = ds, ident.1 = 1, min.pct = 0.25)
-print(x = head(x = cluster1.markers, n = 5))
+for (i in unique(FetchData(ds,"ident"))$ident){
+
+	print(paste("Finding Markers for ident :",i,":", sep=""))
+	# find all markers of cluster i
+	date()
+	cluster.markers <- FindMarkers(object = ds, ident.1 = i, min.pct = 0.25)
+	print(x = head(x = cluster.markers, n = 10))
+
+	write.table(x = head(x = cluster.markers, n = 10),
+		file=paste("genelist_cluster.",i,".csv",sep=""),
+		col.names=NA,
+		sep="\t")
+
+#		col.names=NA,	so first column has a header, albeit empty, as a placeholder. (if row.names = TRUE)
+
+#	write.csv(x = head(x = cluster.markers, n = 10),
+#		file=paste("genelist_cluster.",i,".csv",sep="") )
+#
+#		sep="\t",       NOT SETTABLE in write.csv. Need to use write.table
+#		row.names=TRUE, DEFAULT
+#		col.names=TRUE) UNKNOWN to write.csv (DEFAULT in write.table)
+
+}
+
+
 
 # find all markers distinguishing cluster 5 from clusters 0 and 3
-date()
-print("cluster5.markers")
-cluster5.markers <- FindMarkers(object = ds, ident.1 = 5, ident.2 = c(0, 3), min.pct = 0.25)
-print(x = head(x = cluster5.markers, n = 5))
+#date()
+#print("cluster5.markers")
+#cluster5.markers <- FindMarkers(object = ds, ident.1 = 5, ident.2 = c(0, 3), min.pct = 0.25)
+#print(x = head(x = cluster5.markers, n = 5))
 
 # find markers for every cluster compared to all remaining cells, report
 # only the positive ones

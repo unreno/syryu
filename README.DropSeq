@@ -403,7 +403,7 @@ ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o St
 
 
 
-create STAR reference for mm10a (with mm10 gtf and other files) (takes about 40 minutes)
+create STAR reference for mm10a (with mm10 gtf and other files) (takes about 40-90 minutes depending on core count)
 
 cd ~/working/
 mkdir -p ~/working/mm10a_star
@@ -459,10 +459,11 @@ java -jar ~/picard.jar MergeSamFiles \
 	SORT_ORDER=queryname \
 	OUTPUT=2.bam
 
+(Downloaded 1.bam and 2.bam so can just upload next time if needed.)
 
 Cleanup
 
-\rm -r *_*_*.bam
+\rm -f *_*_*.bam
 
  
 Update!
@@ -477,7 +478,6 @@ RUN DATA (takes about 8 hours)
 
 ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
 cd ~/working/dropseq
-cd ~/working/dropseq
 drop_seq.bash ~/working/?.bam > drop_seq.log 2>&1 &
 
 
@@ -489,4 +489,37 @@ drop_seq.bash ~/working/?.bam > drop_seq.log 2>&1 &
 
 
 Download results
-rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/syryu/20171229a.drop_seq_alignment/
+rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/syryu/20171229b.drop_seq_alignment/
+
+
+R crashed
+
+----------------------------------------------------------------------
+
+20180102a - gonna modify and process R
+
+
+
+
+create_ec2_instance.bash --profile syryu --key ~/.aws/JakeSYRyu.pem --instance-type x1e.xlarge --volume-size 100
+
+
+ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' | grep "\." | tr -d '"' | tr -d ' ' )
+echo $ip
+ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
+
+
+
+UPLOAD the previously downloaded data
+
+rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress ~/syryu/20171229b.drop_seq_alignment/ ec2-user@$ip:working/dropseq/ 
+
+
+
+
+Modify and run seurat.R
+
+
+
+
+rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/syryu/20180102a.drop_seq_alignment/

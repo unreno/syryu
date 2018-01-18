@@ -532,17 +532,6 @@ rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYR
 
 
 
-
-
-
-
-
-
----> BOOKMARK <---
-
-
-
-
 ----------------------------------------------------------------------
 
 20180103a - gonna modify and process R
@@ -564,12 +553,21 @@ rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYR
 
 
 
+Memory is a bit of an issue so don't run these at the same time.
+It may cause a collision and then both will fail.
+Put this all in a script and run that.
+
+Make sure that you run it with nohup so it doesn't timeout and crash itself if left unattended.
+
 
 cd ~/working/dropseq/1
-seurat.R > seurat.log 2>&1 &
+chmod +w .
+seurat.R > seurat.log 2>&1
 
 cd ~/working/dropseq/2
-seurat.R > seurat.log 2>&1 &
+chmod +w .
+seurat.R > seurat.log 2>&1
+
 
 
 Check on the creation of csv files.
@@ -579,6 +577,203 @@ Check on the creation of csv files.
 
 
 rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/syryu/20180103a.drop_seq_alignment/
+
+
+
+
+
+
+
+
+
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+#	20180118 - Gonna need to modify the attempts at adding a gene to mm10 and try all of this again.
+
+
+
+
+
+
+---> BOOKMARK <---
+
+
+
+##	Prep mm10b.fasta locally (formerly mm10a)
+
+###	Start from scratch
+
+wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE63nnn/GSE63472/suppl/GSE63472_mm10_reference_metadata.tar.gz
+
+
+###	Initially, the 2 additional sequences were windows files with ^M's so fix
+
+vi eGFP.fasta SV40polya.fasta
+
+###	And mm10.fasta doesn't have an EOL EOF
+
+cp mm10.fasta mm10b.fasta
+echo >> mm10b.fasta
+
+
+###	Drop-seq_alignment.sh NEEDS A SINGLE REFERENCE FASTA SO MERGE IN NEW STUFF
+
+cat eGFP.fasta >> mm10b.fasta
+cat SV40polya.fasta >> mm10b.fasta
+chmod 444 mm10b.fasta
+
+###	Rename gtf to match
+
+mv mm10new.gtf mm10b.gtf
+chmod 444 mm10b.gtf
+
+
+
+###	Trying dropSeqPipe locally (had to contact owner for updated repo)
+
+mkdir ~/tmp
+cd ~/tmp
+
+curl https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o Miniconda3-latest-MacOSX-x86_64.sh
+bash Miniconda3-latest-MacOSX-x86_64.sh
+
+curl http://mccarrolllab.com/download/1276/ -o Drop-seq-tools1.13.zip
+unzip Drop-seq-tools1.13.zip
+
+git clone https://github.com/Hoohm/dropSeqPipe.git
+
+cp dropSeqPipe/drop-seq-tools-wrapper.sh Drop-seq_tools-1.13/
+
+cd dropSeqPipe
+conda env create --name dropSeqPipe --file environment.yaml
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##	Start new AWS instance
+
+
+create_ec2_instance.bash --profile syryu --key ~/.aws/JakeSYRyu.pem --instance-type x1e.xlarge --volume-size 100
+
+
+ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' | grep "\." | tr -d '"' | tr -d ' ' )
+echo $ip
+ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
+
+
+
+
+###	UPDATE!
+
+sudo yum update
+cd ~/syryu
+git pull
+make install
+
+
+
+
+###	Destroy mm10 and mm10a stuff and prep for mm10b
+
+/bin/rm -rf ~/mm10
+/bin/rm -rf ~/mm10a
+/bin/rm -rf ~/working/mm10*
+
+
+
+
+
+
+
+
+
+
+###	UPLOAD BAM FILES AND NEW FILES FOR MAKING REFERENCE
+
+scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/syryu/singlecell/?.bam ec2-user@$ip:working/
+
+
+scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/syryu/singlecell/mm10b.gtf ~/github/unreno/syryu/singlecell/mm10b.fasta.gz ec2-user@$ip:working/
+
+
+
+###	Use dropSeqPipe to turn the fasta and gtf into full reference
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###	create STAR reference for mm10b (takes about 40-90 minutes depending on core count)
+
+cd ~/working/
+mkdir -p ~/working/mm10b_star
+
+STAR --genomeFastaFiles ~/mm10b/mm10b.fasta --runMode genomeGenerate --genomeDir ~/working/mm10b_star --sjdbGTFfile mm10b.gtf --sjdbOverhang 100 --runThreadN 4
+
+
+
+
+
+mkdir -p ~/working/dropseq
+mv ~/working/Log.out ~/working/dropseq/star_mm10b_creation.log
+chmod 444 ~/working/mm10b_star/*
+chmod 444 ~/working/dropseq/star_mm10b_creation.log
+
+ 
+
+
+
+###	RUN DATA (takes about 8 hours)
+
+ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
+cd ~/working/dropseq
+drop_seq.bash ~/working/?.bam > drop_seq.log 2>&1 &
+
+
+
+
+
+##	DOWNLOAD
+
+rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/github/unreno/syryu/singlecell/20180118a.drop_seq_alignment/
+
 
 
 

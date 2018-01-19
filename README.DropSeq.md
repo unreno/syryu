@@ -8,11 +8,11 @@
 
 * STAR - STAR-2.5.3a.tar.gz  ( https://github.com/alexdobin/STAR/releases )
 * Picard - picard.jar ( http://broadinstitute.github.io/picard/ )
-* Drop_seq - Drop-seq_tools-1.13-3.zip ( http://mccarrolllab.com/dropseq/ )
-* Mouse reference files ... GSE63472_mm10_reference_metadata.tar.gz
+* Drop\_seq - Drop-seq\_tools-1.13-3.zip ( http://mccarrolllab.com/dropseq/ )
+* Mouse reference files ... GSE63472\_mm10\_reference\_metadata.tar.gz
 
 
-###	Converted all fastq files to unaligned bams with picard ( my script convert_fastq_files_to_bams.bash )
+###	Converted all fastq files to unaligned bams with picard ( my script convert\_fastq\_files\_to\_bams.bash )
 
 ```
 	java -jar $basedir/picard.jar FastqToSam \
@@ -51,7 +51,7 @@ removed java-1.7.0 and installed java-1.8.0 (picard needed)
 created new ami with 12GB volume as needed more space.
 
 c4.large (2,8,3.75)
-  what():  std::bad_alloc
+  what():  std::bad\_alloc
 
 
 Need more memory. Trying m4.xlarge (4,13,16) with --volume-size 100
@@ -108,7 +108,7 @@ This generated a lot of error bam data. (Apparently this is good.)
 
 So Young recommends testing with ... (150GB! - 44,808 cells )
 https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE63473&format=file
-ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE63nnn/GSE63473/suppl/GSE63473_RAW.tar
+ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE63nnn/GSE63473/suppl/GSE63473\_RAW.tar
 
 Didn't seem to be any actual RAW data here.
 
@@ -168,7 +168,7 @@ install.packages("Seurat")
 ```
 
 Had to manually edit "sudo vi /usr/lib64/R/etc/Makeconf"
-	and copy 4 lines like CXX1X* to CXX11*
+	and copy 4 lines like CXX1X\* to CXX11\*
 
 Still didn't work.
 
@@ -317,8 +317,8 @@ drop_seq.bash ~/working/*bam > drop_seq.log 2>&1 &
 
 ###	New updates
 
-Merge all the 1*.bams into 1.bam AND SORT BY NAME
-Merge all the 2*.bams into 2.bam AND SORT BY NAME
+Merge all the 1\*.bams into 1.bam AND SORT BY NAME
+Merge all the 2\*.bams into 2.bam AND SORT BY NAME
 
 ```
 samtools merge ~/singlecell/1.merged.bam */1*bam
@@ -363,8 +363,8 @@ java -jar ~/picard.jar MergeSamFiles \
 ```
 
 Add 
-	MIN_NUM_GENES_PER_CELL=100
-	NUM_CORE_BARCODES=100
+	MIN\_NUM\_GENES\_PER\_CELL=100
+	NUM\_CORE\_BARCODES=100
 in DigitalExpression stage
 
 Use "ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200, is.expr=1)"
@@ -456,8 +456,8 @@ scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o St
 
 ###	Merge (This takes about an hour)
 
-Merge all the 1*.bams into 1.bam AND SORT BY NAME
-Merge all the 2*.bams into 2.bam AND SORT BY NAME
+Merge all the 1\*.bams into 1.bam AND SORT BY NAME
+Merge all the 2\*.bams into 2.bam AND SORT BY NAME
 
 ```
 cd ~/working/
@@ -628,7 +628,7 @@ echo >> mm10b.fasta
 ```
 
 
-###	Drop-seq_alignment.sh NEEDS A SINGLE REFERENCE FASTA SO MERGE IN NEW STUFF
+###	Drop-seq\_alignment.sh NEEDS A SINGLE REFERENCE FASTA SO MERGE IN NEW STUFF
 
 ```
 cat eGFP.fasta >> mm10b.fasta
@@ -644,13 +644,19 @@ chmod 444 mm10b.gtf
 ```
 
 
+###	Produce other mm10b reference files
+
+At some point in the drop-seq-alignment.sh script, the mm10b.refFlat file is required
+so reverting back to this point and doing so.
+
+This will likely not complete today, so I'll need to to this all over again next week.
 
 
-See if can run with simply this new fasta and gtf
+Actually, I think that this can be done separately
 
-SKIP -->
-###	Use dropSeqPipe to turn the fasta and gtf into full reference
-###	Trying dropSeqPipe locally (had to contact owner for updated repo)
+
+
+####	Use dropSeqPipe to turn the fasta and gtf into full reference
 
 ```
 mkdir ~/tmp
@@ -659,8 +665,14 @@ cd ~/tmp
 curl https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o Miniconda3-latest-MacOSX-x86_64.sh
 bash Miniconda3-latest-MacOSX-x86_64.sh
 
+#	-- OR --
+
+wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+
 curl http://mccarrolllab.com/download/1276/ -o Drop-seq-tools1.13.zip
 unzip Drop-seq-tools1.13.zip
+
 
 git clone https://github.com/Hoohm/dropSeqPipe.git
 
@@ -668,13 +680,30 @@ cp dropSeqPipe/drop-seq-tools-wrapper.sh Drop-seq_tools-1.13/
 
 cd dropSeqPipe
 conda env create --name dropSeqPipe --file environment.yaml
+
+
+
+
+vi config.yml
+
+vi samples.csv
+
+
+source activate dropSeqPipe
+
+dropSeqPip -f /path/to/your/reference/folder/ -c /path/to/local/config/file.yaml -m generate_meta
+
+
+
+
+
+
+
+
+
+
 ```
 
-
-
-
-
-END SKIP -->
 
 
 
@@ -707,53 +736,17 @@ chmod -R +w ~/mm10a
 mkdir ~/mm10b
 ```
 
-
-
-
-
-
-
-
-
 ###	UPLOAD BAM FILES AND NEW FILES FOR MAKING REFERENCE
 ```
 scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/syryu/singlecell/?.bam ec2-user@$ip:working/
 
-
 scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/syryu/singlecell/mm10b/mm10b.gtf ~/github/unreno/syryu/singlecell/mm10b/mm10b.fasta.gz ec2-user@$ip:mm10b/
-
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ###	create STAR reference for mm10b with just fasta and gtf (takes about 40-90 minutes depending on core count)
 
 Will it work?
+
 ```
 chmod -w ~/mm10b/mm10b*
 cd ~/working/
@@ -767,23 +760,56 @@ STAR --genomeFastaFiles ~/mm10b/mm10b.fasta --runMode genomeGenerate --genomeDir
 
 Doesn't work ... `--genomeFastaFiles <( zcat ~/mm10b/mm10b.fasta.gz )` so must gunzip 
 
-
-
-
-
----> BOOKMARK <---
-
-
-
-
-
 ```
 mkdir -p ~/working/dropseq
 mv ~/working/Log.out ~/working/dropseq/star_mm10b_creation.log
 chmod 444 ~/working/mm10b_star/*
 chmod 444 ~/working/dropseq/star_mm10b_creation.log
+rmdir ~/working/_STARtmp
 ```
  
+
+
+
+###	Modify gtf file
+
+The last 2 lines of this mm10b.gtf file NEED TO BE ...
+
+```
+eGFP	AddedGenes	exon	1	576	.	+	0	gene_id "eGFP"; gene_name "eGFP"; transcript_id "eGFP"; transcript_name "eGFP";
+SV40polya	AddedGenes	exon	1	240	.	+	0	gene_id "SV40polya"; gene_name "SV40polya"; transcript_id "SV40polya"; transcript_name "SV40polya";
+```
+
+Or like so where the tabs have been converted to pipes (for your viewing pleasure)
+```
+eGFP|AddedGenes|exon|1|576|.|+|0|gene_id "eGFP"; gene_name "eGFP"; transcript_id "eGFP"; transcript_name "eGFP";
+SV40polya|AddedGenes|exon|1|240|.|+|0|gene_id "SV40polya"; gene_name "SV40polya"; transcript_id "SV40polya"; transcript_name "SV40polya";
+```
+
+Seems gene\_name and transcript\_name are expected/required.
+
+
+
+###	And create dict using Pcard’s CreateSequenceDictionary
+
+This only takes a few seconds
+
+```
+cd ~/mm10b/
+java -jar ~/picard.jar CreateSequenceDictionary R=mm10b.fasta
+chmod -w mm10b.dict
+```
+
+
+###	Create refFlat file
+
+```
+cd cd ~/mm10b/
+ConvertToRefFlat ANNOTATIONS_FILE=mm10b.gtf SEQUENCE_DICTIONARY=mm10b.dict OUTPUT=mm10b.refFlat
+chmod -w mm10b.refFlat
+```
+
+
 
 
 
@@ -791,7 +817,7 @@ chmod 444 ~/working/dropseq/star_mm10b_creation.log
 ```
 ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
 cd ~/working/dropseq
-drop_seq.bash ~/working/?.bam > drop_seq.log 2>&1 &
+nohup drop_seq.bash ~/working/?.bam > drop_seq.log 2>&1 &
 ```
 
 
@@ -799,7 +825,7 @@ drop_seq.bash ~/working/?.bam > drop_seq.log 2>&1 &
 
 ##	DOWNLOAD
 ```
-rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/github/unreno/syryu/singlecell/20180118a.drop_seq_alignment/
+rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/github/unreno/syryu/singlecell/20180119a.drop_seq_alignment/
 
 ```
 

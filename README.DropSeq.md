@@ -15,11 +15,11 @@
 ###	Converted all fastq files to unaligned bams with picard ( my script convert\_fastq\_files\_to\_bams.bash )
 
 ```
-	java -jar $basedir/picard.jar FastqToSam \
-		F1=$fastq1 \
-		F2=$fastq2 \
-		O=$basename.bam \
-		SM=$basename
+java -jar $basedir/picard.jar FastqToSam \
+	F1=$fastq1 \
+	F2=$fastq2 \
+	O=$basename.bam \
+	SM=$basename
 ```
 
 
@@ -82,9 +82,7 @@ Done in about an hour. Not too bad. Final reference is about 25GB so rather than
 ###	Copy up bam file for test run.
 
 
-```
-scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  /Users/jakewendt/BaseSpace/Minkyung_1763-56931876/FASTQ_Generation_2017-12-13_15_11_00Z-67441595/1763_03_L003-ds.ee0be2f1073b47d083679a1b81232597/2A_S2_L003.bam ec2-user@$ip:working/
-```
+`scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  /Users/jakewendt/BaseSpace/Minkyung_1763-56931876/FASTQ_Generation_2017-12-13_15_11_00Z-67441595/1763_03_L003-ds.ee0be2f1073b47d083679a1b81232597/2A_S2_L003.bam ec2-user@$ip:working/`
 
 
 
@@ -172,9 +170,7 @@ Had to manually edit "sudo vi /usr/lib64/R/etc/Makeconf"
 
 Still didn't work.
 
-```
-cd /usr/lib64/R/etc/; sudo cp Makeconf.rpmnew Makeconf
-```
+`cd /usr/lib64/R/etc/; sudo cp Makeconf.rpmnew Makeconf`
 
 
 Create New AMI with syryu script installed
@@ -207,9 +203,8 @@ mv ~/working/Log.out ~/working/dropseq/star_mm10a_creation.log
 
 
 ###	Upload data
-```
-scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  /Users/jakewendt/BaseSpace/Minkyung_1763-56931876/FASTQ*/*/*.bam ec2-user@$ip:working/
-```
+
+`scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  /Users/jakewendt/BaseSpace/Minkyung_1763-56931876/FASTQ*/*/*.bam ec2-user@$ip:working/`
 
 
 ###	RUN DATA
@@ -221,9 +216,9 @@ drop_seq.bash ~/working/*bam > drop_seq.log 2>&1 &
 
 
 ###	Download results
-```
-rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem" --progress --delete ec2-user@$ip:working/dropseq/ ~/syryu/20171228a.drop_seq_alignment/
-```
+
+`rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem" --progress --delete ec2-user@$ip:working/dropseq/ ~/syryu/20171228a.drop_seq_alignment/`
+
 
 Several memory failures in R.
 
@@ -296,9 +291,7 @@ chmod 444 ~/working/dropseq/star_mm10a_creation.log
 
 ###	Upload data (takes about 5 minutes)
 
-```
-scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  /Users/jakewendt/BaseSpace/Minkyung_1763-56931876/FASTQ*/*/*.bam ec2-user@$ip:working/
-```
+`scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  /Users/jakewendt/BaseSpace/Minkyung_1763-56931876/FASTQ*/*/*.bam ec2-user@$ip:working/`
 
 
 ###	RUN DATA (takes about 8 hours)
@@ -394,9 +387,8 @@ Perhaps try x1e.xlarge. Only 4 CPUs so may need to modify STAR ref creation all
 
 
 ###	Download results
-```
-rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/syryu/20171229a.drop_seq_alignment/
-```
+
+`rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/syryu/20171229a.drop_seq_alignment/`
 
 
 ----------------------------------------------------------------------
@@ -418,14 +410,10 @@ Not sure if 120 SSD is only available? Max? Min? Seems irrelevant.
 ```
 create_ec2_instance.bash --profile syryu --key ~/.aws/JakeSYRyu.pem --instance-type x1e.xlarge --volume-size 100
 
-
 ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' | grep "\." | tr -d '"' | tr -d ' ' )
 echo $ip
 ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
-
 ```
-
-
 
 
 ###	create STAR reference for mm10a (with mm10 gtf and other files) (takes about 40-90 minutes depending on core count)
@@ -447,11 +435,7 @@ chmod 444 ~/working/dropseq/star_mm10a_creation.log
 
 ###	Upload data (takes about 5 minutes)
 
-```
-scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  /Users/jakewendt/BaseSpace/Minkyung_1763-56931876/FASTQ*/*/*.bam ec2-user@$ip:working/
-```
-
-
+`scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  /Users/jakewendt/BaseSpace/Minkyung_1763-56931876/FASTQ*/*/*.bam ec2-user@$ip:working/`
 
 
 ###	Merge (This takes about an hour)
@@ -492,10 +476,7 @@ java -jar ~/picard.jar MergeSamFiles \
 
 ###	Cleanup
 
-```
-\rm -f *_*_*.bam
-```
-
+`\rm -f *_*_*.bam` 
  
 ###	Update!
 
@@ -515,9 +496,8 @@ drop_seq.bash ~/working/?.bam > drop_seq.log 2>&1 &
 ```
 
 ###	Download results
-```
-rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/syryu/20171229b.drop_seq_alignment/
-```
+
+`rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/syryu/20171229b.drop_seq_alignment/`
 
 R crashed
 
@@ -537,9 +517,7 @@ ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o St
 
 ###	UPLOAD the previously downloaded data
 
-```
-rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress ~/syryu/20171229b.drop_seq_alignment/ ec2-user@$ip:working/dropseq/ 
-```
+`rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress ~/syryu/20171229b.drop_seq_alignment/ ec2-user@$ip:working/dropseq/`
 
 ###	Modify and run seurat.R
 
@@ -572,9 +550,7 @@ ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o St
 
 ###	UPLOAD the previously downloaded data
 
-```
-rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress ~/syryu/20171229b.drop_seq_alignment/ ec2-user@$ip:working/dropseq/ 
-```
+`rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress ~/syryu/20171229b.drop_seq_alignment/ ec2-user@$ip:working/dropseq/`
 
 
 Memory is a bit of an issue so don't run these at the same time.
@@ -595,40 +571,37 @@ seurat.R > seurat.log 2>&1
 
 Check on the creation of csv files.
 
-```
-rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/syryu/20180103a.drop_seq_alignment/
-```
+`rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/syryu/20180103a.drop_seq_alignment/`
 
 ----------------------------------------------------------------------
 
-#	20180119 - Gonna need to modify the attempts at adding a gene to mm10 and try all of this again.
+
+##	20180119 / 20180122
+
+
+Custom fasta with matching custom gtf, dict and refFlat files.
 
 
 
-##	Prep mm10b.fasta locally (formerly mm10a)
+###	Prep mm10b.fasta locally (formerly mm10a)
 
-###	Start from scratch
+####	Start from scratch
 
-```
-wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE63nnn/GSE63472/suppl/GSE63472_mm10_reference_metadata.tar.gz
-```
+`wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE63nnn/GSE63472/suppl/GSE63472_mm10_reference_metadata.tar.gz`
 
 
-###	Initially, the 2 additional sequences were windows files with ^M's so fix
+####	Initially, the 2 additional sequences were windows files with ^M's so fix
 
-```
-vi eGFP.fasta SV40polya.fasta
-```
+`vi eGFP.fasta SV40polya.fasta`
 
-###	And mm10.fasta doesn't have an EOL EOF
+####	And mm10.fasta doesn't have an EOL EOF
 
 ```
 cp mm10.fasta mm10b.fasta
 echo >> mm10b.fasta
 ```
 
-
-###	Drop-seq\_alignment.sh NEEDS A SINGLE REFERENCE FASTA SO MERGE IN NEW STUFF
+####	Drop-seq\_alignment.sh NEEDS A SINGLE REFERENCE FASTA SO MERGE IN NEW STUFF
 
 ```
 cat eGFP.fasta >> mm10b.fasta
@@ -636,7 +609,9 @@ cat SV40polya.fasta >> mm10b.fasta
 chmod 444 mm10b.fasta
 ```
 
-###	Rename gtf to match
+###	Prep matching mm10b.gtf
+
+####	Rename gtf to match
 
 ```
 mv mm10new.gtf mm10b.gtf
@@ -644,70 +619,29 @@ chmod 444 mm10b.gtf
 ```
 
 
-###	Produce other mm10b reference files
+####	Modify gtf file (If haven't done already. I have done locally now.)
 
-At some point in the drop-seq-alignment.sh script, the mm10b.refFlat file is required
-so reverting back to this point and doing so.
-
-This will likely not complete today, so I'll need to to this all over again next week.
-
-
-Actually, I think that this can be done separately
-
-
-
-####	Use dropSeqPipe to turn the fasta and gtf into full reference
+The last 2 lines of this mm10b.gtf file NEED TO BE ...
 
 ```
-mkdir ~/tmp
-cd ~/tmp
-
-curl https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o Miniconda3-latest-MacOSX-x86_64.sh
-bash Miniconda3-latest-MacOSX-x86_64.sh
-
-#	-- OR --
-
-wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
-bash Miniconda3-latest-Linux-x86_64.sh
-
-curl http://mccarrolllab.com/download/1276/ -o Drop-seq-tools1.13.zip
-unzip Drop-seq-tools1.13.zip
-
-
-git clone https://github.com/Hoohm/dropSeqPipe.git
-
-cp dropSeqPipe/drop-seq-tools-wrapper.sh Drop-seq_tools-1.13/
-
-cd dropSeqPipe
-conda env create --name dropSeqPipe --file environment.yaml
-
-
-
-
-vi config.yml
-
-vi samples.csv
-
-
-source activate dropSeqPipe
-
-dropSeqPip -f /path/to/your/reference/folder/ -c /path/to/local/config/file.yaml -m generate_meta
-
-
-
-
-
-
-
-
-
-
+eGFP	AddedGenes	exon	1	576	.	+	0	gene_id "eGFP"; gene_name "eGFP"; transcript_id "eGFP"; transcript_name "eGFP";
+SV40polya	AddedGenes	exon	1	240	.	+	0	gene_id "SV40polya"; gene_name "SV40polya"; transcript_id "SV40polya"; transcript_name "SV40polya";
 ```
 
+Or like so where the tabs have been converted to pipes (for your viewing pleasure)
+
+```
+eGFP|AddedGenes|exon|1|576|.|+|0|gene_id "eGFP"; gene_name "eGFP"; transcript_id "eGFP"; transcript_name "eGFP";
+SV40polya|AddedGenes|exon|1|240|.|+|0|gene_id "SV40polya"; gene_name "SV40polya"; transcript_id "SV40polya"; transcript_name "SV40polya";
+```
+
+Seems gene\_name and transcript\_name are expected/required by ConvertToRefFlat.
+
+I did this AFTER I create the STAR reference. Hmm. I'll likely need to redo this.
 
 
 
-##	Start new AWS instance
+###	Start new AWS instance
 
 ```
 create_ec2_instance.bash --profile syryu --key ~/.aws/JakeSYRyu.pem --instance-type x1e.xlarge --volume-size 100
@@ -717,9 +651,8 @@ echo $ip
 ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
 ```
 
-
-
 ###	UPDATE!
+
 ```
 sudo yum update
 cd ~/syryu
@@ -727,9 +660,8 @@ git pull
 make install
 ```
 
-
-
 ###	Destroy mm10/mm10a stuff and prep for mm10b
+
 ```
 chmod -R +w ~/mm10a
 /bin/rm -rf ~/mm10a
@@ -737,15 +669,40 @@ mkdir ~/mm10b
 ```
 
 ###	UPLOAD BAM FILES AND NEW FILES FOR MAKING REFERENCE
+
 ```
+ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' | grep "\." | tr -d '"' | tr -d ' ' )
+echo $ip
+
 scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/syryu/singlecell/?.bam ec2-user@$ip:working/
 
 scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/syryu/singlecell/mm10b/mm10b.gtf ~/github/unreno/syryu/singlecell/mm10b/mm10b.fasta.gz ec2-user@$ip:mm10b/
 ```
 
+
+###	And create dict using Pcard’s CreateSequenceDictionary
+
+This only takes a few seconds
+
+```
+cd ~/mm10b/
+java -jar ~/picard.jar CreateSequenceDictionary REFERENCE=mm10b.fasta
+chmod -w mm10b.dict
+```
+
+###	Create refFlat file
+
+Not too long here either.
+
+```
+cd cd ~/mm10b/
+ConvertToRefFlat ANNOTATIONS_FILE=mm10b.gtf SEQUENCE_DICTIONARY=mm10b.dict OUTPUT=mm10b.refFlat
+chmod -w mm10b.refFlat
+```
+
+
 ###	create STAR reference for mm10b with just fasta and gtf (takes about 40-90 minutes depending on core count)
 
-Will it work?
 
 ```
 chmod -w ~/mm10b/mm10b*
@@ -755,7 +712,6 @@ mkdir -p ~/working/mm10b_star
 gunzip ~/mm10b/mm10b.fasta.gz
 
 STAR --genomeFastaFiles ~/mm10b/mm10b.fasta --runMode genomeGenerate --genomeDir ~/working/mm10b_star --sjdbGTFfile mm10b.gtf --sjdbOverhang 100 --runThreadN 4
-
 ```
 
 Doesn't work ... `--genomeFastaFiles <( zcat ~/mm10b/mm10b.fasta.gz )` so must gunzip 
@@ -767,66 +723,27 @@ chmod 444 ~/working/mm10b_star/*
 chmod 444 ~/working/dropseq/star_mm10b_creation.log
 rmdir ~/working/_STARtmp
 ```
- 
-
-
-
-###	Modify gtf file
-
-The last 2 lines of this mm10b.gtf file NEED TO BE ...
-
-```
-eGFP	AddedGenes	exon	1	576	.	+	0	gene_id "eGFP"; gene_name "eGFP"; transcript_id "eGFP"; transcript_name "eGFP";
-SV40polya	AddedGenes	exon	1	240	.	+	0	gene_id "SV40polya"; gene_name "SV40polya"; transcript_id "SV40polya"; transcript_name "SV40polya";
-```
-
-Or like so where the tabs have been converted to pipes (for your viewing pleasure)
-```
-eGFP|AddedGenes|exon|1|576|.|+|0|gene_id "eGFP"; gene_name "eGFP"; transcript_id "eGFP"; transcript_name "eGFP";
-SV40polya|AddedGenes|exon|1|240|.|+|0|gene_id "SV40polya"; gene_name "SV40polya"; transcript_id "SV40polya"; transcript_name "SV40polya";
-```
-
-Seems gene\_name and transcript\_name are expected/required.
-
-
-
-###	And create dict using Pcard’s CreateSequenceDictionary
-
-This only takes a few seconds
-
-```
-cd ~/mm10b/
-java -jar ~/picard.jar CreateSequenceDictionary R=mm10b.fasta
-chmod -w mm10b.dict
-```
-
-
-###	Create refFlat file
-
-```
-cd cd ~/mm10b/
-ConvertToRefFlat ANNOTATIONS_FILE=mm10b.gtf SEQUENCE_DICTIONARY=mm10b.dict OUTPUT=mm10b.refFlat
-chmod -w mm10b.refFlat
-```
-
-
-
-
 
 ###	RUN DATA (takes about 8 hours)
+
+Drop-seq\_alignment.sh takes about an hour, then dge.bash/seurat.R takes about 2 hours or so.
+
 ```
+ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' | grep "\." | tr -d '"' | tr -d ' ' )
+echo $ip
 ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
 cd ~/working/dropseq
 nohup drop_seq.bash ~/working/?.bam > drop_seq.log 2>&1 &
 ```
 
 
+###	DOWNLOAD
 
-
-##	DOWNLOAD
 ```
-rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/github/unreno/syryu/singlecell/20180119a.drop_seq_alignment/
+ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' | grep "\." | tr -d '"' | tr -d ' ' )
+echo $ip
 
+rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/github/unreno/syryu/singlecell/20180119a.drop_seq_alignment/
 ```
 
 

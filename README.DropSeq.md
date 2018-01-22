@@ -862,7 +862,14 @@ echo $ip
 
 scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/syryu/singlecell/?.bam ec2-user@$ip:working/
 
-scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/syryu/singlecell/mm10c/mm10c.gtf ~/github/unreno/syryu/singlecell/mm10c/mm10c.fasta.gz ec2-user@$ip:mm10c/
+scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/syryu/singlecell/mm10c/mm10c.gtf.gz ~/github/unreno/syryu/singlecell/mm10c/mm10c.fasta.gz ec2-user@$ip:mm10c/
+```
+
+
+```
+cd ~/mm10c/
+gunzip mm10c.fasta.gz
+gunzip mm10c.gtf.gz
 ```
 
 

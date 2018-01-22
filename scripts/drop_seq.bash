@@ -6,8 +6,8 @@ script=`basename $0`
 #	Defaults:
 #max=5
 num_cells=20000
-genomedir="/home/ec2-user/working/mm10b_star"
-referencefasta="/home/ec2-user/mm10b/mm10b.fasta"
+genomedir="/home/ec2-user/working/mm10c_star"
+referencefasta="/home/ec2-user/mm10c/mm10c.fasta"
 
 function usage(){
 	echo

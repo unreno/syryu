@@ -576,7 +576,7 @@ Check on the creation of csv files.
 ----------------------------------------------------------------------
 
 
-##	20180119 / 20180122
+##	20180119
 
 
 Custom fasta with matching custom gtf, dict and refFlat files.
@@ -744,6 +744,192 @@ ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instanc
 echo $ip
 
 rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/github/unreno/syryu/singlecell/20180119a.drop_seq_alignment/
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+----------------------------------------------------------------------
+
+
+##	20180122
+
+Seems that our eGFP sequence was incorrect. One last time?
+
+Custom fasta with matching custom gtf, dict and refFlat files.
+
+
+###	Prep mm10c.fasta locally (formerly mm10a)
+
+####	Start from scratch
+
+`wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE63nnn/GSE63472/suppl/GSE63472_mm10_reference_metadata.tar.gz`
+
+
+####	Initially, the 2 additional sequences were windows files with ^M's so fix
+
+`vi eGFP.fasta SV40polya.fasta`
+
+####	And mm10.fasta doesn't have an EOL EOF
+
+```
+cp mm10.fasta mm10c.fasta
+echo >> mm10c.fasta
+```
+
+####	Drop-seq\_alignment.sh NEEDS A SINGLE REFERENCE FASTA SO MERGE IN NEW STUFF
+
+```
+cat eGFP.fasta >> mm10c.fasta
+cat SV40polya.fasta >> mm10c.fasta
+chmod 444 mm10c.fasta
+```
+
+###	Prep matching mm10c.gtf
+
+####	Rename gtf to match
+
+```
+mv mm10new.gtf mm10c.gtf
+chmod 444 mm10c.gtf
+```
+
+
+####	Modify gtf file (If haven't done already. I have done locally now.)
+
+The last 2 lines of this mm10c.gtf file NEED TO BE ...
+
+```
+eGFP	AddedGenes	exon	1	576	.	+	0	gene_id "eGFP"; gene_name "eGFP"; transcript_id "eGFP"; transcript_name "eGFP";
+SV40polya	AddedGenes	exon	1	240	.	+	0	gene_id "SV40polya"; gene_name "SV40polya"; transcript_id "SV40polya"; transcript_name "SV40polya";
+```
+
+Or like so where the tabs have been converted to pipes (for your viewing pleasure)
+
+```
+eGFP|AddedGenes|exon|1|576|.|+|0|gene_id "eGFP"; gene_name "eGFP"; transcript_id "eGFP"; transcript_name "eGFP";
+SV40polya|AddedGenes|exon|1|240|.|+|0|gene_id "SV40polya"; gene_name "SV40polya"; transcript_id "SV40polya"; transcript_name "SV40polya";
+```
+
+Seems gene\_name and transcript\_name are expected/required by ConvertToRefFlat.
+
+I did this AFTER I create the STAR reference. Hmm. I'll likely need to redo this.
+
+
+
+###	Start new AWS instance
+
+```
+create_ec2_instance.bash --profile syryu --key ~/.aws/JakeSYRyu.pem --instance-type x1e.xlarge --volume-size 100
+
+ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' | grep "\." | tr -d '"' | tr -d ' ' )
+echo $ip
+ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
+```
+
+###	UPDATE!
+
+```
+sudo yum update
+cd ~/syryu
+git pull
+make install
+```
+
+###	Destroy mm10/mm10a stuff and prep for mm10c
+
+```
+chmod -R +w ~/mm10a
+/bin/rm -rf ~/mm10a
+mkdir ~/mm10c
+```
+
+###	UPLOAD BAM FILES AND NEW FILES FOR MAKING REFERENCE
+
+```
+ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' | grep "\." | tr -d '"' | tr -d ' ' )
+echo $ip
+
+scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/syryu/singlecell/?.bam ec2-user@$ip:working/
+
+scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/syryu/singlecell/mm10c/mm10c.gtf ~/github/unreno/syryu/singlecell/mm10c/mm10c.fasta.gz ec2-user@$ip:mm10c/
+```
+
+
+###	And create dict using Pcard’s CreateSequenceDictionary
+
+This only takes a few seconds
+
+```
+cd ~/mm10c/
+java -jar ~/picard.jar CreateSequenceDictionary REFERENCE=mm10c.fasta
+chmod -w mm10c.dict
+```
+
+###	Create refFlat file
+
+Not too long here either.
+
+```
+cd cd ~/mm10c/
+ConvertToRefFlat ANNOTATIONS_FILE=mm10c.gtf SEQUENCE_DICTIONARY=mm10c.dict OUTPUT=mm10c.refFlat
+chmod -w mm10c.refFlat
+```
+
+
+###	create STAR reference for mm10c with just fasta and gtf (takes about 40-90 minutes depending on core count)
+
+
+```
+chmod -w ~/mm10c/mm10c*
+cd ~/working/
+mkdir -p ~/working/mm10c_star
+
+gunzip ~/mm10c/mm10c.fasta.gz
+
+STAR --genomeFastaFiles ~/mm10c/mm10c.fasta --runMode genomeGenerate --genomeDir ~/working/mm10c_star --sjdbGTFfile mm10c.gtf --sjdbOverhang 100 --runThreadN 4
+```
+
+Doesn't work ... `--genomeFastaFiles <( zcat ~/mm10c/mm10c.fasta.gz )` so must gunzip 
+
+```
+mkdir -p ~/working/dropseq
+mv ~/working/Log.out ~/working/dropseq/star_mm10c_creation.log
+chmod 444 ~/working/mm10c_star/*
+chmod 444 ~/working/dropseq/star_mm10c_creation.log
+rmdir ~/working/_STARtmp
+```
+
+###	RUN DATA (takes about 8 hours)
+
+Drop-seq\_alignment.sh takes about an hour, then dge.bash/seurat.R takes about 2 hours or so.
+
+```
+ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' | grep "\." | tr -d '"' | tr -d ' ' )
+echo $ip
+ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ec2-user@$ip
+cd ~/working/dropseq
+nohup drop_seq.bash ~/working/?.bam > drop_seq.log 2>&1 &
+```
+
+
+###	DOWNLOAD
+
+```
+ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' | grep "\." | tr -d '"' | tr -d ' ' )
+echo $ip
+
+rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/github/unreno/syryu/singlecell/20180122a.drop_seq_alignment/
 ```
 
 

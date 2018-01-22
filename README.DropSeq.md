@@ -904,7 +904,7 @@ mkdir -p ~/working/mm10c_star
 
 gunzip ~/mm10c/mm10c.fasta.gz
 
-STAR --genomeFastaFiles ~/mm10c/mm10c.fasta --runMode genomeGenerate --genomeDir ~/working/mm10c_star --sjdbGTFfile mm10c.gtf --sjdbOverhang 100 --runThreadN 4
+nohup STAR --genomeFastaFiles ~/mm10c/mm10c.fasta --runMode genomeGenerate --genomeDir ~/working/mm10c_star --sjdbGTFfile ~/mm10c/mm10c.gtf --sjdbOverhang 100 --runThreadN 4 &
 ```
 
 Doesn't work ... `--genomeFastaFiles <( zcat ~/mm10c/mm10c.fasta.gz )` so must gunzip 
@@ -938,5 +938,13 @@ echo $ip
 
 rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete ec2-user@$ip:working/dropseq/ ~/github/unreno/syryu/singlecell/20180122a.drop_seq_alignment/
 ```
+
+
+
+
+
+##	Post Run Notes
+
+Probably should've stuck with a single name for the modified reference. Say mm10ryulab.
 
 

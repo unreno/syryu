@@ -31,6 +31,12 @@ ds.data <- read.table("error_detected.dge.txt.gz",row.names=1,header=T)
 #	For 1, ( 17153128 Dec 30 01:52 error_detected.dge.txt.gz )
 #	Took over 1.5 hours and 76GB memory so far
 
+print("nrow(ds.data)")
+nrow(ds.data)
+
+print("ncol(ds.data)")
+ncol(ds.data)
+
 print("object_size(ds.data)")
 object_size(ds.data)
 
@@ -65,6 +71,24 @@ object_size(ds)
 print("mem_used()")
 mem_used()
 
+
+
+
+print("Saving ds")
+save(ds, file="InitialSeuratObjectSample.RData")
+
+print("Creating VlnPlot")
+VlnPlot(object = ds, features.plot = c("nGene", "nUMI"), nCol = 2)
+
+print("Creating GenePlot")
+GenePlot(object = ds, gene1 = "nUMI", gene2 = "nGene")
+
+
+
+
+
+
+
 date()
 print("NormalizeData")
 ds <- NormalizeData(object = ds)
@@ -75,7 +99,8 @@ ds <- ScaleData(object = ds)
 
 date()
 print("FindVariableGenes")
-ds <- FindVariableGenes(object = ds, do.plot = FALSE)
+#ds <- FindVariableGenes(object = ds, do.plot = FALSE)
+ds <- FindVariableGenes(object = ds, do.plot = TRUE)
 
 
 
@@ -259,6 +284,13 @@ for (i in unique(FetchData(ds,"ident"))$ident){
 #ds.markers <- FindAllMarkers(object = ds, only.pos = TRUE, min.pct = 0.25, thresh.use = 10)
 #
 #	Nothing works on this data set
+
+
+print("Removing raw ds.data")
+rm(ds.data)
+
+print("Saving all environment")
+save(list=ls(all=TRUE), file="Sample.RData")
 
 
 

@@ -170,9 +170,18 @@ done
 
 #	Basically, this is TRUE AND DO ...
 #[ $# -eq 0 ] && usage
-[[ -z $amino_acids ]] && ( echo -e "\nAmino Acids Required" && usage )
-[[ -f $evidence ]] || ( echo -e "\nEvidence file Required" && usage )
-[[ -f $protein_fasta ]] || ( echo -e "\nProtein fasta file Required" && usage )
+if [[ -z $amino_acids ]] ; then
+	echo -e "\nAmino Acids Required"
+	usage
+fi
+if [[ ! -f $evidence ]] ; then
+	echo -e "\nEvidence file Required"
+	usage
+fi
+if [[ ! -f $protein_fasta ]] ; then
+	echo -e "\nProtein fasta file Required"
+	usage
+fi
 
 protein_base_name=${protein_fasta%%.*}
 echo $protein_base_name
@@ -218,17 +227,32 @@ while read line; do
 	#	I suppose its possible that sequence is repeated in a given protein.
 	#	Not sure what to do if it is.
 
-	[[ ${number_matches_in_protein} -eq 0 ]] && ( echo "None of the matches match the xpected protein."; exit )
+	echo "Found ${number_matches_in_protein}"
+
+	if [[ ${number_matches_in_protein} -eq 0 ]] ; then
+		echo "None of the matches match the expected protein."
+		echo $line >> no_matches_found_in_database
+		continue
+#		exit
+	fi
+
+	if [[ ${number_matches_in_protein} -gt 1 ]] ; then
+		echo "More than one matches match the expected protein."
+		echo $line >> multiple_matches_found_in_database
+		continue
+#		exit
+	fi
 
 	match_start=$( cat ${out} | grep ${protein} | awk '{print $4}' )
 	match_end=$( cat ${out} | grep ${protein} | awk '{print $5}' )
 
-
 	echo -e -n "${sequence}\t${protein}\t${match_start}\t${match_end}" >> MatchedModification.txt
 
-	for aa in $( echo ${amino_acids} | awk -F, '{ for(i=1;i<=NF;i++) print $i }' ) ; do
+#	for aa in $( echo ${amino_acids} | awk -F, '{ for(i=1;i<=NF;i++) print $i }' ) ; do
+	for aa in $( echo ${amino_acids//,} | fold -w1 ) ; do
 #		positions=$( echo ${cleaned_sequence} | grep -o . | grep -n "[${aa}]" | awk -F: -v s=${match_start} '{x=x""$1+s";"}END{printf(substr(x, 1, length(x)-1))}' )
-		positions=$( echo ${cleaned_sequence} | grep -o . | grep -n "[${aa}]" | awk -F: -v s=${match_start} '{printf($1+s";")}' )
+#		positions=$( echo ${cleaned_sequence} | grep -o . | grep -n "[${aa}]" | awk -F: -v s=${match_start} '{printf($1+s";")}' )
+		positions=$( echo ${cleaned_sequence} | fold -w1 | grep -n "[${aa}]" | awk -F: -v s=${match_start} '{printf($1+s";")}' )
 		positions=${positions%?}
 
 #		all_modified_positions=$( echo ${sequence} | sed 's/_//g' | awk -v s=${match_start} '{ while(( m = match($0,/\(/) ) > 0 ){ x=x""s+m-1";"; sub(/\(.{2,4}\)/,"",$0); } }END{printf(substr(x, 1, length(x)-1)) }' )

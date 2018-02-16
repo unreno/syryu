@@ -227,17 +227,23 @@ while read line; do
 	echo -e -n "${sequence}\t${protein}\t${match_start}\t${match_end}" >> MatchedModification.txt
 
 	for aa in $( echo ${amino_acids} | awk -F, '{ for(i=1;i<=NF;i++) print $i }' ) ; do
-		positions=$( echo ${cleaned_sequence} | grep -o . | grep -n "[${aa}]" | awk -F: -v s=${match_start} '{x=x""$1+s";"}END{printf(substr(x, 1, length(x)-1))}' )
+#		positions=$( echo ${cleaned_sequence} | grep -o . | grep -n "[${aa}]" | awk -F: -v s=${match_start} '{x=x""$1+s";"}END{printf(substr(x, 1, length(x)-1))}' )
+		positions=$( echo ${cleaned_sequence} | grep -o . | grep -n "[${aa}]" | awk -F: -v s=${match_start} '{printf($1+s";")}' )
+		positions=${positions%?}
 
-		all_modified_positions=$( echo ${sequence} | sed 's/_//g' | awk -v s=${match_start} '{ while(( m = match($0,/\(/) ) > 0 ){ x=x""s+m-1";"; sub(/\(.{2,4}\)/,"",$0); } }END{printf(substr(x, 1, length(x)-1)) }' )
+#		all_modified_positions=$( echo ${sequence} | sed 's/_//g' | awk -v s=${match_start} '{ while(( m = match($0,/\(/) ) > 0 ){ x=x""s+m-1";"; sub(/\(.{2,4}\)/,"",$0); } }END{printf(substr(x, 1, length(x)-1)) }' )
+		all_modified_positions=$( echo ${sequence} | sed 's/_//g' | awk -v s=${match_start} '{ while(( m = match($0,/\(/) ) > 0 ){ printf(s+m-1";"); sub(/\(.{2,4}\)/,"",$0); } }' )
+		all_modified_positions=${all_modified_positions%?}
 
 		
 		#	comm -12 <( echo "12;14;21" | sed 's/;/\n/g' | sort ) <( echo "2;14"| sed 's/;/\n/g' | sort )
 		#	comm is meant to compare 2 files containing sorted lists.
 		#		-12 means ignore items only in 1 of those lists, leaving just those that are in both.
 
-		modified_positions=$( comm -12 <( echo ${positions} | sed 's/;/\n/g' | sort ) <( echo ${all_modified_positions} | sed 's/;/\n/g' | sort ) )
+#		modified_positions=$( comm -12 <( echo ${positions} | sed 's/;/\n/g' | sort ) <( echo ${all_modified_positions} | sed 's/;/\n/g' | sort ) )
+		modified_positions=$( comm -12 <( echo ${positions} | sed 's/;/\n/g' | sort ) <( echo ${all_modified_positions} | sed 's/;/\n/g' | sort ) | tr "\n" ";" )
 
+		modified_positions=${modified_positions%?}	#	remove last char
 
 		echo -e -n "\t${positions}\t${modified_positions}" >> MatchedModification.txt
 

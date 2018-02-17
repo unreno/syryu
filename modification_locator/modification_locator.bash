@@ -2,18 +2,6 @@
 
 set -e
 
-#	(I uploaded that codes (PeptideMatch java codes) that does this. It was previously published by another group. If you like, you can modify these codes or re-write it in your language you prefer.)
-#
-#	                If “Modified sequence” contains S, T, or Y, then please look for the location of either S, T, or Y in protein and record it. If there are more than one of these, then record all separated by comma.
-#
-#	                If S, T, or Y are modified in “Modified sequence”, then please record its location in STY modification position column.
-#
-#	                If “Modified sequence” contains M, then please look for the location of M in protein and record it. If there are more than one site, then record them separated by comma.
-#
-#	                If M modified in “Modified sequence”, then please record its location in M modification position column.
-#
-#	 
-#
 #	The second output file (name it as ProteinModification.txt) contains 1) Leading razor protein, 2) AA, 3) AA location, 4) Sequences with Modified AA, and 5) Sequences with Unmodified AA
 #	For each leading razor protein that were observed in at least once in evidence file, find all S, T, Y, or M. AA will contain one of these amino acids located in a specific location.
 #
@@ -25,29 +13,20 @@ set -e
 #
 #	 
 #
-#	 
-#
 #	Cartoon Sample
 #
-#	Fasta file:
+#		Fasta file:
 #
-#	>PROTEIN1
+#		>PROTEIN1
+#		AAASSSTTYAAAM
 #
-#	AAASSSTTYAAAM
-#
-#	 
 #
 #	Evidence file:
 #
-#	Modified Sequence Leading razor protein
+#		Modified Sequence 	Leading razor protein
+#		_ASSST[80]TY_			yadayadayada
+#		_SSS[80]T[80]_		somethingelse
 #
-#	_ASSST[80]TY_
-#
-#	_SSS[80]T[80]_
-#
-#	 
-#
-#	Then,
 #
 #	Output file 1:
 #
@@ -68,12 +47,6 @@ set -e
 #	PROTEIN1\t               S\t           6\t     _SSS[80]T[80]_\t         _ASSST[80]TY_
 #	PROTEIN1\t               T\t           7\t\    _ASSST[80]TY_; _SSS[80]T[80]_\t
 #
-#	…
-#
-#	 
-#
-#	Thank you!!
-#
 #
 #	I'll see if I can just uniq the modified sequence / leading razor protein from within the script itself.
 #
@@ -84,22 +57,16 @@ set -e
 #	Modifications come after the column.
 #
 #	The modification value itself is irrelevant in this script.
+#
+#
+#	modification_locator.bash --amino_acids STY,M --evidence evidence.txt --protein uniprot-organism+homo+sapiens.fasta
+#
+#	As each record in ProteinModification.txt, comes from multiple records in the source,
+#	it will likely be simplest to just make it from MatchModification.txt.
+#
+#	protein_modification_locator.bash --match MatchedModification.txt
 
 
-
-
-#	Select only those matching the requested amino acids.
-
-#	[[ -f evidence.STYM.txt ]] || tail -n +2 evidence.txt | awk -F"\t" '( $4 ~ /[STYM]/ ){print $4,$15}' | sort -u > evidence.STYM.txt
-
-#	for each modified sequence;
-#		remember its protein
-#		find position of modified sequence and protein in protein database
-#		find given amino acid positions
-#		find given modified amino acid positions
-#			
-
-#	This will likely be better done in something like ruby.
 
 
 
@@ -119,9 +86,9 @@ function usage(){
 	echo "$script <OPTIONS>"
 	echo
 	echo "Options:"
-	echo "  --amino_acids COMMA SEPARATED TEXT"
-	echo "  --evidence TEXT TSV FILE"
-	echo "  --protein FASTA FILE"
+	echo "	--amino_acids COMMA SEPARATED TEXT"
+	echo "	--evidence TEXT TSV FILE"
+	echo "	--protein FASTA FILE"
 #	echo "	--estimated-num-cells (-n) INTEGER : "
 #	echo "	--genomedir (-g) STRING : Directory of STAR genome directory"
 #	echo "	--referencefasta (-r) STRING : Reference fasta of the Drop-seq reference metadata bundle"
@@ -183,6 +150,8 @@ if [[ ! -f $protein_fasta ]] ; then
 	usage
 fi
 
+date
+
 protein_base_name=${protein_fasta%%.*}
 echo $protein_base_name
 
@@ -231,14 +200,14 @@ while read line; do
 
 	if [[ ${number_matches_in_protein} -eq 0 ]] ; then
 		echo "None of the matches match the expected protein."
-		echo $line >> no_matches_found_in_database
+		echo $line >> MatchedModificationNONE.txt
 		continue
 #		exit
 	fi
 
 	if [[ ${number_matches_in_protein} -gt 1 ]] ; then
 		echo "More than one matches match the expected protein."
-		echo $line >> multiple_matches_found_in_database
+		echo $line >> MatchedModificationMULTIPLE.txt
 		continue
 #		exit
 	fi
@@ -248,16 +217,16 @@ while read line; do
 
 	echo -e -n "${sequence}\t${protein}\t${match_start}\t${match_end}" >> MatchedModification.txt
 
-#	for aa in $( echo ${amino_acids} | awk -F, '{ for(i=1;i<=NF;i++) print $i }' ) ; do
-	for aa in $( echo ${amino_acids//,} | fold -w1 ) ; do
+	for aa in $( echo ${amino_acids} | awk -F, '{ for(i=1;i<=NF;i++) print $i }' ) ; do
+#	for aa in $( echo ${amino_acids//,} | fold -w1 ) ; do	# NO NO NO!
 #		positions=$( echo ${cleaned_sequence} | grep -o . | grep -n "[${aa}]" | awk -F: -v s=${match_start} '{x=x""$1+s";"}END{printf(substr(x, 1, length(x)-1))}' )
 #		positions=$( echo ${cleaned_sequence} | grep -o . | grep -n "[${aa}]" | awk -F: -v s=${match_start} '{printf($1+s";")}' )
 		positions=$( echo ${cleaned_sequence} | fold -w1 | grep -n "[${aa}]" | awk -F: -v s=${match_start} '{printf($1+s";")}' )
-		positions=${positions%?}
+		positions=${positions%;}
 
 #		all_modified_positions=$( echo ${sequence} | sed 's/_//g' | awk -v s=${match_start} '{ while(( m = match($0,/\(/) ) > 0 ){ x=x""s+m-1";"; sub(/\(.{2,4}\)/,"",$0); } }END{printf(substr(x, 1, length(x)-1)) }' )
 		all_modified_positions=$( echo ${sequence} | sed 's/_//g' | awk -v s=${match_start} '{ while(( m = match($0,/\(/) ) > 0 ){ printf(s+m-1";"); sub(/\(.{2,4}\)/,"",$0); } }' )
-		all_modified_positions=${all_modified_positions%?}
+		all_modified_positions=${all_modified_positions%;}
 
 		
 		#	comm -12 <( echo "12;14;21" | sed 's/;/\n/g' | sort ) <( echo "2;14"| sed 's/;/\n/g' | sort )
@@ -267,7 +236,8 @@ while read line; do
 #		modified_positions=$( comm -12 <( echo ${positions} | sed 's/;/\n/g' | sort ) <( echo ${all_modified_positions} | sed 's/;/\n/g' | sort ) )
 		modified_positions=$( comm -12 <( echo ${positions} | sed 's/;/\n/g' | sort ) <( echo ${all_modified_positions} | sed 's/;/\n/g' | sort ) | tr "\n" ";" )
 
-		modified_positions=${modified_positions%?}	#	remove last char
+		#modified_positions=${modified_positions%?}	#	remove last char
+		modified_positions=${modified_positions%;}	#	remove last semicolon
 
 		echo -e -n "\t${positions}\t${modified_positions}" >> MatchedModification.txt
 
@@ -282,4 +252,4 @@ done < evidence.${acids}.txt
 #done < <( head evidence.${acids}.txt )
 
 echo 'Done'
-
+date

@@ -466,7 +466,7 @@ end	#	Xcorr
 ######################################################################
 
 
-
+#	Redirect STDOUT after seen enough records.
 stdout_redirected = false
 original_stdout = $stdout.clone
 #	$stdout.reopen("/dev/null", "a")

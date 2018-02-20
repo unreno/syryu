@@ -17,7 +17,7 @@ def usage(options={})
 	puts "	--amino_acids COMMA SEPARATED TEXT"
 	puts "	--evidence TEXT TSV FILE"
 	puts "	--protein FASTA FILE"
-#	puts "	--suffix STRING ...... output file and directory suffixes"
+#	puts "	--suffix STRING ...... working directory suffixes"
 #	puts "	--log_count INTEGER .. number of records logged before silencing output"
 	puts
 	puts "Defaults/current values:"
@@ -32,17 +32,25 @@ end
 ######################################################################
 
 
-stdout_redirected = false
-original_stdout = $stdout.clone
-#	$stdout.reopen("/dev/null", "a")
+#	Setup future redirect of STDOUT if desired
+#stdout_redirected = false
+#original_stdout = $stdout.clone
+#	In the future, could redirect STDOUT to /dev/null
+#	if !stdout_redirected && options.has_key?(:log_count) && record_number > options[:log_count].to_i
+#		puts "Record number(#{record_number}) has exceeded requested log count(#{options[:log_count]})."
+#		puts "Redirecting the rest of the output to /dev/null."
+#		stdout_redirected = true
+#		$stdout.reopen("/dev/null", "a")
+#	end
 
 
 #	Must be called before option parsing as they remove the items.
 puts "Command: #{$0} #{$*.join(' ')}"
 
 
+options = {}
 #options = { suffix: 'TESTING'}
-options = { suffix: Time.now.strftime("%Y%m%d%H%M%S") }
+#options = { suffix: Time.now.strftime("%Y%m%d%H%M%S") }
 OptionParser.new do |opt|
 	opt.on("--amino_acids COMMA SEPARATED TEXT"){|o| options[:amino_acids] = o }
 	opt.on("--evidence TEXT TSV FILE"){|o| options[:evidence_file] = o }
@@ -51,7 +59,7 @@ OptionParser.new do |opt|
 #	opt.on('--log_count 10') { |o| options[:log_count] = o }
 end.parse!
 
-#puts options
+puts options
 
 
 ######################################################################
@@ -78,40 +86,21 @@ end
 #usage(options) #if ARGV.length < 2 
 
 
+class PeptideMatch
 
-exit
+	@@dir = "PeptideMatchOutput"
 
+	def self.dir
+		@@dir
+	end
 
+	def self.dir=(value)
+		@@dir = value
+		Dir.mkdir(@@dir) unless Dir.exists?(@@dir)
+	end
 
-#matched_mod=File.open("MatchedModification.txt",'w')
-#matched_mod.close
-
-
-protein_mod=File.open("ProteinModification.txt",'w')
-protein_mod.puts "Leading razor protein\tAA\tAA location\tSequences with Modified AA\tSequences with Unmodified AA" 
-
-CSV.open("MatchedModification.txt",'rb',
-	{ headers: true, col_sep: "\t"  }).each do |line|
-
-	puts line.to_hash
-
-
-
-
-
-end
-
-
-
-
-
-
-protein_mod.close
-
-
-
-
-
+	def initialize( protein_fasta_file )
+		Dir.mkdir(@@dir) unless Dir.exists?(@@dir)
 #	protein_base_name=${protein_fasta%%.*}
 #	echo $protein_base_name
 #	
@@ -119,14 +108,69 @@ protein_mod.close
 #		echo "Creating protein database."
 #		java -jar PeptideMatchCMD_1.0.jar -a index -d ${protein_fasta} -i ${protein_base_name}
 #	fi
-#	
-#	
-#	acids=$(echo $amino_acids | sed 's/[^[:alpha:]]//g' )
-#	echo $acids
-#	
-#	[[ -f evidence.${acids}.txt ]] || tail -n +2 evidence.txt | awk -F"\t" '( $4 ~ /['$acids']/ ){print $4"\t"$15}' | sort -u > evidence.${acids}.txt
-#	
-#	
+	end
+
+	def match( sequence, protein )
+#		[[ -f ${out} ]] ||  java -jar PeptideMatchCMD_1.0.jar -a query -i ${protein_base_name} -q ${cleaned_sequence} -o ${out}
+	end
+
+end	#	class PeptideMatch
+
+peptide_matcher = PeptideMatch.new( options[:protein_file] )
+puts PeptideMatch.dir
+
+
+##################################################
+
+acids = options[:amino_acids].gsub(/[^[:alpha:]]/,'')
+select_evidence_file = options[:evidence_file].gsub(/(.[^.]+)$/,".#{acids}\\1")
+if !File.exists?( select_evidence_file )
+	puts "Filtering evidence."
+	acids_regex=Regexp.new("[#{acids}]")	
+	select_evidence = CSV.open(options[:evidence_file],'rb',
+			{ headers: true, col_sep: "\t"  }).collect do |line|
+		[line["Modified sequence"],line["Leading razor protein"]] if line["Modified sequence"].match(acids_regex)
+	end.compact
+
+	select_evidence_csv = CSV.open(select_evidence_file,'w', { col_sep: "\t"  })
+	select_evidence.sort.uniq.each do |line|
+		select_evidence_csv.puts line
+	end
+	select_evidence_csv.close
+else
+	puts "Evidence already filtered."
+end
+
+##################################################
+
+class Evidence
+	attr_accessor :sequence, :protein
+	def initialize(h={})
+		@sequence=h["Modified sequence"]
+		@protein=h["Leading razor protein"]
+	end
+end
+
+
+evidences=[]
+CSV.open(options[:evidence_file],'rb',
+	{ headers: true, col_sep: "\t"  }).each do |line|
+
+	puts line.to_hash
+
+
+	evidences.push Evidence.new(line.to_hash)
+
+	break if $. > 10
+
+
+
+
+
+
+
+
+
 #	
 #	echo -e -n "Modified sequence\tLeading razor protein\tStart position\tEnd position" > MatchedModification.txt
 #	for aa in $( echo ${amino_acids} | awk -F, '{ for(i=1;i<=NF;i++) print $i }' ) ; do
@@ -191,9 +235,24 @@ protein_mod.close
 #	
 #	
 #	
-#	
-#	done < evidence.${acids}.txt
-#	
-#	echo 'Done'
-#	date
-#	
+
+
+end		#	CSV.open(options[:evidence_file],'rb',
+
+#matched_mod=File.open("MatchedModification.txt",'w')
+#
+#protein_mod=File.open("ProteinModification.txt",'w')
+#protein_mod.puts "Leading razor protein\tAA\tAA location\tSequences with Modified AA\tSequences with Unmodified AA" 
+
+
+#
+#
+#
+#matched_mod.close
+#protein_mod.close
+
+puts evidences.inspect
+
+
+puts "Done"
+puts Time.now

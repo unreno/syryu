@@ -85,40 +85,78 @@ end
 
 #usage(options) #if ARGV.length < 2 
 
+class String
 
-class PeptideMatch
+	def indices_of_chars(chars)
+    start, indices = -1, []
+    indices << start while start = (self.index /[#{chars}]/, start + 1)
+    indices
+	end
+
+	def indices_of_mods()
+		tmp=self
+    indices = []
+		while (i = tmp.index /\(/)
+    	indices << i - 1
+			tmp.sub! /\(.*?\)/,''
+		end
+    indices
+	end
+
+end
+
+
+
+class Evidence
+
+	attr_accessor :sequence, :protein, :cleaned_sequence, :alignments, :modified_positions
 
 	@@dir = "PeptideMatchOutput"
 
-	def self.dir
-		@@dir
+	def initialize(h={})
+		@sequence=h["Modified sequence"]
+		@protein=h["Leading razor protein"]
+		@cleaned_sequence=sequence.gsub(/_/,'').gsub(/\([[:alpha:]]*\)/,'')
+		@alignments = []
+		@modified_positions=sequence.gsub(/_/,'').indices_of_mods
 	end
 
-	def self.dir=(value)
-		@@dir = value
+	def query( database )
 		Dir.mkdir(@@dir) unless Dir.exists?(@@dir)
+		outfile="#{@@dir}/#{database}.#{cleaned_sequence}.txt"
+
+		#	puts outfile
+
+		if !File.exists?( outfile )
+			puts "Querying."
+			system("java -jar PeptideMatchCMD_1.0.jar -a query -i #{database} -q #{cleaned_sequence} -o #{outfile}")
+		else
+			puts "Catting existing query."
+		end
+		
+		File.open(outfile,'rb').each do |line|
+			next if line =~ /^#/
+			l = line.split
+			if l[0] == cleaned_sequence && l[1] == protein
+				##Query	Subject	SubjectLength	MatchStart	MatchEnd
+				alignments.push({ match_start: l[3].to_i, match_end: l[4].to_i,
+					absolute_positions: {}, modified_positions: [] })
+			end
+		end
 	end
 
-	def initialize( protein_fasta_file )
-		Dir.mkdir(@@dir) unless Dir.exists?(@@dir)
-#	protein_base_name=${protein_fasta%%.*}
-#	echo $protein_base_name
-#	
-#	if [[ ! -d $protein_base_name ]] ; then
-#		echo "Creating protein database."
-#		java -jar PeptideMatchCMD_1.0.jar -a index -d ${protein_fasta} -i ${protein_base_name}
-#	fi
-	end
+end
 
-	def match( sequence, protein )
-#		[[ -f ${out} ]] ||  java -jar PeptideMatchCMD_1.0.jar -a query -i ${protein_base_name} -q ${cleaned_sequence} -o ${out}
-	end
+##################################################
 
-end	#	class PeptideMatch
+protein_base_name=options[:protein_file].gsub(/.[^.]*$/,'').gsub(/.*\/(.*)$/,'\1')
 
-peptide_matcher = PeptideMatch.new( options[:protein_file] )
-puts PeptideMatch.dir
-
+if !Dir.exists?( protein_base_name )
+	puts "Creating #{protein_base_name} protein database."
+	system("java -jar PeptideMatchCMD_1.0.jar -a index -d #{options[:protein_file]} -i #{protein_base_name}")
+else
+	puts "#{protein_base_name} protein database exists."
+end
 
 ##################################################
 
@@ -133,6 +171,7 @@ if !File.exists?( select_evidence_file )
 	end.compact
 
 	select_evidence_csv = CSV.open(select_evidence_file,'w', { col_sep: "\t"  })
+	select_evidence_csv.puts ["Modified sequence","Leading razor protein"]
 	select_evidence.sort.uniq.each do |line|
 		select_evidence_csv.puts line
 	end
@@ -143,116 +182,126 @@ end
 
 ##################################################
 
-class Evidence
-	attr_accessor :sequence, :protein
-	def initialize(h={})
-		@sequence=h["Modified sequence"]
-		@protein=h["Leading razor protein"]
-	end
+puts "Starting"
+puts Time.now
+
+evidences=[]
+
+no_matches = CSV.open("MatchedModificationNONE.txt",'w', {col_sep: "\t" })
+no_matches.puts ["Modified sequence","Leading razor protein"]
+multiple_matches = CSV.open("MatchedModificationMULTIPLE.txt",'w', {col_sep: "\t" })
+multiple_matches.puts ["Modified sequence","Leading razor protein"]
+matched_mod = CSV.open("MatchedModification.txt",'w', {col_sep: "\t" })
+matched_mod_header = ["Modified sequence","Leading razor protein","Start position","End position"]
+options[:amino_acids].split(",").each do |acid|
+	matched_mod_header.push "#{acid} position"
+	matched_mod_header.push "#{acid} moidification position"
+end
+matched_mod.puts matched_mod_header
+
+c = CSV.open(select_evidence_file,'rb')
+record_count = c.readlines.size
+c.close
+(c=CSV.open(select_evidence_file,'rb',
+	{ headers: true, col_sep: "\t"  })).each do |line|
+
+	puts "Processing #{c.lineno}/#{record_count} - #{line['Modified sequence']}:#{line['Leading razor protein']}"
+
+	e = Evidence.new(line.to_hash)
+	e.query( protein_base_name )
+	evidences.push e
+
+	if e.alignments.length < 1
+		puts "None of the matches match the expected protein."
+		no_matches.puts line
+	else
+		if e.alignments.length > 1
+			puts "More than one matches match the expected protein. Reporting all."
+			multiple_matches.puts line
+		end
+
+#		e.alignments.each_with_index do |alignment,align_i|
+		e.alignments.each do |alignment|
+
+			matched_mod_line = [e.sequence,e.protein,alignment[:match_start],alignment[:match_end]]
+	
+
+acids.split(//).each do |acid|
+	positions = e.cleaned_sequence.indices_of_chars(acid).collect{|i| alignment[:match_start] + i }
+	positions.each { |position| alignment[:absolute_positions][position] = acid }
 end
 
 
-evidences=[]
-CSV.open(options[:evidence_file],'rb',
-	{ headers: true, col_sep: "\t"  }).each do |line|
+			options[:amino_acids].split(",").each do |acid_group|
 
-	puts line.to_hash
+#				absolute_positions=e.cleaned_sequence.indices_of_chars(acid_group).collect{|i| alignment[:match_start] + i }
+#puts alignment.inspect
+				absolute_positions=alignment[:absolute_positions].select{|k,v| acid_group.match(v) }.collect{|k,v| k }
+#puts absolute_positions.inspect
+#				alignment[:absolute_positions] += absolute_positions
 
+				modified_positions=e.modified_positions.collect{|i| alignment[:match_start] + i } & absolute_positions
+				alignment[:modified_positions] += modified_positions
 
-	evidences.push Evidence.new(line.to_hash)
+				matched_mod_line << absolute_positions.join(";")
+				matched_mod_line << modified_positions.join(";")
+			end
 
-	break if $. > 10
+			matched_mod.puts matched_mod_line
 
+		end	#	e.alignments.each do |alignment|
 
+	end	#	e.alignments.length >= 1
 
-
-
-
-
-
-
-#	
-#	echo -e -n "Modified sequence\tLeading razor protein\tStart position\tEnd position" > MatchedModification.txt
-#	for aa in $( echo ${amino_acids} | awk -F, '{ for(i=1;i<=NF;i++) print $i }' ) ; do
-#		echo -e -n "\t${aa} position\t${aa} modification position" >> MatchedModification.txt
-#	done
-#	echo >> MatchedModification.txt
-#	
-#	
-#	while read line; do
-#	
-#	  echo $line
-#		sequence=${line%	*}
-#		echo $sequence
-#		protein=${line#*	}
-#		echo $protein
-#	
-#		cleaned_sequence=$( echo ${sequence} | sed -e 's/_//g' -e 's/([[:alpha:]]*)//g' )
-#		echo $cleaned_sequence
-#	
-#		out=${protein_base_name}.${cleaned_sequence}.txt
-#	
-#		[[ -f ${out} ]] ||  java -jar PeptideMatchCMD_1.0.jar -a query -i ${protein_base_name} -q ${cleaned_sequence} -o ${out}
-#	
-#		number_matches_in_protein=$( cat ${out} | grep ${protein} | wc -l )
-#	
-#		echo "Found ${number_matches_in_protein}"
-#	
-#		if [[ ${number_matches_in_protein} -eq 0 ]] ; then
-#			echo "None of the matches match the expected protein."
-#			echo $line >> MatchedModificationNONE.txt
-#			continue
-#		fi
-#	
-#		if [[ ${number_matches_in_protein} -gt 1 ]] ; then
-#			echo "More than one matches match the expected protein."
-#			echo $line >> MatchedModificationMULTIPLE.txt
-#			continue
-#		fi
-#	
-#		match_start=$( cat ${out} | grep ${protein} | awk '{print $4}' )
-#		match_end=$( cat ${out} | grep ${protein} | awk '{print $5}' )
-#	
-#		echo -e -n "${sequence}\t${protein}\t${match_start}\t${match_end}" >> MatchedModification.txt
-#	
-#		for aa in $( echo ${amino_acids} | awk -F, '{ for(i=1;i<=NF;i++) print $i }' ) ; do
-#			positions=$( echo ${cleaned_sequence} | fold -w1 | grep -n "[${aa}]" | awk -F: -v s=${match_start} '{printf($1+s";")}' )
-#			positions=${positions%;}
-#	
-#			all_modified_positions=$( echo ${sequence} | sed 's/_//g' | awk -v s=${match_start} '{ while(( m = match($0,/\(/) ) > 0 ){ printf(s+m-1";"); sub(/\(.{2,4}\)/,"",$0); } }' )
-#			all_modified_positions=${all_modified_positions%;}
-#	
-#			
-#			modified_positions=$( comm -12 <( echo ${positions} | sed 's/;/\n/g' | sort ) <( echo ${all_modified_positions} | sed 's/;/\n/g' | sort ) | tr "\n" ";" )
-#	
-#			modified_positions=${modified_positions%;}	#	remove last semicolon
-#	
-#			echo -e -n "\t${positions}\t${modified_positions}" >> MatchedModification.txt
-#	
-#		done
-#	
-#		echo >> MatchedModification.txt
-#	
-#	
-#	
-
+	#	Can't use $. as it is the last counter used and in this case, its the query output, not the csv file.
+	#break if $. > 10
+#	break if c.lineno > 10
 
 end		#	CSV.open(options[:evidence_file],'rb',
 
-#matched_mod=File.open("MatchedModification.txt",'w')
-#
-#protein_mod=File.open("ProteinModification.txt",'w')
-#protein_mod.puts "Leading razor protein\tAA\tAA location\tSequences with Modified AA\tSequences with Unmodified AA" 
+no_matches.close
+multiple_matches.close
+matched_mod.close
+
+##################################################
+
+protein_mod=CSV.open("ProteinModification.txt",'w', {col_sep: "\t" })
+protein_mod.puts ["Leading razor protein","AA","AA location","Sequences with Modified AA","Sequences with Unmodified AA"]
 
 
+#	Leading razor protein\t AA\t AA location\t Sequences with Modified AA\t Sequences with Unmodified AA\t
 #
-#
-#
-#matched_mod.close
-#protein_mod.close
+#	PROTEIN1\t               S\t           4\t     \t                       _ASSST[80]TY_;_SSS[80]T[80]_
+#	PROTEIN1\t               S\t           5\t     \t                       _ASSST[80]TY_;_SSS[80]T[80]_
+#	PROTEIN1\t               S\t           6\t     _SSS[80]T[80]_\t         _ASSST[80]TY_
+#	PROTEIN1\t               T\t           7\t\    _ASSST[80]TY_; _SSS[80]T[80]_\t
 
-puts evidences.inspect
 
+evidences.collect{|e|e.protein}.uniq.sort.each do |protein|
+
+	evidences_for_this_protein = evidences.select{|e|e.protein == protein}
+
+	positions = {}
+
+	evidences_for_this_protein.each do |evidence|
+		evidence.alignments.each do |alignment|
+			positions.update alignment[:absolute_positions]
+		end
+	end
+
+
+	positions.each do |position,acid|
+
+		protein_mod_line = [ protein, acid, position, 
+			evidences_for_this_protein.select{|evidence| evidence.alignments.any?{|a|a[:modified_positions].include? position }}.collect{|e| e.sequence }.join(';'),
+			evidences_for_this_protein.select{|evidence| evidence.alignments.any?{|a| !a[:modified_positions].include? position }}.collect{|e| e.sequence }.join(';') ]
+		protein_mod.puts protein_mod_line
+
+	end
+	
+end
+
+protein_mod.close
 
 puts "Done"
 puts Time.now

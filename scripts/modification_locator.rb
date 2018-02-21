@@ -11,7 +11,8 @@ def usage(options={})
 #	puts "If going to run multiple times, for whatever reason, you can specify the same suffix with suffix option."
 #	puts "This way, most of the parsing and the theospec calls won't need rerun."
 	puts "Produces MatchedModification.txt, ProteinModification.txt, "
-	puts "MatchedModificationNONE.txt and MatchedModificationMULTIPLE.txt"
+	puts "MatchedModificationNONE.txt, MatchedModificationMULTIPLE.txt"
+	puts "and ModificationNormalizerPeptides.txt"
 	puts
 	puts "#{$0} [options] "#<formatted moda output file> <observed spectra mgf file>"
 	puts
@@ -87,7 +88,7 @@ end
 
 
 
-#usage(options) #if ARGV.length < 2 
+#usage(options) #if ARGV.length < 2
 
 class String
 
@@ -118,8 +119,8 @@ class Evidence
 	@@dir = "PeptideMatchOutput"
 
 	def initialize(h={})
-		@sequence=h["Modified sequence"]
-		@protein=h["Leading razor protein"]
+		@sequence=h['Modified sequence']
+		@protein=h['Leading razor protein']
 		@cleaned_sequence=sequence.gsub(/_/,'').gsub(/\([[:alpha:]]*\)/,'')
 		@alignments = []
 		@modified_positions=sequence.gsub(/_/,'').indices_of_mods
@@ -137,7 +138,7 @@ class Evidence
 		else
 			puts "Catting existing query."
 		end
-		
+
 		File.open(outfile,'rb').each do |line|
 			next if line =~ /^#/
 			l = line.split
@@ -168,14 +169,14 @@ acids = options[:amino_acids].gsub(/[^[:alpha:]]/,'')
 select_evidence_file = options[:evidence_file].gsub(/(.[^.]+)$/,".#{acids}\\1")
 if !File.exists?( select_evidence_file )
 	puts "Filtering evidence."
-	acids_regex=Regexp.new("[#{acids}]")	
+	acids_regex=Regexp.new("[#{acids}]")
 	select_evidence = CSV.open(options[:evidence_file],'rb',
 			{ headers: true, col_sep: "\t"  }).collect do |line|
-		[line["Modified sequence"],line["Leading razor protein"]] if line["Modified sequence"].match(acids_regex)
+		[line['Modified sequence'],line['Leading razor protein']] if line['Modified sequence'].match(acids_regex)
 	end.compact
 
 	select_evidence_csv = CSV.open(select_evidence_file,'w', { col_sep: "\t"  })
-	select_evidence_csv.puts ["Modified sequence","Leading razor protein"]
+	select_evidence_csv.puts ['Modified sequence','Leading razor protein']
 	select_evidence.sort.uniq.each do |line|
 		select_evidence_csv.puts line
 	end
@@ -192,11 +193,11 @@ puts Time.now
 evidences=[]
 
 no_matches = CSV.open("MatchedModificationNONE.txt",'w', {col_sep: "\t" })
-no_matches.puts ["Modified sequence","Leading razor protein"]
+no_matches.puts ['Modified sequence','Leading razor protein']
 multiple_matches = CSV.open("MatchedModificationMULTIPLE.txt",'w', {col_sep: "\t" })
-multiple_matches.puts ["Modified sequence","Leading razor protein"]
+multiple_matches.puts ['Modified sequence','Leading razor protein']
 matched_mod = CSV.open("MatchedModification.txt",'w', {col_sep: "\t" })
-matched_mod_header = ["Modified sequence","Leading razor protein","Start position","End position"]
+matched_mod_header = ['Modified sequence','Leading razor protein','Start position','End position']
 options[:amino_acids].split(",").each do |acid|
 	matched_mod_header.push "#{acid} position"
 	matched_mod_header.push "#{acid} modification position"
@@ -227,7 +228,7 @@ c.close
 		e.alignments.each do |alignment|
 
 			matched_mod_line = [e.sequence,e.protein,alignment[:match_start],alignment[:match_end]]
-	
+
 			acids.split(//).each do |acid|
 				positions = e.cleaned_sequence.indices_of_chars(acid).collect{|i| alignment[:match_start] + i }
 				positions.each { |position| alignment[:absolute_positions][position] = acid }
@@ -263,8 +264,7 @@ matched_mod.close
 ##################################################
 
 protein_mod=CSV.open("ProteinModification.txt",'w', {col_sep: "\t" })
-protein_mod.puts ["Leading razor protein","AA","AA location","Sequences with Modified AA","Sequences with Unmodified AA"]
-
+protein_mod.puts ['Leading razor protein','AA','AA location','Sequences with Modified AA','Sequences with Unmodified AA']
 
 #	Leading razor protein\t AA\t AA location\t Sequences with Modified AA\t Sequences with Unmodified AA\t
 #
@@ -274,14 +274,19 @@ protein_mod.puts ["Leading razor protein","AA","AA location","Sequences with Mod
 #	PROTEIN1\t               T\t           7\t\    _ASSST[80]TY_; _SSS[80]T[80]_\t
 
 
-evidences.collect{|e|e.protein}.uniq.sort.each do |protein|
+puts "Producing ProteinModification.txt ..."
+
+proteins = evidences.select{|e|e.alignments.length > 0}.collect{|e|e.protein}.uniq.sort
+proteins.each_with_index do |protein, protein_i|
+
+	puts "Processing protein #{protein_i+1}/#{proteins.length} : #{protein}"
 
 	evidences_for_this_protein = evidences.select{|e|e.protein == protein}
 
 	positions = {}
 
 	alignments = evidences_for_this_protein.collect do |e|
-		e.alignments.each do |alignment| 
+		e.alignments.each do |alignment|
 			positions.update alignment[:absolute_positions]
 			alignment[:sequence] = e.sequence
 		end
@@ -294,7 +299,7 @@ evidences.collect{|e|e.protein}.uniq.sort.each do |protein|
 
 		alignments_at_this_position = alignments.select{|a| a[:match_start] <= position && a[:match_end] >= position }
 
-		protein_mod_line = [ protein, acid, position, 
+		protein_mod_line = [ protein, acid, position,
 			alignments_at_this_position.select{|a|  a[:modified_positions].include? position
 				}.collect{|a| a[:sequence] }.join(';'),
 			alignments_at_this_position.select{|a| !a[:modified_positions].include? position
@@ -303,10 +308,42 @@ evidences.collect{|e|e.protein}.uniq.sort.each do |protein|
 		protein_mod.puts protein_mod_line
 
 	end
-	
-end	#	evidences.collect{|e|e.protein}.uniq.sort.each do |protein|
+
+end	#	proteins.each_with_index do |protein, protein_i|
 
 protein_mod.close
+
+##################################################
+
+modification_normalizer=CSV.open("ModificationNormalizerPeptides.txt",'w', {col_sep: "\t" })
+modification_normalizer.puts ['Leading razor protein','Peptides without specified AAs']
+
+puts "Producing ModificationNormalizerPeptides.txt ..."
+
+out={}
+acids_regex=Regexp.new("[#{acids}]")
+c = CSV.open(options[:evidence_file],'rb')
+record_count = c.readlines.size
+c.close
+(c=CSV.open(options[:evidence_file],'rb',
+		{ headers: true, col_sep: "\t"  })).each do |line|
+
+	puts "Processing record #{c.lineno}/#{record_count} : #{line['Modified sequence']} : #{line['Leading razor protein']}"
+
+	unless line['Modified sequence'].match(acids_regex)
+		out[ line['Leading razor protein'] ] ||= []
+		out[ line['Leading razor protein'] ] << line['Modified sequence'] unless out[ line['Leading razor protein'] ].include? line['Modified sequence']
+	end
+
+end
+
+out.keys.sort.each do |protein|
+	modification_normalizer.puts [ protein, out[protein].join(';') ]
+end
+
+modification_normalizer.close
+
+##################################################
 
 puts "Done"
 puts Time.now

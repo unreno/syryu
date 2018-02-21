@@ -10,6 +10,8 @@ def usage(options={})
 #	puts "Uses a date suffix for all created files."
 #	puts "If going to run multiple times, for whatever reason, you can specify the same suffix with suffix option."
 #	puts "This way, most of the parsing and the theospec calls won't need rerun."
+	puts "Produces MatchedModification.txt, ProteinModification.txt, "
+	puts "MatchedModificationNONE.txt and MatchedModificationMULTIPLE.txt"
 	puts
 	puts "#{$0} [options] "#<formatted moda output file> <observed spectra mgf file>"
 	puts
@@ -23,7 +25,9 @@ def usage(options={})
 	puts "Defaults/current values:"
 #	puts "	--suffix #{options[:suffix]}"
 	puts
+	puts "Examples:"
 #	puts "#{$0} out_blind_140521_EOC_MCis_T2_3.txt.OUTPUT.tsv 140521_EOC_MCis_T2_3.SCANS.mgf"
+	puts "#{$0} --amino_acids STY,M --evidence evidence.txt --protein uniprot-organism+homo+sapiens.fasta"
 	puts
 	exit
 end
@@ -195,7 +199,7 @@ matched_mod = CSV.open("MatchedModification.txt",'w', {col_sep: "\t" })
 matched_mod_header = ["Modified sequence","Leading razor protein","Start position","End position"]
 options[:amino_acids].split(",").each do |acid|
 	matched_mod_header.push "#{acid} position"
-	matched_mod_header.push "#{acid} moidification position"
+	matched_mod_header.push "#{acid} modification position"
 end
 matched_mod.puts matched_mod_header
 
@@ -220,25 +224,18 @@ c.close
 			multiple_matches.puts line
 		end
 
-#		e.alignments.each_with_index do |alignment,align_i|
 		e.alignments.each do |alignment|
 
 			matched_mod_line = [e.sequence,e.protein,alignment[:match_start],alignment[:match_end]]
 	
-
-acids.split(//).each do |acid|
-	positions = e.cleaned_sequence.indices_of_chars(acid).collect{|i| alignment[:match_start] + i }
-	positions.each { |position| alignment[:absolute_positions][position] = acid }
-end
-
+			acids.split(//).each do |acid|
+				positions = e.cleaned_sequence.indices_of_chars(acid).collect{|i| alignment[:match_start] + i }
+				positions.each { |position| alignment[:absolute_positions][position] = acid }
+			end
 
 			options[:amino_acids].split(",").each do |acid_group|
 
-#				absolute_positions=e.cleaned_sequence.indices_of_chars(acid_group).collect{|i| alignment[:match_start] + i }
-#puts alignment.inspect
 				absolute_positions=alignment[:absolute_positions].select{|k,v| acid_group.match(v) }.collect{|k,v| k }
-#puts absolute_positions.inspect
-#				alignment[:absolute_positions] += absolute_positions
 
 				modified_positions=e.modified_positions.collect{|i| alignment[:match_start] + i } & absolute_positions
 				alignment[:modified_positions] += modified_positions
@@ -283,23 +280,31 @@ evidences.collect{|e|e.protein}.uniq.sort.each do |protein|
 
 	positions = {}
 
-	evidences_for_this_protein.each do |evidence|
-		evidence.alignments.each do |alignment|
+	alignments = evidences_for_this_protein.collect do |e|
+		e.alignments.each do |alignment| 
 			positions.update alignment[:absolute_positions]
+			alignment[:sequence] = e.sequence
 		end
-	end
+		e.alignments
+	end.flatten
 
+	positions.keys.sort.each do |position|
 
-	positions.each do |position,acid|
+		acid=positions[position]
+
+		alignments_at_this_position = alignments.select{|a| a[:match_start] <= position && a[:match_end] >= position }
 
 		protein_mod_line = [ protein, acid, position, 
-			evidences_for_this_protein.select{|evidence| evidence.alignments.any?{|a|a[:modified_positions].include? position }}.collect{|e| e.sequence }.join(';'),
-			evidences_for_this_protein.select{|evidence| evidence.alignments.any?{|a| !a[:modified_positions].include? position }}.collect{|e| e.sequence }.join(';') ]
+			alignments_at_this_position.select{|a|  a[:modified_positions].include? position
+				}.collect{|a| a[:sequence] }.join(';'),
+			alignments_at_this_position.select{|a| !a[:modified_positions].include? position
+				}.collect{|a| a[:sequence] }.join(';') ]
+
 		protein_mod.puts protein_mod_line
 
 	end
 	
-end
+end	#	evidences.collect{|e|e.protein}.uniq.sort.each do |protein|
 
 protein_mod.close
 

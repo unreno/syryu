@@ -7,32 +7,8 @@
 
 * Download mm10c.fasta.gz, mm10c.refFlat.gz, mm10c.dict.gz, mm10c.gtf.gz from Azure
 * Download picard.jar `wget https://github.com/broadinstitute/picard/releases/download/2.17.0/picard.jar`
-
 * Download fastq data from Illumina
-* Modify convert\_fastq\_files\_to\_bams.bash to be more flexible or change to convert\_fastq\_files\_to\_merged\_sorted\_bams.bash <----
-* Convert fastq data to bams
-* Merge bams and sort by name with picard so can correctly incorrectly sort
-
-```
-java -jar ~/picard.jar FastqToSam \
-  F1=$fastq1 \
-  F2=$fastq2 \
-  O=$basename.bam \
-  SM=$basename
-
-java -jar ~/picard.jar MergeSamFiles \
-	INPUT=1A_S4_L001.bam \
-	INPUT=1A_S4_L002.bam \
-	INPUT=1A_S4_L003.bam \
-	INPUT=1A_S4_L004.bam \
-	INPUT=1B_S3_L001.bam \
-	INPUT=1B_S3_L002.bam \
-	INPUT=1B_S3_L003.bam \
-	INPUT=1B_S3_L004.bam \
-	ASSUME_SORTED=true \
-	SORT_ORDER=queryname \
-	OUTPUT=1.bam
-```
+* Convert fastq data to bams with convert\_fastq\_files\_to\_merged\_sorted\_bams.bash
 
 
 ###	Start new AWS instance
@@ -68,14 +44,7 @@ mkdir ~/mm10c
 ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' | grep "\." | tr -d '"' | tr -d ' ' )
 echo $ip
 
-
-
-
-scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/syryu/20180227/?.bam ec2-user@$ip:working/
-
-
-
-
+scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/syryu/drop_seq/B?.bam ec2-user@$ip:working/
 
 scp -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/syryu/drop_seq/mm10c.*.gz ec2-user@$ip:mm10c/
 ```
@@ -96,8 +65,6 @@ gunzip mm10c.dict.gz
 chmod -w ~/mm10c/mm10c*
 cd ~/working/
 mkdir -p ~/working/mm10c_star
-
-gunzip ~/mm10c/mm10c.fasta.gz
 
 nohup STAR --genomeFastaFiles ~/mm10c/mm10c.fasta --runMode genomeGenerate --genomeDir ~/working/mm10c_star --sjdbGTFfile ~/mm10c/mm10c.gtf --sjdbOverhang 100 --runThreadN 4 &
 ```

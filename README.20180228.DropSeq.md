@@ -79,7 +79,43 @@ rmdir ~/working/_STARtmp
 
 ###	RUN DATA (takes way more than 8 hours)
 
-Drop-seq\_alignment.sh takes about 2 hours, then dge.bash/seurat.R takes about 3 hours or so.
+Drop-seq\_alignment.sh takes about 2 hours, then dge.bash/seurat.R takes about 7 hours or so.
+
+
+read.table fails, likely due to memory shortage. Attempting to better compute memory needed.
+
+First run sample 1's dge, 
+```BASH
+zcat 1-error_detected.dge.txt | wc -l
+# 15564
+zcat 1-error_detected.dge.txt  | head -1 | awk '{print NF}'
+#	311392
+expr 311392 \* 15564
+#	4846505088
+
+echo 76000000000 / 4846505088 | bc -l 
+#	15.68140311833713688241
+```
+
+used at least 76GB so looks like 16 bytes each.
+
+B3 has
+
+```BASH
+zcat error_detected.dge.txt.gz | head -1 | awk '{print NF}'
+#	1030357
+zcat error_detected.dge.txt.gz | wc -l
+#	17895
+expr 1030357 \* 17895
+#	18438238515
+echo 18438238515 * 16  | bc -l
+295011816240
+```
+
+So looks like I need a machine with at least 295 GB
+
+
+
 
 ```BASH
 ip=$( aws --profile syryu ec2 describe-instances --query 'Reservations[].Instances[].PublicIpAddress' | grep "\." | tr -d '"' | tr -d ' ' )
@@ -107,4 +143,11 @@ rsync --archive --verbose --compress --rsh "ssh -i /Users/jakewendt/.aws/JakeSYR
 
 Probably should've stuck with a single name for the modified reference. Say mm10ryulab.
 
+Given the computed memory need, will need the x1e.4xlarge to run seurat.R
+
+```
+x1e.xlarge	4	12	122	1 x 120 SSD	$0.834 per Hour
+x1e.2xlarge	8	23	244	1 x 240 SSD	$1.668 per Hour
+x1e.4xlarge	16	47	488	1 x 480 SSD	$3.336 per Hour
+```
 

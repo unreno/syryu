@@ -68,7 +68,8 @@ scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/
 
 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@52.168.35.1
 
-sudo apt install default-jre
+sudo apt install openjdk-8-jdk
+
 sudo apt install unzip
 
 
@@ -88,7 +89,6 @@ mkdir ~/bin
 cp STAR-2.5.3a/bin/Linux_x86_64_static/STAR bin/
 
 sudo apt install htop
-sudo apt install r-base-core
 sudo apt install openssl libssl-dev libcurl4-openssl-dev libssh2-1-dev
 
 
@@ -105,6 +105,18 @@ local({
 	options(repos = r)
 })
 EOF
+
+
+#sudo apt install r-base-core
+#	apt version of R is 3.2.?. Too old
+wget https://cloud.r-project.org/src/base/R-3/R-3.4.3.tar.gz
+
+sudo apt install libx11-dev xorg-dev
+cd R-3.4.3
+./configure --prefix ~/.local
+make install
+
+
 
 R
 install.packages("devtools")

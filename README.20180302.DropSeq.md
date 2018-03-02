@@ -37,12 +37,12 @@ java -jar ~/picard.jar MergeSamFiles ASSUME_SORTED=false SORT_ORDER=queryname OU
 Started Standard_E16s_v3, 16CPU 128GB memory, 128GB disk via the web site.
 
 
-ssh jake@52.168.35.1
 
 
 ###	UPDATE!
 
 ```BASH
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@52.168.35.1
 sudo apt update
 sudo apt full-upgrade
 sudo apt install make
@@ -66,6 +66,7 @@ scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/
 
 ```BASH
 
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@52.168.35.1
 
 sudo apt install default-jre
 sudo apt install unzip
@@ -151,7 +152,7 @@ Drop-seq\_alignment.sh takes about 1 hours, then dge.bash/seurat.R takes about 1
 
 
 ```BASH
-ssh -i /Users/jakewendt/.aws/JakeSYRyu.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@52.168.35.1
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@52.168.35.1
 cd ~/working/dropseq
 nohup drop_seq.bash ~/working/*.bam > drop_seq.log 2>&1 &
 ```

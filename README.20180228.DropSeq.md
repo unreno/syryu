@@ -110,10 +110,15 @@ expr 1030357 \* 17895
 #	18438238515
 echo 18438238515 * 16  | bc -l
 295011816240
+
+
+echo '1246168 * 18125 * 16 / 1000000000' | bc -l
+361.38872
 ```
 
-So looks like I need a machine with at least 295 GB
+So looks like I need a machine with at least 300 GB
 
+The final object doesn't use this much memory though.
 
 
 
@@ -150,4 +155,7 @@ x1e.xlarge	4	12	122	1 x 120 SSD	$0.834 per Hour
 x1e.2xlarge	8	23	244	1 x 240 SSD	$1.668 per Hour
 x1e.4xlarge	16	47	488	1 x 480 SSD	$3.336 per Hour
 ```
+
+Looks like I'm gonna process pre-merging for these samples as well as the previous ones.
+
 

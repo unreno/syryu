@@ -187,8 +187,8 @@ Probably should've stuck with a single name for the modified reference. Say mm10
 
 
 
-
-
+rename B4_S2 B4 B4_S2_L00*
+rename B3_S1 B3 B3_S1_L00*
 
 `cd ~/github/unreno/syryu/drop_seq/20180302a.drop_seq_alignment/`
 ```R

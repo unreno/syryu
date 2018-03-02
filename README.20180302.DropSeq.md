@@ -125,6 +125,7 @@ install.packages("httpuv")
 #install.packages("igraph")
 install_github("igraph/rigraph")
 install.packages("Seurat")
+install.packages("pryr")
 
 
 
@@ -158,9 +159,9 @@ chmod 444 ~/working/dropseq/star_mm10c_creation.log
 rmdir ~/working/_STARtmp
 ```
 
-###	RUN DATA (individually, should take about 2 hours)
+###	RUN DATA (individually, should take under an hour on Azure 16/128)
 
-Drop-seq\_alignment.sh takes about 1 hours, then dge.bash/seurat.R takes about 1 hours or so.
+Drop-seq\_alignment.sh takes about 20 min, then dge.bash/seurat.R takes about 20 min or so.
 
 
 ```BASH
@@ -183,4 +184,65 @@ rsync --archive --verbose --compress --rsh "ssh -o UserKnownHostsFile=/dev/null 
 ##	Post Run Notes
 
 Probably should've stuck with a single name for the modified reference. Say mm10ryulab.
+
+
+
+
+
+
+`cd ~/github/unreno/syryu/drop_seq/20180302a.drop_seq_alignment/`
+```R
+library(Seurat)
+library(pryr)
+date()
+mem_used()
+
+load("1_L001/InitialSeuratObjectSample.RData")
+mem_used()
+ds1=ds
+mem_used()
+load("1_L002/InitialSeuratObjectSample.RData")
+mem_used()
+ds2=ds
+mem_used()
+load("1_L003/InitialSeuratObjectSample.RData")
+mem_used()
+ds3=ds
+mem_used()
+load("1_L004/InitialSeuratObjectSample.RData")
+mem_used()
+ds4=ds
+mem_used()
+rm(ds)
+mem_used()
+date()
+
+ls(all.names = TRUE)
+
+mem_used()
+ds1n2 <- MergeSeurat(object1 = ds1, object2 = ds2, add.cell.id1 = "L001", add.cell.id2 = "L002", project = "L001,L002")
+mem_used()
+rm(ds1)
+mem_used()
+rm(ds2)
+mem_used()
+date()
+
+ds3n4 <- MergeSeurat(object1 = ds3, object2 = ds4, add.cell.id1 = "L003", add.cell.id2 = "L004", project = "L003,L004")
+mem_used()
+rm(ds3)
+mem_used()
+rm(ds4)
+mem_used()
+date()
+
+merged <- MergeSeurat(object1 = ds1n2, object2 = ds3n4, project = "L001,L002,L003,L004")
+mem_used()
+rm(ds1n2)
+mem_used()
+rm(ds3n4)
+mem_used()
+date()
+
+```
 

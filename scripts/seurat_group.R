@@ -62,6 +62,7 @@ mem_used()
 rm(ds)
 mem_used()
 date()
+rm(last)
 
 ls(all.names = TRUE)
 
@@ -82,7 +83,7 @@ rm(ds4)
 mem_used()
 date()
 
-merged <- MergeSeurat(object1 = ds1n2, object2 = ds3n4, project = "L001,L002,L003,L004", do.normalize = FALSE)
+ds <- MergeSeurat(object1 = ds1n2, object2 = ds3n4, project = "L001,L002,L003,L004", do.normalize = FALSE)
 mem_used()
 rm(ds1n2)
 mem_used()

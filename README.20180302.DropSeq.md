@@ -231,6 +231,8 @@ nohup drop_seq.bash ~/working/{B4_L00?,B3_L001,B3_L004}.bam > drop_seq.2.log 2>&
 
 If all 6 complete successfully, ...
 
+All 6 create seurat object successfully, however 5 of the 6 failed at other points.
+
 
 ```BASH
 cd ~/working/dropseq

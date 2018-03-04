@@ -106,43 +106,54 @@ if( opt$redo ) {
 
 print("Creating VlnPlot")
 VlnPlot(object = ds, features.plot = c("nGene", "nUMI"), nCol = 2)
+mem_used()
+date()
 
 print("Creating GenePlot")
 GenePlot(object = ds, gene1 = "nUMI", gene2 = "nGene")
-
+mem_used()
 date()
+
 print("NormalizeData")
 ds <- NormalizeData(object = ds)
-
+mem_used()
 date()
+
 print("ScaleDate")
 ds <- ScaleData(object = ds)
-
+mem_used()
 date()
+
 print("FindVariableGenes")
 #ds <- FindVariableGenes(object = ds, do.plot = FALSE)
 ds <- FindVariableGenes(object = ds, do.plot = TRUE)
+mem_used()
+date()
 
 
 
 #	from http://satijalab.org/seurat/pbmc3k_tutorial.html
 
-date()
 print("RunPCA")
 ds <- RunPCA(object = ds, pc.genes = ds@var.genes, do.print = TRUE, pcs.print = 1:5, genes.print = 5)
-
+mem_used()
 date()
+
 print("PrintPCA")
 # Examine and visualize PCA results a few different ways
 PrintPCA(object = ds, pcs.print = 1:5, genes.print = 5, use.full = FALSE)
-
+mem_used()
 date()
+
 print("VizPCA")
 VizPCA(object = ds, pcs.use = 1:2)
-
+mem_used()
 date()
+
 print("PCAPlot")
 PCAPlot(object = ds, dim.1 = 1, dim.2 = 2)
+mem_used()
+date()
 
 # ProjectPCA scores each gene in the dataset (including genes not included
 # in the PCA) based on their correlation with the calculated components.
@@ -150,20 +161,22 @@ PCAPlot(object = ds, dim.1 = 1, dim.2 = 2)
 # that are strongly correlated with cellular heterogeneity, but may not have
 # passed through variable gene selection.  The results of the projected PCA
 # can be explored by setting use.full=T in the functions above
-date()
 print("ProjectPCA")
 ds <- ProjectPCA(object = ds, do.print = FALSE)
-
+mem_used()
 date()
+
 print("Making a couple Heat Maps")
 
-date()
 print("PCHeatmap")
 PCHeatmap(object = ds, pc.use = 1, cells.use = 500, do.balanced = TRUE, label.columns = FALSE)
-
+mem_used()
 date()
+
 print("PCHeatmap")
 PCHeatmap(object = ds, pc.use = 1:12, cells.use = 500, do.balanced = TRUE, label.columns = FALSE, use.full = FALSE)
+mem_used()
+date()
 
 # NOTE: This process can take a long time for big datasets, comment out for
 # expediency.  More approximate techniques such as those implemented in
@@ -209,29 +222,32 @@ print("Finding Clusters")
 # save.SNN = T saves the SNN so that the clustering algorithm can be rerun
 # using the same graph but with a different resolution value (see docs for
 # full details)
-date()
 print("FindClusters")
 ds <- FindClusters(object = ds, reduction.type = "pca", dims.use = 1:10, resolution = 0.6, print.output = 0, save.SNN = TRUE)
-
+mem_used()
 date()
+
 print("PrintFindClustersParams")
 PrintFindClustersParams(object = ds)
+mem_used()
+date()
 
 # While we do provide function-specific printing functions, the more general
 # function to print calculation parameters is PrintCalcParams().
 
-
-date()
 print("RunTSNE")
 ds <- RunTSNE(object = ds, dims.use = 1:10, do.fast = TRUE, check_duplicates = FALSE)
+mem_used()
+date()
 #Error in Rtsne.default(X = as.matrix(x = data.use), dims = dim.embed,  : 
 #  Remove duplicates before running TSNE.
 
 # note that you can set do.label=T to help label individual clusters
 
-date()
 print("TSNEPlot")
 TSNEPlot(object = ds)
+mem_used()
+date()
 
 
 

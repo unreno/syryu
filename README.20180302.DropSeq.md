@@ -178,7 +178,7 @@ rsync --archive --verbose --compress --rsh "ssh -o UserKnownHostsFile=/dev/null 
 ```
 
 
-
+##################################################
 
 
 ##	Post Run Notes
@@ -186,63 +186,66 @@ rsync --archive --verbose --compress --rsh "ssh -o UserKnownHostsFile=/dev/null 
 Probably should've stuck with a single name for the modified reference. Say mm10ryulab.
 
 
-
+```
 rename B4_S2 B4 B4_S2_L00*
 rename B3_S1 B3 B3_S1_L00*
-
-`cd ~/github/unreno/syryu/drop_seq/20180302a.drop_seq_alignment/`
-```R
-library(Seurat)
-library(pryr)
-date()
-mem_used()
-
-load("1_L001/InitialSeuratObjectSample.RData")
-mem_used()
-ds1=ds
-mem_used()
-load("1_L002/InitialSeuratObjectSample.RData")
-mem_used()
-ds2=ds
-mem_used()
-load("1_L003/InitialSeuratObjectSample.RData")
-mem_used()
-ds3=ds
-mem_used()
-load("1_L004/InitialSeuratObjectSample.RData")
-mem_used()
-ds4=ds
-mem_used()
-rm(ds)
-mem_used()
-date()
-
-ls(all.names = TRUE)
-
-mem_used()
-ds1n2 <- MergeSeurat(object1 = ds1, object2 = ds2, add.cell.id1 = "L001", add.cell.id2 = "L002", project = "L001,L002")
-mem_used()
-rm(ds1)
-mem_used()
-rm(ds2)
-mem_used()
-date()
-
-ds3n4 <- MergeSeurat(object1 = ds3, object2 = ds4, add.cell.id1 = "L003", add.cell.id2 = "L004", project = "L003,L004")
-mem_used()
-rm(ds3)
-mem_used()
-rm(ds4)
-mem_used()
-date()
-
-merged <- MergeSeurat(object1 = ds1n2, object2 = ds3n4, project = "L001,L002,L003,L004")
-mem_used()
-rm(ds1n2)
-mem_used()
-rm(ds3n4)
-mem_used()
-date()
-
 ```
 
+
+Sadly, failed on 6 of the 16.
+
+Restarting on an 8 CPU 256GB
+
+Standard_E32-8s_v3 (8 vcpus, 256 GB memory)
+
+New ip address 13.92.226.126
+
+
+
+```
+B4\* samples ran out of memory.
+system call failed: Cannot allocate memory 
+
+The 2 B3 samples failed differently. Not sure if these are memory issues or not.
+[1] "PCHeatmap"
+Error in sx[1:num.genes, , drop = FALSE] : subscript out of bounds
+Calls: PCHeatmap ... DimTopCells -> unique -> unlist -> lapply -> FUN -> rownames
+Execution halted
+
+[1] "PCHeatmap"
+Error in sx[1:num.genes, , drop = FALSE] : subscript out of bounds
+Calls: PCHeatmap ... DimTopCells -> unique -> unlist -> lapply -> FUN -> rownames
+Execution halted
+Warning message:
+system call failed: Cannot allocate memory 
+```
+
+
+
+
+```BASH
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@13.92.226.126
+cd ~/working/dropseq
+nohup drop_seq.bash ~/working/{B4_L00?,B3_L001,B3_L004}.bam > drop_seq.2.log 2>&1 &
+```
+
+If all 6 complete successfully, ...
+
+
+```BASH
+cd ~/working/dropseq
+nohup seurat_group.bash 1 2 B3 B4 > seurat_group.log 2>&1 &
+```
+
+
+
+
+
+
+
+
+###	DOWNLOAD
+
+```BASH
+rsync --archive --verbose --compress --rsh "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete jake@13.92.226.126:working/dropseq/ ~/github/unreno/syryu/drop_seq/20180302a.drop_seq_alignment/
+```

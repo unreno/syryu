@@ -18,76 +18,97 @@ library(pryr)
 
 
 
+#	This is a bit excessive
+library(optparse)
+ 
+#	default action is "store"
+#	default dest variable are the options without the leading dashes
+option_list = list(
+	make_option("--redo", action="store_true", default=FALSE,
+		help="load saved R file rather than load error_detected.dge.txt.gz")
+); 
+ 
+opt_parser = OptionParser(option_list=option_list);
+opt = parse_args(opt_parser);
+
+
+
+
+
+
 #	from http://satijalab.org/seurat/Seurat_AlignmentTutorial.html
+if( opt$redo ) {
+	print("Loading InitialSeuratObjectSample.RData")
+	load("InitialSeuratObjectSample.RData")
+} else {
 
-date()
-print("Loading data from error_detected.dge.txt.gz")
+	date()
+	print("Loading data from error_detected.dge.txt.gz")
+	
+	print("mem_used()")
+	mem_used()
+	
+	# load data
+	ds.data <- read.table("error_detected.dge.txt.gz",row.names=1,header=T)
+	#	For 1, ( 17153128 Dec 30 01:52 error_detected.dge.txt.gz )
+	#	Took over 1.5 hours and 76GB memory so far
+	
+	print("nrow(ds.data)")
+	nrow(ds.data)
+	
+	print("ncol(ds.data)")
+	ncol(ds.data)
+	
+	print("object_size(ds.data)")
+	object_size(ds.data)
+	
+	
+	#ds <- CreateSeuratObject(raw.data = ds.data)
+	
+	#ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200, is.expr=1)
+	#
+	#	Error in if (!nreplace) return(x) : missing value where TRUE/FALSE needed
+	#	Calls: CreateSeuratObject ... suppressMessages -> withCallingHandlers -> [<- -> [<-.data.frame
+	#	In addition: Warning message:
+	#	In sum(i, na.rm = TRUE) : integer overflow - use sum(as.numeric(.))
+	#	Execution halted
+	#
+	#	Maybe, we need to remove "is.expr=1"? 
+	#
+	#	ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200)
+	#
+	#	Or filter more data at DigitalExpression stage in dropseq (i.e. MIN_NUM_GENES_PER_CELL=2000 instead of 100)?
+	#	Others kept only 0.1% of their data for Seurat.
+	#
+	#	Trying removing is.expr=1
+	
+	print("mem_used()")
+	mem_used()
+	date()
+	print("CreateSeuratObject")
+	ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200)
+	
+	print("Removing raw ds.data")
+	rm(ds.data)
+	
+	date()
+	print("object_size(ds)")
+	object_size(ds)
+	print("mem_used()")
+	mem_used()
+	print("Saving ds")
+	save(ds, file="InitialSeuratObjectSample.RData")
+}
 
-print("mem_used()")
-mem_used()
-
-# load data
-ds.data <- read.table("error_detected.dge.txt.gz",row.names=1,header=T)
-#	For 1, ( 17153128 Dec 30 01:52 error_detected.dge.txt.gz )
-#	Took over 1.5 hours and 76GB memory so far
-
-print("nrow(ds.data)")
-nrow(ds.data)
-
-print("ncol(ds.data)")
-ncol(ds.data)
-
-print("object_size(ds.data)")
-object_size(ds.data)
-
-
-#ds <- CreateSeuratObject(raw.data = ds.data)
-
-#ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200, is.expr=1)
-#
-#	Error in if (!nreplace) return(x) : missing value where TRUE/FALSE needed
-#	Calls: CreateSeuratObject ... suppressMessages -> withCallingHandlers -> [<- -> [<-.data.frame
-#	In addition: Warning message:
-#	In sum(i, na.rm = TRUE) : integer overflow - use sum(as.numeric(.))
-#	Execution halted
-#
-#	Maybe, we need to remove "is.expr=1"? 
-#
-#	ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200)
-#
-#	Or filter more data at DigitalExpression stage in dropseq (i.e. MIN_NUM_GENES_PER_CELL=2000 instead of 100)?
-#	Others kept only 0.1% of their data for Seurat.
-#
-#	Trying removing is.expr=1
-
-print("mem_used()")
-mem_used()
-date()
-print("CreateSeuratObject")
-ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200)
-date()
-print("object_size(ds)")
-object_size(ds)
-print("mem_used()")
-mem_used()
 
 
 
-
-print("Saving ds")
-save(ds, file="InitialSeuratObjectSample.RData")
 
 print("Creating VlnPlot")
 VlnPlot(object = ds, features.plot = c("nGene", "nUMI"), nCol = 2)
 
 print("Creating GenePlot")
 GenePlot(object = ds, gene1 = "nUMI", gene2 = "nGene")
-
-
-
-
-
-
 
 date()
 print("NormalizeData")
@@ -285,9 +306,6 @@ for (i in unique(FetchData(ds,"ident"))$ident){
 #
 #	Nothing works on this data set
 
-
-print("Removing raw ds.data")
-rm(ds.data)
 
 print("Saving all environment")
 save(list=ls(all=TRUE), file="Sample.RData")

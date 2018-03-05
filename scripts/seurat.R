@@ -34,7 +34,8 @@ opt = parse_args(opt_parser);
 
 
 
-
+print("Starting")
+date()
 
 #	from http://satijalab.org/seurat/Seurat_AlignmentTutorial.html
 if( opt$redo ) {
@@ -42,16 +43,21 @@ if( opt$redo ) {
 	load("InitialSeuratObjectSample.RData")
 } else {
 
-	date()
 	print("Loading data from error_detected.dge.txt.gz")
 	
 	print("mem_used()")
 	mem_used()
-	
+	date()
+
 	# load data
 	ds.data <- read.table("error_detected.dge.txt.gz",row.names=1,header=T)
 	#	For 1, ( 17153128 Dec 30 01:52 error_detected.dge.txt.gz )
 	#	Took over 1.5 hours and 76GB memory so far
+
+	date()
+
+	print("mem_used()")
+	mem_used()
 	
 	print("nrow(ds.data)")
 	nrow(ds.data)

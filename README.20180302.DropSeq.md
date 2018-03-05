@@ -251,3 +251,42 @@ nohup seurat_group.bash 1 2 B3 B4 > seurat_group.log 2>&1 &
 ```BASH
 rsync --archive --verbose --compress --rsh "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete jake@13.92.226.126:working/dropseq/ ~/github/unreno/syryu/drop_seq/20180302a.drop_seq_alignment/
 ```
+
+
+### One more time
+
+Gonna start a monster and see if can process the whole b3 and b4 samples
+
+Standard_E64-16s_v3 (16 vcpus, 432 GB memory)
+
+
+52.226.129.154
+
+mkdir -p ~/working/drop_seq/B3
+mkdir -p ~/working/drop_seq/B4
+
+```BASH
+rsync --archive --verbose --compress --rsh "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress ~/github/unreno/syryu/drop_seq/20180228a.drop_seq_alignment jake@52.226.129.154:working/
+
+scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/syryu/drop_seq/20180228a.drop_seq_alignment/B3/error_detected.dge.txt.gz jake@52.226.129.154:working/drop_seq/B3
+scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/syryu/drop_seq/20180228a.drop_seq_alignment/B4/error_detected.dge.txt.gz jake@52.226.129.154:working/drop_seq/B4
+```
+
+
+```BASH
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@52.226.129.154
+cd ~/working/20180228a.drop_seq_alignment/B3
+nohup seurat.R > seurat.log 2>&1 &
+
+
+cd ~/working/20180228a.drop_seq_alignment/B4
+nohup seurat.R > seurat.log 2>&1 &
+```
+
+
+###	DOWNLOAD
+
+```BASH
+rsync --archive --verbose --compress --rsh "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete jake@52.226.129.154:working/dropseq/ ~/github/unreno/syryu/drop_seq/20180304a.drop_seq_alignment/
+```
+

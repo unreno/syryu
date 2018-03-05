@@ -41,6 +41,7 @@ mem_used()
 #
 #}
 
+print(paste0("\n\nGrouping ",last,"\n\n"))
 
 
 load(sprintf("../%s_L001/InitialSeuratObjectSample.RData",last))
@@ -345,8 +346,8 @@ for (i in unique(FetchData(ds,"ident"))$ident){
 #	Nothing works on this data set
 
 
-print("Removing raw ds.data")
-rm(ds.data)
+#print("Removing raw ds.data")
+#rm(ds.data)
 
 print("Saving all environment")
 save(list=ls(all=TRUE), file="Sample.RData")

@@ -273,6 +273,9 @@ scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/
 ```
 
 
+For B4, initial seurat.R read.table and creation of seurat object took about 8 hours and used 384GB of memory
+
+
 ```BASH
 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@52.226.129.154
 cd ~/working/20180228a.drop_seq_alignment/B3
@@ -281,6 +284,7 @@ nohup seurat.R > seurat.log 2>&1 &
 
 cd ~/working/20180228a.drop_seq_alignment/B4
 nohup seurat.R > seurat.log 2>&1 &
+nohup seurat.R --redo > seurat.log 2>&1 &
 ```
 
 
@@ -289,4 +293,19 @@ nohup seurat.R > seurat.log 2>&1 &
 ```BASH
 rsync --archive --verbose --compress --rsh "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete jake@52.226.129.154:working/dropseq/ ~/github/unreno/syryu/drop_seq/20180304a.drop_seq_alignment/
 ```
+
+
+
+
+
+### Post run notes
+
+It seems that R doesn't clean up well.
+Even after deleting object, it still takes up quite a bit of memory.
+While the memory used doesn't show in mem\_used(), the system shows it as mostly taken.
+Later in the script, another function can run out of memory and the script crashes out.
+Rerunning seurat.R using my option --redo, loads the data from the stored data and never loads the dge file theu never fills the memory.
+Success.
+Perhaps future runs should have one script simply convert the dge to seurat and then quit leaving the analysis to load the saved seurat object and analyze.
+
 

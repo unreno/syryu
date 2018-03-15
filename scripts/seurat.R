@@ -14,8 +14,9 @@ library(Seurat)
 #	install.packages("pryr")
 library(pryr)
 #	object_size(some_object)
-#	mem_used()
+#	humanReadable(mem_used())
 
+library(gdata)
 
 
 #	This is a bit excessive
@@ -39,21 +40,21 @@ print(paste0("Starting at :",date(),":"))
 #	from http://satijalab.org/seurat/Seurat_AlignmentTutorial.html
 if( opt$redo ) {
 	print("Loading InitialSeuratObjectSample.RData")
-	print(paste0("mem_used before loading seurat object :",mem_used(),": at :", date(),":"))
+	print(paste0("mem_used before loading seurat object :",humanReadable(mem_used()),": at :", date(),":"))
 	load("InitialSeuratObjectSample.RData")
-	print(paste0("mem_used after loading seurat object :",mem_used(),": at :", date(),":"))
+	print(paste0("mem_used after loading seurat object :",humanReadable(mem_used()),": at :", date(),":"))
 } else {
 
 	print("Loading data from error_detected.dge.txt.gz")
 	
-	print(paste0("mem_used before read table :",mem_used(),": at :", date(),":"))
+	print(paste0("mem_used before read table :",humanReadable(mem_used()),": at :", date(),":"))
 
 	# load data
 	ds.data <- read.table("error_detected.dge.txt.gz",row.names=1,header=T)
 	#	For 1, ( 17153128 Dec 30 01:52 error_detected.dge.txt.gz )
 	#	Took over 1.5 hours and 76GB memory so far
 
-	print(paste0("mem_used after read table :",mem_used(),": at :", date(),":"))
+	print(paste0("mem_used after read table :",humanReadable(mem_used()),": at :", date(),":"))
 
 	print(paste0("nrow(ds.data) :",nrow(ds.data),":"))
 	print(paste0("ncol(ds.data) :",ncol(ds.data),":"))
@@ -77,27 +78,27 @@ if( opt$redo ) {
 	#
 	#	Trying removing is.expr=1
 	
-	print(paste0("mem_used before Garbage Collection :",mem_used(),": at :", date(),":"))
+	print(paste0("mem_used before Garbage Collection :",humanReadable(mem_used()),": at :", date(),":"))
 
 	print("Garbage collection before")
 	gc(verbose=T)
-	print(paste0("mem_used after Garbage Collection, before CreateSeurat :",mem_used(),": at :", date(),":"))
+	print(paste0("mem_used after Garbage Collection, before CreateSeurat :",humanReadable(mem_used()),": at :", date(),":"))
 	
 	print("CreateSeuratObject")
 #	ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200)
 	ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 10)	#	20180314
 
-	print(paste0("mem_used after CreateSeurat, before rm(ds.data) :",mem_used(),": at :", date(),":"))
+	print(paste0("mem_used after CreateSeurat, before rm(ds.data) :",humanReadable(mem_used()),": at :", date(),":"))
 	
 	print("Removing raw ds.data")
 	rm(ds.data)
 
-	print(paste0("mem_used after rm(ds.data) :",mem_used(),": at :", date(),":"))
+	print(paste0("mem_used after rm(ds.data) :",humanReadable(mem_used()),": at :", date(),":"))
 
 	print("Garbage collection after")
 	gc(verbose=T)
 
-	print(paste0("mem_used after Garbage Collection :",mem_used(),": at :", date(),":"))
+	print(paste0("mem_used after Garbage Collection :",humanReadable(mem_used()),": at :", date(),":"))
 	
 	print(paste0("object_size(ds) :",object_size(ds),":"))
 
@@ -111,44 +112,44 @@ if( opt$redo ) {
 
 print("Creating VlnPlot")
 VlnPlot(object = ds, features.plot = c("nGene", "nUMI"), nCol = 2)
-print(paste0("mem_used after VlnPlot :",mem_used(),": at :", date(),":"))
+print(paste0("mem_used after VlnPlot :",humanReadable(mem_used()),": at :", date(),":"))
 
 print("Creating GenePlot")
 GenePlot(object = ds, gene1 = "nUMI", gene2 = "nGene")
-print(paste0("mem_used after GenePlot :",mem_used(),": at :", date(),":"))
+print(paste0("mem_used after GenePlot :",humanReadable(mem_used()),": at :", date(),":"))
 
 print("NormalizeData")
 ds <- NormalizeData(object = ds)
-print(paste0("mem_used after NormalizeData :",mem_used(),": at :", date(),":"))
+print(paste0("mem_used after NormalizeData :",humanReadable(mem_used()),": at :", date(),":"))
 
 print("ScaleDate")
 ds <- ScaleData(object = ds)
-print(paste0("mem_used after ScaleData :",mem_used(),": at :", date(),":"))
+print(paste0("mem_used after ScaleData :",humanReadable(mem_used()),": at :", date(),":"))
 
 print("FindVariableGenes")
 #ds <- FindVariableGenes(object = ds, do.plot = FALSE)
 ds <- FindVariableGenes(object = ds, do.plot = TRUE)
-print(paste0("mem_used after FindVariableGenes :",mem_used(),": at :", date(),":"))
+print(paste0("mem_used after FindVariableGenes :",humanReadable(mem_used()),": at :", date(),":"))
 
 
 #	from http://satijalab.org/seurat/pbmc3k_tutorial.html
 
 print("RunPCA")
 ds <- RunPCA(object = ds, pc.genes = ds@var.genes, do.print = TRUE, pcs.print = 1:5, genes.print = 5)
-print(paste0("mem_used after RunPCA :",mem_used(),": at :", date(),":"))
+print(paste0("mem_used after RunPCA :",humanReadable(mem_used()),": at :", date(),":"))
 
 print("PrintPCA")
 # Examine and visualize PCA results a few different ways
 PrintPCA(object = ds, pcs.print = 1:5, genes.print = 5, use.full = FALSE)
-print(paste0("mem_used after PrintPCA :",mem_used(),": at :", date(),":"))
+print(paste0("mem_used after PrintPCA :",humanReadable(mem_used()),": at :", date(),":"))
 
 print("VizPCA")
 VizPCA(object = ds, pcs.use = 1:2)
-print(paste0("mem_used after VizPCA :",mem_used(),": at :", date(),":"))
+print(paste0("mem_used after VizPCA :",humanReadable(mem_used()),": at :", date(),":"))
 
 print("PCAPlot")
 PCAPlot(object = ds, dim.1 = 1, dim.2 = 2)
-print(paste0("mem_used after PCAPlot :",mem_used(),": at :", date(),":"))
+print(paste0("mem_used after PCAPlot :",humanReadable(mem_used()),": at :", date(),":"))
 
 # ProjectPCA scores each gene in the dataset (including genes not included
 # in the PCA) based on their correlation with the calculated components.
@@ -158,17 +159,17 @@ print(paste0("mem_used after PCAPlot :",mem_used(),": at :", date(),":"))
 # can be explored by setting use.full=T in the functions above
 print("ProjectPCA")
 ds <- ProjectPCA(object = ds, do.print = FALSE)
-print(paste0("mem_used after ProjectPCA :",mem_used(),": at :", date(),":"))
+print(paste0("mem_used after ProjectPCA :",humanReadable(mem_used()),": at :", date(),":"))
 
 print("Making a couple Heat Maps")
 
 print("PCHeatmap")
 PCHeatmap(object = ds, pc.use = 1, cells.use = 500, do.balanced = TRUE, label.columns = FALSE)
-print(paste0("mem_used after PCHeatmap :",mem_used(),": at :", date(),":"))
+print(paste0("mem_used after PCHeatmap :",humanReadable(mem_used()),": at :", date(),":"))
 
 print("PCHeatmap")
 PCHeatmap(object = ds, pc.use = 1:12, cells.use = 500, do.balanced = TRUE, label.columns = FALSE, use.full = FALSE)
-print(paste0("mem_used after PCHeatmap :",mem_used(),": at :", date(),":"))
+print(paste0("mem_used after PCHeatmap :",humanReadable(mem_used()),": at :", date(),":"))
 
 # NOTE: This process can take a long time for big datasets, comment out for
 # expediency.  More approximate techniques such as those implemented in
@@ -216,18 +217,18 @@ print("Finding Clusters")
 # full details)
 print("FindClusters")
 ds <- FindClusters(object = ds, reduction.type = "pca", dims.use = 1:10, resolution = 0.6, print.output = 0, save.SNN = TRUE)
-print(paste0("mem_used after FindClusters :",mem_used(),": at :", date(),":"))
+print(paste0("mem_used after FindClusters :",humanReadable(mem_used()),": at :", date(),":"))
 
 print("PrintFindClustersParams")
 PrintFindClustersParams(object = ds)
-print(paste0("mem_used after PrintFindClustersParams :",mem_used(),": at :", date(),":"))
+print(paste0("mem_used after PrintFindClustersParams :",humanReadable(mem_used()),": at :", date(),":"))
 
 # While we do provide function-specific printing functions, the more general
 # function to print calculation parameters is PrintCalcParams().
 
 print("RunTSNE")
 ds <- RunTSNE(object = ds, dims.use = 1:10, do.fast = TRUE, check_duplicates = FALSE)
-print(paste0("mem_used after RunTSNE :",mem_used(),": at :", date(),":"))
+print(paste0("mem_used after RunTSNE :",humanReadable(mem_used()),": at :", date(),":"))
 
 #Error in Rtsne.default(X = as.matrix(x = data.use), dims = dim.embed,  : 
 #  Remove duplicates before running TSNE.
@@ -236,7 +237,7 @@ print(paste0("mem_used after RunTSNE :",mem_used(),": at :", date(),":"))
 
 print("TSNEPlot")
 TSNEPlot(object = ds)
-print(paste0("mem_used after TSNEPlot :",mem_used(),": at :", date(),":"))
+print(paste0("mem_used after TSNEPlot :",humanReadable(mem_used()),": at :", date(),":"))
 
 
 #	No point in this
@@ -315,7 +316,7 @@ print("Saving all environment")
 save(list=ls(all=TRUE), file="Sample.RData")
 
 
-print(paste0("Ending R script :",mem_used(),": at :", date(),":"))
+print(paste0("Ending R script :",humanReadable(mem_used()),": at :", date(),":"))
 
 
 #ds.markers %>% group_by(cluster) %>% top_n(2, avg_logFC)

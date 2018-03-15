@@ -39,7 +39,9 @@ print(paste0("Starting at :",date(),":"))
 #	from http://satijalab.org/seurat/Seurat_AlignmentTutorial.html
 if( opt$redo ) {
 	print("Loading InitialSeuratObjectSample.RData")
+	print(paste0("mem_used before loading seurat object :",mem_used(),": at :", date(),":"))
 	load("InitialSeuratObjectSample.RData")
+	print(paste0("mem_used after loading seurat object :",mem_used(),": at :", date(),":"))
 } else {
 
 	print("Loading data from error_detected.dge.txt.gz")

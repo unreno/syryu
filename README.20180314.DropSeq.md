@@ -74,6 +74,19 @@ rsync --archive --verbose --compress --rsh "ssh -o UserKnownHostsFile=/dev/null 
 ```
 
 
+Prep to save VM image ...
+
+Remotely ...
+
+```BASH
+sudo waagent -deprovision
+```
+
+Using the web portal GUI, save the image
+
+
+
+
 ##################################################
 
 

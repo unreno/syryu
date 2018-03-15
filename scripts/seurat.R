@@ -240,15 +240,7 @@ TSNEPlot(object = ds)
 print(paste0("mem_used after TSNEPlot :",humanReadable(mem_used()),": at :", date(),":"))
 
 
-#	No point in this
-#save(ds, file = "~/syryu/meddling.R")
 
-
-
-
-#	Error in FindMarkers(object = ds, ident.1 = 1, min.pct = 0.25) :
-#	  No genes pass logfc.threshold threshold
-#	Execution halted
 
 
 date()
@@ -262,6 +254,7 @@ for (i in unique(FetchData(ds,"ident"))$ident){
 
 
 	tryCatch({
+		#	With lower thresholds?
 		#	Occassionally, this errors
 		#	Error in FindMarkers(object = ds, ident.1 = i, min.pct = 0.25) :
 		#	  No genes pass logfc.threshold threshold

@@ -20,6 +20,7 @@ ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@52.226.33.1
 sudo apt update
 sudo apt full-upgrade
 sudo apt autoremove
+sudo apt install gfortran
 
 cd ~/syryu
 git pull

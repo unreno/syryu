@@ -48,6 +48,12 @@ DigitalExpression \
 
 #	NUM_CORE_BARCODES=100 ... Doesn't seem to make any difference. (Maybe default value?)
 
-seurat.R
+create_seurat.R
+
+#	R is pretty bad at garbage collection.
+#	Reading error_detected.dge.txt.gz and creating the seurat object then quiting.
+#	Then running another script that reads in the seurat works well.
+
+seurat.R --redo
 
 echo

@@ -92,7 +92,8 @@ if( opt$redo ) {
 	mem_used()
 	date()
 	print("CreateSeuratObject")
-	ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200)
+#	ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200)
+	ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 10)	#	20180314
 	
 	print("Removing raw ds.data")
 	rm(ds.data)

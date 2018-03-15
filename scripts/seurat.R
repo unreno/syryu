@@ -21,14 +21,14 @@ library(gdata)
 
 #	This is a bit excessive
 library(optparse)
- 
+
 #	default action is "store"
 #	default dest variable are the options without the leading dashes
 option_list = list(
 	make_option("--redo", action="store_true", default=FALSE,
 		help="load saved R file rather than load error_detected.dge.txt.gz")
-); 
- 
+);
+
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 
@@ -46,7 +46,7 @@ if( opt$redo ) {
 } else {
 
 	print("Loading data from error_detected.dge.txt.gz")
-	
+
 	print(paste0("mem_used before read table :",humanReadable(mem_used()),": at :", date(),":"))
 
 	# load data
@@ -59,8 +59,8 @@ if( opt$redo ) {
 	print(paste0("nrow(ds.data) :",nrow(ds.data),":"))
 	print(paste0("ncol(ds.data) :",ncol(ds.data),":"))
 	print(paste0("object_size(ds.data) :",object_size(ds.data),":"))
-	
-	
+
+
 	#ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200, is.expr=1)
 	#
 	#	Error in if (!nreplace) return(x) : missing value where TRUE/FALSE needed
@@ -69,7 +69,7 @@ if( opt$redo ) {
 	#	In sum(i, na.rm = TRUE) : integer overflow - use sum(as.numeric(.))
 	#	Execution halted
 	#
-	#	Maybe, we need to remove "is.expr=1"? 
+	#	Maybe, we need to remove "is.expr=1"?
 	#
 	#	ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200)
 	#
@@ -77,19 +77,19 @@ if( opt$redo ) {
 	#	Others kept only 0.1% of their data for Seurat.
 	#
 	#	Trying removing is.expr=1
-	
+
 	print(paste0("mem_used before Garbage Collection :",humanReadable(mem_used()),": at :", date(),":"))
 
 	print("Garbage collection before")
 	gc(verbose=T)
 	print(paste0("mem_used after Garbage Collection, before CreateSeurat :",humanReadable(mem_used()),": at :", date(),":"))
-	
+
 	print("CreateSeuratObject")
 #	ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200)
 	ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 10)	#	20180314
 
 	print(paste0("mem_used after CreateSeurat, before rm(ds.data) :",humanReadable(mem_used()),": at :", date(),":"))
-	
+
 	print("Removing raw ds.data")
 	rm(ds.data)
 
@@ -99,7 +99,7 @@ if( opt$redo ) {
 	gc(verbose=T)
 
 	print(paste0("mem_used after Garbage Collection :",humanReadable(mem_used()),": at :", date(),":"))
-	
+
 	print(paste0("object_size(ds) :",object_size(ds),":"))
 
 	print("Saving ds")
@@ -230,7 +230,7 @@ print("RunTSNE")
 ds <- RunTSNE(object = ds, dims.use = 1:10, do.fast = TRUE, check_duplicates = FALSE)
 print(paste0("mem_used after RunTSNE :",humanReadable(mem_used()),": at :", date(),":"))
 
-#Error in Rtsne.default(X = as.matrix(x = data.use), dims = dim.embed,  : 
+#Error in Rtsne.default(X = as.matrix(x = data.use), dims = dim.embed,  :
 #  Remove duplicates before running TSNE.
 
 # note that you can set do.label=T to help label individual clusters
@@ -246,7 +246,7 @@ print(paste0("mem_used after TSNEPlot :",humanReadable(mem_used()),": at :", dat
 
 
 
-#	Error in FindMarkers(object = ds, ident.1 = 1, min.pct = 0.25) : 
+#	Error in FindMarkers(object = ds, ident.1 = 1, min.pct = 0.25) :
 #	  No genes pass logfc.threshold threshold
 #	Execution halted
 
@@ -259,13 +259,28 @@ for (i in unique(FetchData(ds,"ident"))$ident){
 	print(paste("Finding Markers for ident :",i,":", sep=""))
 	# find all markers of cluster i
 	date()
-	cluster.markers <- FindMarkers(object = ds, ident.1 = i, min.pct = 0.25)
-	print(x = head(x = cluster.markers, n = 10))
 
-	write.table(x = head(x = cluster.markers, n = 10),
-		file=paste("genelist_cluster.",i,".csv",sep=""),
-		col.names=NA,
-		sep="\t")
+
+	tryCatch({
+		#	Occassionally, this errors
+		#	Error in FindMarkers(object = ds, ident.1 = i, min.pct = 0.25) :
+		#	  No genes pass logfc.threshold threshold
+		#	Execution halted
+
+		cluster.markers <- FindMarkers(object = ds, ident.1 = i, min.pct = 0.25)
+
+		print(x = head(x = cluster.markers, n = 10))
+
+		write.table(x = head(x = cluster.markers, n = 10),
+			file=paste("genelist_cluster.",i,".csv",sep=""),
+			col.names=NA,
+			sep="\t")
+
+	}, error = function(e) {
+		#	Nothing. Just don't halt execution.
+		print("Caught error. Continuing.")
+	})
+
 
 #		col.names=NA,	so first column has a header, albeit empty, as a placeholder. (if row.names = TRUE)
 
@@ -289,7 +304,7 @@ for (i in unique(FetchData(ds,"ident"))$ident){
 # find markers for every cluster compared to all remaining cells, report
 # only the positive ones
 #ds.markers <- FindAllMarkers(object = ds, only.pos = TRUE, min.pct = 0.25, thresh.use = 0.25)
-#	Error in rbind(deparse.level, ...) : 
+#	Error in rbind(deparse.level, ...) :
 #	  numbers of columns of arguments do not match
 #	In addition: Warning messages:
 #	1: In data.frame(..., check.names = FALSE) :

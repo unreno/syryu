@@ -97,6 +97,9 @@ if( opt$redo ) {
 	
 	print("Removing raw ds.data")
 	rm(ds.data)
+
+	print("Garbage collection")
+	gc(verbose=T)
 	
 	date()
 	print("object_size(ds)")

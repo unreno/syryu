@@ -271,7 +271,9 @@ for (i in unique(FetchData(ds,"ident"))$ident){
 
 	}, error = function(e) {
 		#	Nothing. Just don't halt execution.
-		print("Caught error. Continuing.")
+		print("Caught error.")
+		print("Likely no genes meet the threshold.")
+		print("Continuing.")
 	})
 
 

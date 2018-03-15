@@ -91,6 +91,10 @@ if( opt$redo ) {
 	print("mem_used()")
 	mem_used()
 	date()
+
+	print("Garbage collection before")
+	gc(verbose=T)
+	
 	print("CreateSeuratObject")
 #	ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200)
 	ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 10)	#	20180314
@@ -98,7 +102,7 @@ if( opt$redo ) {
 	print("Removing raw ds.data")
 	rm(ds.data)
 
-	print("Garbage collection")
+	print("Garbage collection after")
 	gc(verbose=T)
 	
 	date()

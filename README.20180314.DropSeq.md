@@ -66,19 +66,42 @@ nohup find . -name error_detected.bam -execdir dge.bash \; > dge.log 2>&1 &
 ```
 
 
+If necessary, 
 
-###	DOWNLOAD
+```BASH
+nohup seurat.R --redo > seurat.log 2>&1 &
+```
+
+
+
+
+###	DOWNLOAD LOCALLY
 
 ```BASH
 rsync --archive --verbose --compress --rsh "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete jake@52.226.33.193:working/dropseq/ ~/github/unreno/syryu/drop_seq/20180314.drop_seq_alignment/
 ```
 
 
-Prep to save VM image ...
+###	UPLOAD TO AZURE STORAGE
+
+Browse to portal.azure.com, Storage Account -> ryulab -> Access Keys to find a key.
+
+I copied mine into ~/dest-key
+
+I tried the <( cat ~/dest-key ), but it errored
+
+[ERROR] The syntax of the command is incorrect. The supplied storage key (dest-key) is not a valid Base64 string.
+
+
+Cleanup and upload data to Azure Storage and prep to save VM image ...
 
 Remotely ...
 
 ```BASH
+mv ~/working/dropseq ~/working/20180314.drop_seq_alignment
+
+azcopy --source ~/working/20180314.drop_seq_alignment --destination https://ryulab.blob.core.windows.net/ryulab/DropSeq/20180314.drop_seq_alignment/ --recursive --dest-key YOUR_DEST_KEY
+
 sudo waagent -deprovision
 ```
 
@@ -94,8 +117,6 @@ Using the web portal GUI, save the image
 
 Probably should've stuck with a single name for the modified reference. Say mm10ryulab.
 
-
-
 It seems that R doesn't clean up well.
 Even after deleting object, it still takes up quite a bit of memory.
 While the memory used doesn't show in mem\_used(), the system shows it as mostly taken.
@@ -103,5 +124,4 @@ Later in the script, another function can run out of memory and the script crash
 Rerunning seurat.R using my option --redo, loads the data from the stored data and never loads the dge file theu never fills the memory.
 Success.
 Perhaps future runs should have one script simply convert the dge to seurat and then quit leaving the analysis to load the saved seurat object and analyze.
-
 

@@ -58,7 +58,8 @@ print(paste0("mem_used before CreateSeurat :",humanReadable(mem_used()),": at :"
 
 print("CreateSeuratObject")
 #	ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200)
-ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 10)	#	20180314
+#	ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 10)	#	20180314
+ds <- CreateSeuratObject(raw.data = ds.data, min.cells = 3,  min.genes = 200)	#	20180518
 
 print(paste0("mem_used after CreateSeurat, before rm(ds.data) :",humanReadable(mem_used()),": at :", date(),":"))
 

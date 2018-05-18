@@ -31,7 +31,10 @@ DigitalExpression \
 	OUTPUT=error_detected.dge.txt.gz \
 	CELL_BC_FILE=cell_bc_file.txt.gz \
 	SUMMARY=out_gene_exon_tagged.dge.summary.txt \
-	MIN_NUM_GENES_PER_CELL=10
+	MIN_NUM_GENES_PER_CELL=100
+
+#	20180518 - set to 100 for latest data
+#	MIN_NUM_GENES_PER_CELL=100
 
 #	20180314 - refined for B3 and B4, but also to be reused for 1 and 2
 #	MIN_NUM_GENES_PER_CELL=100

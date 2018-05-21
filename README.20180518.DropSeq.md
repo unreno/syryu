@@ -10,7 +10,7 @@ Copied all Batch6\*fastq.gz into B6 directory and ran convert\_fastq\_files\_to\
 
 Copied all Batch7\*fastq.gz into B7 directory and ran convert\_fastq\_files\_to\_merged\_sorted\_bams.bash.
 
-
+Uploaded 2 bam files to Azure Storage
 
 
 
@@ -20,9 +20,16 @@ Copied all Batch7\*fastq.gz into B7 directory and ran convert\_fastq\_files\_to\
 B6.bam is almost 8GB which is the size of 1, 2, 3 and 4 combined.
 This may not be enough, but we shall see.
 
-Restart Azure Linux Standard_E64-16s_v3 (16 vcpus, 432 GB memory)
 
+From last ubuntu image, create virtual machine.
+*	name : ubuntu
+* username : jake
+* ssh public key : cat ~/.ssh/id_rsa.pub
+* resource group : ubuntu
 
+Size E64-16s_v3 (16 vcpus, 432 GB memory)
+
+IP Address 40.114.26.27
 
 
 
@@ -30,60 +37,56 @@ Restart Azure Linux Standard_E64-16s_v3 (16 vcpus, 432 GB memory)
 
 
 ```BASH
-ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@IP_ADDRESS
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@40.114.26.27
+
 sudo apt update
 sudo apt full-upgrade
 sudo apt autoremove
-sudo apt install gfortran
+sudo reboot
+
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@40.114.26.27
 
 cd ~/syryu
 git pull
 make install
 
 
+
 mkdir ~/working/dropseq
 cd ~/working/dropseq
 mkdir B6
 mkdir B7
-```
 
+cat ~/dest-key 
 
-locally ...
-
-```BASH
-scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ~/github/unreno/syryu/20180518/*.bam jake@IP_ADDRESS:working/
+azcopy --destination ~/working/B6.bam --source https://ryulab.blob.core.windows.net/ryulab/DropSeq/bams/B6.bam --source-key $( cat ~/dest-key )
+azcopy --destination ~/working/B7.bam --source https://ryulab.blob.core.windows.net/ryulab/DropSeq/bams/B7.bam --source-key $( cat ~/dest-key )
 
 ```
+
 
 
 Remotely ...
 ```BASH
-ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@IP_ADDRESS
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@40.114.26.27
 cd ~/working/dropseq
-nohup drop_seq.bash ~/working/*.bam > drop_seq.log 2>&1 &
+nohup drop_seq.bash ~/working/B[67].bam > drop_seq.log 2>&1 &
 ```
 
 
 
 
 
-###	DOWNLOAD LOCALLY
+###	DOWNLOAD LOCALLY (if desired)
 
 ```BASH
-rsync --archive --verbose --compress --rsh "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete jake@IP_ADDRESS:working/dropseq/ ~/github/unreno/syryu/drop_seq/20180518.drop_seq_alignment/
+rsync --archive --verbose --compress --rsh "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress --delete jake@40.114.26.27:working/dropseq/ ~/github/unreno/syryu/drop_seq/20180518.drop_seq_alignment/
 ```
 
 
 ###	UPLOAD TO AZURE STORAGE
 
 Browse to portal.azure.com, Storage Account -> ryulab -> Access Keys to find a key.
-
-I copied mine into ~/dest-key
-
-I tried the <( cat ~/dest-key ), but it errored
-
-[ERROR] The syntax of the command is incorrect. The supplied storage key (dest-key) is not a valid Base64 string.
-
 
 Cleanup and upload data to Azure Storage and prep to save VM image ...
 
@@ -92,10 +95,7 @@ Remotely ...
 ```BASH
 mv ~/working/dropseq ~/working/20180518.drop_seq_alignment
 
-azcopy --source ~/working/B6.bam --destination https://ryulab.blob.core.windows.net/ryulab/bams/ --dest-key YOUR_DEST_KEY
-azcopy --source ~/working/B7.bam --destination https://ryulab.blob.core.windows.net/ryulab/bams/ --dest-key YOUR_DEST_KEY
-
-azcopy --source ~/working/20180518.drop_seq_alignment --destination https://ryulab.blob.core.windows.net/ryulab/DropSeq/20180518.drop_seq_alignment/ --recursive --dest-key YOUR_DEST_KEY
+azcopy --source ~/working/20180518.drop_seq_alignment --destination https://ryulab.blob.core.windows.net/ryulab/DropSeq/20180518.drop_seq_alignment/ --recursive --dest-key $( cat ~/dest-key )
 
 sudo waagent -deprovision
 ```

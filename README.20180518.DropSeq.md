@@ -53,9 +53,6 @@ make install
 
 
 mkdir ~/working/dropseq
-cd ~/working/dropseq
-mkdir B6
-mkdir B7
 
 cat ~/dest-key 
 
@@ -67,12 +64,49 @@ azcopy --destination ~/working/B7.bam --source https://ryulab.blob.core.windows.
 
 
 Remotely ...
+
+Trying with 81GB free space. B6 8GB file took 70GB but still going.
+This script really needs to more regularly clean up after itself rather than waiting until it completes.
+
 ```BASH
 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@40.114.26.27
 cd ~/working/dropseq
 nohup drop_seq.bash ~/working/B[67].bam > drop_seq.log 2>&1 &
 ```
 
+Sadly, B6 crashed in R. Likely ran out of memory even with 432GB!
+
+
+`/home/jake/.local/bin/dge.bash: line 54: 22662 Killed                  create_seurat.R`
+
+Created monster swap space. Let's see if this makes a difference.
+
+`df -h` and noticed that /dev/sdb1 was over 800GB and not mounted?
+
+```BASH
+sudo mount /dev/sdb1 ~/tmpdrive/
+
+sudo fallocate -l 500G ~/tmpdrive/swap
+sudo mkswap ~/tmpdrive/swap
+sudo chmod 600 ~/tmpdrive/	swap 
+sudo swapon ~/tmpdrive/swap 
+
+sudo swapoff ~/tmpdrive/swap 
+sudo rm ~/tmpdrive/swap 
+sudo umount ~/tmpdrive/
+```
+
+
+B7 worked great, no need for the swap space.
+Rerunning B6 by hand.
+
+```BASH
+cd ~/working/dropseq/B6	
+
+nohup create_seurat.R > create_seurat.log 2>&1 &
+
+nohup seurat.R --redo > seurat.log 2>&1 &
+```
 
 
 
@@ -93,9 +127,11 @@ Cleanup and upload data to Azure Storage and prep to save VM image ...
 Remotely ...
 
 ```BASH
-mv ~/working/dropseq ~/working/20180518.drop_seq_alignment
+azcopy --source ~/working/dropseq --destination https://ryulab.blob.core.windows.net/ryulab/DropSeq/20180518.drop_seq_alignment --recursive --dest-key $( cat ~/dest-key )
 
-azcopy --source ~/working/20180518.drop_seq_alignment --destination https://ryulab.blob.core.windows.net/ryulab/DropSeq/20180518.drop_seq_alignment/ --recursive --dest-key $( cat ~/dest-key )
+sudo swapoff ~/tmpdrive/swap 
+sudo rm ~/tmpdrive/swap 
+sudo umount ~/tmpdrive/
 
 sudo waagent -deprovision
 ```

@@ -108,6 +108,16 @@ nohup create_seurat.R > create_seurat.log 2>&1 &
 nohup seurat.R --redo > seurat.log 2>&1 &
 ```
 
+Reprocessing is using the swap space! R sucks at memory usage. It thinks that its only using 110GB but its using 600GB.
+
+`create_seurat.R` seems to have worked but ended with the message ...?
+```
+Warning message:
+system call failed: Cannot allocate memory 
+```
+Not sure what command failed.
+
+`seurat.R` ran without a problem!
 
 
 
@@ -127,7 +137,7 @@ Cleanup and upload data to Azure Storage and prep to save VM image ...
 Remotely ...
 
 ```BASH
-azcopy --source ~/working/dropseq --destination https://ryulab.blob.core.windows.net/ryulab/DropSeq/20180518.drop_seq_alignment --recursive --dest-key $( cat ~/dest-key )
+azcopy --verbose --source ~/working/dropseq --destination https://ryulab.blob.core.windows.net/ryulab/DropSeq/20180518.drop_seq_alignment --recursive --dest-key $( cat ~/dest-key )
 
 sudo swapoff ~/tmpdrive/swap 
 sudo rm ~/tmpdrive/swap 

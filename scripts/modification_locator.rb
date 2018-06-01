@@ -16,14 +16,12 @@ def usage(options={})
 	puts "Options:"
 	puts "	--amino_acids COMMA SEPARATED TEXT"
 	puts "	--evidence TEXT TSV FILE"
-#	puts "	--experiment TEXT TSV FILE"
 	puts "	--protein FASTA FILE"
 	puts
 	puts "Defaults/current values:"
 	puts
 	puts "Examples:"
 	puts "#{$0} --amino_acids STY,M --evidence evidence.txt --protein uniprot-organism+homo+sapiens.fasta"
-#	puts "#{$0} --amino_acids STY,M --evidence evidence.txt --protein uniprot-organism+homo+sapiens.fasta --experiment experimentalDesignTemplate_FINAL.txt"
 	puts
 	exit
 end
@@ -52,7 +50,6 @@ options = {}
 OptionParser.new do |opt|
 	opt.on("--amino_acids COMMA SEPARATED TEXT"){|o| options[:amino_acids] = o }
 	opt.on("--evidence TEXT TSV FILE"){|o| options[:evidence_file] = o }
-#	opt.on("--experiment TEXT TSV FILE"){|o| options[:experiment_file] = o }
 	opt.on("--protein FASTA FILE"){|o| options[:protein_file] = o }
 end.parse!
 
@@ -271,8 +268,10 @@ peptides_without_specified_aas.keys.sort.each do |protein|
 end
 modification_normalizer.close
 
+puts "Generating experiment list."
 experiments = evidences.collect{|e| e.experiment }.sort.uniq
 
+puts "Selecting evidences"
 select_evidences = evidences.select{|e| e.matched_amino_acids == true }
 
 no_matches.close
@@ -493,7 +492,6 @@ protein_mod=CSV.open("ProteinModification.txt",'w', {col_sep: "\t" })
 
 protein_mod_line = ['Leading razor protein','AA','AA location','Sequences with Modified AA','Sequences with Unmodified AA']
 
-#experiments.keys.sort.each do |k|
 experiments.each do |k|
 	protein_mod_line.push(
 		"Sequences with Modified AA intensity.#{k}",
@@ -526,6 +524,7 @@ proteins.each_with_index do |protein, protein_i|
 
 	puts "Processing protein #{protein_i+1}/#{proteins.length} : #{protein}"
 
+	puts "Selecting evidences for this protein."
 	select_evidences_for_this_protein = select_evidences.select{|e|e.protein == protein}
 
 	positions = {}
@@ -550,7 +549,10 @@ proteins.each_with_index do |protein, protein_i|
 		e.alignments
 	end.flatten
 
-	positions.keys.sort.each do |position|
+	positions_length = positions.keys.length
+	positions.keys.sort.each_with_index do |position,position_i|
+
+		puts "Processing position #{position_i}/#{positions_length} : #{position}."
 
 		acid=positions[position]
 
@@ -571,16 +573,18 @@ proteins.each_with_index do |protein, protein_i|
 		protein_mod_line = [ protein, acid, position,
 			sequences_with_modified_positions, sequences_without_modified_positions ]
 
-		experiments.each do |exp|
+		experiments.each_with_index do |experiment,experiment_i|
+
+			puts "Processing experiment #{experiment_i}/#{experiments.length} : #{experiment}."
 
 			exp_with_modified_positions = with_modified_positions.select{|a|
-				a[:experiment] == exp }
+				a[:experiment] == experiment }
 			exp_without_modified_positions = without_modified_positions.select{|a|
-				a[:experiment] == exp }
+				a[:experiment] == experiment }
 
-			#	protein_mod_line.push("Sequences with Modified AA intensity.#{exp}",
-			#		"Sequences with Unmodified AA intensity.#{exp}",
-			#		"ModificationNormalizerPeptides intensity.#{exp}")
+			#	protein_mod_line.push("Sequences with Modified AA intensity.#{experiment}",
+			#		"Sequences with Unmodified AA intensity.#{experiment}",
+			#		"ModificationNormalizerPeptides intensity.#{experiment}")
 
 
 			#	<Extract intensities of "Sequences with Modified AA" for each Experiment and
@@ -675,10 +679,10 @@ proteins.each_with_index do |protein, protein_i|
 
 			evidences_for_these_sequences = evidences.select{|e|
 				e.protein == protein }.select{|a|
-				a.experiment == exp }.select{|e|
+				a.experiment == experiment }.select{|e|
 				mnp.include? e.sequence }
 
-			#puts "exp:#{exp.to_s}"
+			#puts "experiment:#{experiment.to_s}"
 			#puts "MNP:#{mnp.to_s}"
 			#puts "AFTS:#{evidences_for_these_sequences.collect{|e| e.sequence }.sort.uniq.inspect}"
 

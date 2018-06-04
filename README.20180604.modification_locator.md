@@ -1,6 +1,6 @@
 #	Modification Locator Processing
 
-##	20180601
+##	20180604
 
 From last ubuntu image, create virtual machine.
 *	name : ubuntu
@@ -8,9 +8,20 @@ From last ubuntu image, create virtual machine.
 * ssh public key : cat ~/.ssh/id_rsa.pub
 * resource group : ubuntu
 
+
+
+
+
+Using parallel ruby gem so gonna launch a VM with a bunch of cpus
+
+
 Standard F16s_v2 (16 vcpus, 32 GB memory)
 
 IP Address 23.101.142.194
+
+
+
+
 
 
 
@@ -45,7 +56,7 @@ rsync --archive --verbose --compress --rsh "ssh -o UserKnownHostsFile=/dev/null 
 
 
 ```BASH
-modification_locator.rb --amino_acids STY --evidence evidence.txt --protein uniprot-organism+homo+sapiens.fasta > 20180601.modification_locator.txt &
+modification_locator.rb --amino_acids STY --evidence evidence.txt --protein uniprot-organism+homo+sapiens.fasta > 20180604.modification_locator.txt &
 ```
 
 
@@ -66,9 +77,9 @@ Remotely ...
 
 ```BASH
 cd ~/modification_locator/
-mkdir 20180601
-mv MatchedModification*.txt ModificationNormalizerPeptides.txt ProteinModification.txt *.modification_locator.txt 20180601/
-azcopy --verbose --source ~/modification_locator/20180601/ --destination https://ryulab.file.core.windows.net/ryulab/Modification%20Locator/20180601 --recursive --dest-key $( cat ~/dest-key )
+mkdir 20180604
+mv MatchedModification*.txt ModificationNormalizerPeptides.txt ProteinModification.txt *.modification_locator.txt 20180604/
+azcopy --verbose --source ~/modification_locator/20180604/ --destination https://ryulab.file.core.windows.net/ryulab/Modification%20Locator/20180604 --recursive --dest-key $( cat ~/dest-key )
 
 
 

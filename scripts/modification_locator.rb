@@ -3,6 +3,8 @@
 require 'csv'
 require 'optparse'
 
+require 'parallel'
+
 def usage(options={})
 	puts
 	puts "Usage"
@@ -520,7 +522,9 @@ protein_mod.puts protein_mod_line
 puts "Producing ProteinModification.txt ..."
 
 proteins = select_evidences.select{|e|e.alignments.length > 0}.collect{|e|e.protein}.uniq.sort
-proteins.each_with_index do |protein, protein_i|
+#proteins.each_with_index do |protein, protein_i|
+
+Parallel.each_with_index(proteins) do |protein, protein_i|
 
 	puts "Processing protein #{protein_i+1}/#{proteins.length} : #{protein}"
 
@@ -552,7 +556,7 @@ proteins.each_with_index do |protein, protein_i|
 	positions_length = positions.keys.length
 	positions.keys.sort.each_with_index do |position,position_i|
 
-		puts "Processing position #{position_i}/#{positions_length} : #{position}."
+		puts "Processing position #{position_i+1}/#{positions_length} : #{position}."
 
 		acid=positions[position]
 
@@ -575,7 +579,7 @@ proteins.each_with_index do |protein, protein_i|
 
 		experiments.each_with_index do |experiment,experiment_i|
 
-			puts "Processing experiment #{experiment_i}/#{experiments.length} : #{experiment}."
+			puts "Processing experiment #{experiment_i+1}/#{experiments.length} : #{experiment}."
 
 			exp_with_modified_positions = with_modified_positions.select{|a|
 				a[:experiment] == experiment }

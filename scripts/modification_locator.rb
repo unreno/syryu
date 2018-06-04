@@ -254,9 +254,9 @@ c.close
 		#	ModificationNormalizerPeptides.txt
 
 		peptides_without_specified_aas[ line['Leading razor protein'] ] ||= []
-		unless peptides_without_specified_aas[ line['Leading razor protein'] ].include? line['Modified sequence']
+#		unless peptides_without_specified_aas[ line['Leading razor protein'] ].include? line['Modified sequence']
 			peptides_without_specified_aas[ line['Leading razor protein'] ] << line['Modified sequence']
-		end
+#		end
 
 	end
 

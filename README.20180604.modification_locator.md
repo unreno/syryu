@@ -14,10 +14,31 @@ From last ubuntu image, create virtual machine.
 
 Using parallel ruby gem so gonna launch a VM with a bunch of cpus
 
+Standard D64s v3 (64 vcpus, 256 GB memory)
 
-Standard F16s_v2 (16 vcpus, 32 GB memory)
+(Could use E series for 432 GB memory but lets see how this goes)
 
-IP Address 23.101.142.194
+
+Failed creation! Never had that happen on Amazon!
+
+"message": "Allocation failed. We do not have sufficient capacity for the requested VM size in this region. Read more about improving likelihood of allocation success at http://aka.ms/allocation-guidance"
+
+Trying Standard E64s v3 (64 vcpus, 432 GB memory)
+
+Failed!
+
+Trying Standard E32s v3 (32 vcpus, 256 GB memory)
+
+Failed!
+
+Trying Standard E64s v3 (64 vcpus, 432 GB memory) again
+
+I deleted some empty resource groups just in case that was part of the problem?
+Worked this time???
+
+
+
+IP Address 40.121.39.184
 
 
 
@@ -26,43 +47,25 @@ IP Address 23.101.142.194
 
 
 ```BASH
-ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@23.101.142.194
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@40.121.39.184
 
 sudo apt update
 sudo apt full-upgrade
 sudo apt autoremove
 sudo reboot
 
-ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@23.101.142.194
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no jake@40.121.39.184
 
 cd ~/syryu
 git pull
 make install
 
-mkdir ~/modification_locator
 cd ~/modification_locator
 
-azcopy --verbose --source https://ryulab.file.core.windows.net/ryulab/Modification%20Locator/evidence.txt --destination evidence.txt --source-key $( cat ~/dest-key )
-```
-
-
-Locally, upload basic infrastructure ...
-
-```BASH
-rsync --archive --verbose --compress --rsh "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress ~/github/unreno/syryu/modification_locator/PeptideMatch* jake@23.101.142.194:modification_locator/ 
-
-rsync --archive --verbose --compress --rsh "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" --progress ~/github/unreno/syryu/modification_locator/uniprot-organism+homo+sapiens* jake@23.101.142.194:modification_locator/ 
-```
-
-
-```BASH
 modification_locator.rb --amino_acids STY --evidence evidence.txt --protein uniprot-organism+homo+sapiens.fasta > 20180604.modification_locator.txt &
 ```
 
 
-Wow is this slow. Pegs 1 CPU at 100% and using about 6GB memory. Just seems to sit there.
-
-Quit. Need to figure out how to parallelize
 
 
 

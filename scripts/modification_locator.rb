@@ -110,11 +110,11 @@ class Evidence
 	@@dir = "PeptideMatchOutput"
 
 	def initialize(h={})
-		@sequence = h['Modified sequence']
-		@protein = h['Leading razor protein']
-		@intensity = h['Intensity']
-		@experiment = h['Experiment']
-		@msmscount = h['MS/MS Count']
+		@sequence = h['Modified sequence']     #	1
+		@protein = h['Leading razor protein']  #	15
+		@intensity = h['Intensity']            #	54
+		@experiment = h['Experiment']          #	19
+		@msmscount = h['MS/MS Count']          #	49
 		@cleaned_sequence = sequence.gsub(/_/,'').gsub(/\([[:alpha:]]*\)/,'')
 		@alignments = []
 		@modified_positions = sequence.gsub(/_/,'').indices_of_mods
@@ -521,7 +521,11 @@ protein_mod.puts protein_mod_line
 
 puts "Producing ProteinModification.txt ..."
 
+puts "Selecting proteins."
 proteins = select_evidences.select{|e|e.alignments.length > 0}.collect{|e|e.protein}.uniq.sort
+
+puts "Looping over all proteins."
+
 #proteins.each_with_index do |protein, protein_i|
 
 Parallel.each_with_index(proteins) do |protein, protein_i|
@@ -752,3 +756,73 @@ puts Time.now
 
 
 #	awk -F"\t" '{print $(NF-180),$(NF-171),$(NF-162),$(NF-153),$(NF-144),$(NF-135),$(NF-126),$(NF-117),$(NF-108),$(NF-99),$(NF-90),$(NF-81),$(NF-72),$(NF-63),$(NF-54),$(NF-45),$(NF-36),$(NF-27),$(NF-18),$(NF-9),$NF}' ProteinModification.txt | uniq
+
+#	
+#	
+#	 head -1 modification_locator/evidence.1000.txt | awk -F"\t" '{ for(i=1;i<=NF;i++)print i,$i}'
+#	1 Sequence
+#	2 Length
+#	3 Modifications
+#	4 Modified sequence
+#	5 Oxidation (M) Probabilities
+#	6 Phospho (STY) Probabilities
+#	7 Oxidation (M) Score Diffs
+#	8 Phospho (STY) Score Diffs
+#	9 Acetyl (Protein N-term)
+#	10 Oxidation (M)
+#	11 Phospho (STY)
+#	12 Missed cleavages
+#	13 Proteins
+#	14 Leading proteins
+#	15 Leading razor protein
+#	16 Type
+#	17 Raw file
+#	18 Fraction
+#	19 Experiment
+#	20 MS/MS m/z
+#	21 Charge
+#	22 m/z
+#	23 Mass
+#	24 Resolution
+#	25 Uncalibrated - Calibrated m/z [ppm]
+#	26 Uncalibrated - Calibrated m/z [Da]
+#	27 Mass Error [ppm]
+#	28 Mass Error [Da]
+#	29 Uncalibrated Mass Error [ppm]
+#	30 Uncalibrated Mass Error [Da]
+#	31 Max intensity m/z 0
+#	32 Retention time
+#	33 Retention length
+#	34 Calibrated retention time
+#	35 Calibrated retention time start
+#	36 Calibrated retention time finish
+#	37 Retention time calibration
+#	38 Match time difference
+#	39 Match m/z difference
+#	40 Match q-value
+#	41 Match score
+#	42 Number of data points
+#	43 Number of scans
+#	44 Number of isotopic peaks
+#	45 PIF
+#	46 Fraction of total spectrum
+#	47 Base peak fraction
+#	48 PEP
+#	49 MS/MS Count
+#	50 MS/MS Scan Number
+#	51 Score
+#	52 Delta score
+#	53 Combinatorics
+#	54 Intensity
+#	55 Reverse
+#	56 Potential contaminant
+#	57 id
+#	58 Protein group IDs
+#	59 Peptide ID
+#	60 Mod. peptide ID
+#	61 MS/MS IDs
+#	62 Best MS/MS
+#	63 AIF MS/MS IDs
+#	64 Oxidation (M) site IDs
+#	65 Phospho (STY) site IDs
+#	

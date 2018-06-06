@@ -182,10 +182,13 @@ peptides_without_specified_aas={}
 
 no_matches = CSV.open("MatchedModificationNONE.txt",'w', {col_sep: "\t" })
 no_matches.puts ['Modified sequence','Leading razor protein']
+
 multiple_matches = CSV.open("MatchedModificationMULTIPLE.txt",'w', {col_sep: "\t" })
 multiple_matches.puts ['Modified sequence','Leading razor protein']
+
 matched_mod = CSV.open("MatchedModification.txt",'w', {col_sep: "\t" })
 matched_mod_header = ['Modified sequence','Leading razor protein','Start position','End position']
+
 options[:amino_acids].split(",").each do |acid|
 	matched_mod_header.push "#{acid} position"
 	matched_mod_header.push "#{acid} modification position"
@@ -204,7 +207,7 @@ c.close
 (c=CSV.open(options[:evidence_file],'rb',
 		{ headers: true, col_sep: "\t" })).each do |line|
 
-	puts "Processing record #{c.lineno}/#{record_count} : #{line['Modified sequence']} : #{line['Leading razor protein']}"
+	puts "#{Time.now} : Processing record #{c.lineno}/#{record_count} : #{line['Modified sequence']} : #{line['Leading razor protein']}"
 
 	e = Evidence.new(line.to_hash)
 	evidences.push e
@@ -220,7 +223,7 @@ c.close
 			no_matches.puts line
 		else
 			if e.alignments.length > 1
-				puts "More than one matches match the expected protein. Reporting all."
+				puts "More than one matches match the expected protein. Reporting all #{e.alignments.length}."
 				multiple_matches.puts line
 			end
 
@@ -266,7 +269,9 @@ end	#	(c=CSV.open(options[:evidence_file],'rb',
 puts "Writing ModificationNormalizerPeptides.txt ..."
 
 peptides_without_specified_aas.keys.sort.each do |protein|
-	modification_normalizer.puts [ protein, peptides_without_specified_aas[protein].sort.uniq.join(';') ]
+	#	mnp
+	peptides_without_specified_aas[protein] = peptides_without_specified_aas[protein].sort.uniq
+	modification_normalizer.puts [ protein, peptides_without_specified_aas[protein].join(';') ]
 end
 modification_normalizer.close
 
@@ -283,217 +288,16 @@ matched_mod.close
 
 ##################################################
 #
-#		Read experiment file (is Fraction used?)
-#			Name	Fraction	Experiment
-#
-#	This seems unnecessary as the evidence file contains this data as well.
-#
-##################################################
-#
-#	experiments = {}	#	key: Experiment, value: [Name(s)]
-#
-#	if !options[:experiment_file].to_s.empty? and File.exists?(options[:experiment_file])
-#
-#		puts "Reading experiments"
-#		c = CSV.open(options[:experiment_file],'rb')
-#		record_count = c.readlines.size
-#		c.close
-#		(c=CSV.open(options[:experiment_file],'rb',
-#			{ headers: true, col_sep: "\t" })).each do |line|
-#
-#			puts "Processing #{c.lineno}/#{record_count} - #{line['Name']}:#{line['Experiment']}"
-#
-#			if !line['Name'].to_s.empty? and !line['Experiment'].to_s.empty?
-#				experiments[line['Experiment']] ||= []
-#				experiments[line['Experiment']].push(line['Name'])
-#			end
-#
-#		end	#	(c=CSV.open(options[:experiment_file],'rb',
-#
-#	end
-#
-#
-#
-##################################################
-#
-#		Filter evidence file
-#		(Removes unused columns and unmatched sequences)
-#
-##################################################
-#
-#	#acids = options[:amino_acids].gsub(/[^[:alpha:]]/,'')
-#	select_evidence_file = options[:evidence_file].gsub(/(.[^.]+)$/,".#{acids}\\1")
-#	if !File.exists?( select_evidence_file )
-#		puts "Filtering evidence."
-#
-#	#	acids_regex=Regexp.new("[#{acids}]")
-#
-#		select_evidenced = CSV.open(options[:evidence_file],'rb',
-#				{ headers: true, col_sep: "\t" }).collect do |line|
-#			if line['Modified sequence'].match(acids_regex)
-#	#			[line['Modified sequence'],line['Leading razor protein'],line['Experiment'],line['Intensity'],line['MS/MS Count']]
-#	#	At least 1 Intensity is nil. to_s causes a loading error later due to quoting?
-#	#			[line['Modified sequence'],line['Leading razor protein'],line['Experiment'],line['Intensity'].to_s]#,line['MS/MS Count']]
-#	#		||0 creates sorting issue due to type. ||'0' seems to make it work. Is it correct though?
-#
-#				[
-#					line['Modified sequence'],
-#					line['Leading razor protein'],
-#					line['Experiment'],
-#					line['Intensity']||'0',
-#					line['MS/MS Count']
-#				]
-#			end
-#		end.compact
-#
-#		select_evidence_csv = CSV.open(select_evidence_file,'w', { col_sep: "\t" })
-#		select_evidence_csv.puts ['Modified sequence','Leading razor protein','Experiment','Intensity','MS/MS Count']
-#
-#		#	These now include values which will be combined.
-#		#	Probably don't want to "uniq". Perhaps, maybe never should have?
-#		#	select_evidenced.sort.uniq.each do |line|
-#		select_evidenced.sort.each do |line|
-#			select_evidence_csv.puts line
-#		end
-#		select_evidence_csv.close
-#	else
-#		puts "Evidence already filtered."
-#	end
-#
-#
-##################################################
-#
-#		Loop over select evidence
-#		Create MatchedModification*.txt files
-#
-##################################################
-#
-#	select_evidences=[]
-#
-#	no_matches = CSV.open("MatchedModificationNONE.txt",'w', {col_sep: "\t" })
-#	no_matches.puts ['Modified sequence','Leading razor protein']
-#	multiple_matches = CSV.open("MatchedModificationMULTIPLE.txt",'w', {col_sep: "\t" })
-#	multiple_matches.puts ['Modified sequence','Leading razor protein']
-#	matched_mod = CSV.open("MatchedModification.txt",'w', {col_sep: "\t" })
-#	matched_mod_header = ['Modified sequence','Leading razor protein','Start position','End position']
-#	options[:amino_acids].split(",").each do |acid|
-#		matched_mod_header.push "#{acid} position"
-#		matched_mod_header.push "#{acid} modification position"
-#	end
-#	matched_mod.puts matched_mod_header
-#
-#	c = CSV.open(select_evidence_file,'rb')
-#	record_count = c.readlines.size
-#	c.close
-#	(c=CSV.open(select_evidence_file,'rb',
-#		{ headers: true, col_sep: "\t" })).each do |line|
-#
-#		puts "Processing #{c.lineno}/#{record_count} - #{line['Modified sequence']}:#{line['Leading razor protein']}"
-#
-#		e = Evidence.new(line.to_hash)
-#		select_evidences.push e
-#	#	can I switch order?
-#		e.query( protein_base_name )
-#
-#		if e.alignments.length < 1
-#			puts "None of the matches match the expected protein."
-#			no_matches.puts line
-#		else
-#			if e.alignments.length > 1
-#				puts "More than one matches match the expected protein. Reporting all."
-#				multiple_matches.puts line
-#			end
-#
-#			e.alignments.each do |alignment|
-#
-#				matched_mod_line = [e.sequence,e.protein,alignment[:match_start],alignment[:match_end]]
-#
-#				acids.split(//).each do |acid|
-#					positions = e.cleaned_sequence.indices_of_chars(acid).collect{|i| alignment[:match_start] + i }
-#					positions.each { |position| alignment[:absolute_positions][position] = acid }
-#				end
-#
-#				options[:amino_acids].split(",").each do |acid_group|
-#
-#					absolute_positions=alignment[:absolute_positions].select{|k,v| acid_group.match(v) }.collect{|k,v| k }
-#
-#					modified_positions=e.modified_positions.collect{|i| alignment[:match_start] + i } & absolute_positions
-#					alignment[:modified_positions] += modified_positions
-#
-#					matched_mod_line << absolute_positions.join(";")
-#					matched_mod_line << modified_positions.join(";")
-#				end
-#
-#				matched_mod.puts matched_mod_line
-#
-#			end	#	e.alignments.each do |alignment|
-#
-#		end	#	e.alignments.length >= 1
-#
-#		#	Can't use $. as it is the last counter used and in this case, its the query output, not the csv file.
-#		#break if $. > 10
-#	#	break if c.lineno > 10
-#
-#	end		#	CSV.open(select_evidence_file,'rb',
-#
-#	no_matches.close
-#	multiple_matches.close
-#	matched_mod.close
-#
-#
-##################################################
-#
-#		Create ModificationNormalizerPeptides.txt
-#
-##################################################
-#
-#	modification_normalizer=CSV.open("ModificationNormalizerPeptides.txt",'w', {col_sep: "\t" })
-#	modification_normalizer.puts ['Leading razor protein','Peptides without specified AAs']
-#
-#	puts "Producing ModificationNormalizerPeptides.txt ..."
-#
-#	all_evidences = []
-#
-#	peptides_without_specified_aas={}
-#	#acids_regex=Regexp.new("[#{acids}]")
-#	c = CSV.open(options[:evidence_file],'rb')
-#	record_count = c.readlines.size
-#	c.close
-#	(c=CSV.open(options[:evidence_file],'rb',
-#			{ headers: true, col_sep: "\t" })).each do |line|
-#
-#		puts "Processing record #{c.lineno}/#{record_count} : #{line['Modified sequence']} : #{line['Leading razor protein']}"
-#
-#		e = Evidence.new(line.to_hash)
-#		all_evidences.push e
-#
-#		unless line['Modified sequence'].match(acids_regex)
-#			peptides_without_specified_aas[ line['Leading razor protein'] ] ||= []
-#			unless peptides_without_specified_aas[ line['Leading razor protein'] ].include? line['Modified sequence']
-#				peptides_without_specified_aas[ line['Leading razor protein'] ] << line['Modified sequence']
-#			end
-#		end
-#
-#	end
-#
-#	peptides_without_specified_aas.keys.sort.each do |protein|
-#	#	modification_normalizer.puts [ protein, peptides_without_specified_aas[protein].join(';') ]
-#		modification_normalizer.puts [ protein, peptides_without_specified_aas[protein].sort.uniq.join(';') ]
-#	end
-#
-#	modification_normalizer.close
-#
-#
-##################################################
-#
 #		Loop over each protein and create ProteinModification.txt
 #
 ##################################################
 
 protein_mod=CSV.open("ProteinModification.txt",'w', {col_sep: "\t" })
-
-protein_mod_line = ['Leading razor protein','AA','AA location','Sequences with Modified AA','Sequences with Unmodified AA']
-
+protein_mod_line = ['Leading razor protein',
+	'AA',
+	'AA location',
+	'Sequences with Modified AA',
+	'Sequences with Unmodified AA']
 experiments.each do |k|
 	protein_mod_line.push(
 		"Sequences with Modified AA intensity.#{k}",
@@ -506,10 +310,9 @@ experiments.each do |k|
 		"Sequences with Unmodified AA MSMSCount.#{k}",
 		"ModificationNormalizerPeptides MSMSCount.#{k}"
 	)
-
 end
-
 protein_mod.puts protein_mod_line
+
 
 #	Leading razor protein	AA	AA location	Sequences with Modified AA	Sequences with Unmodified AA
 #
@@ -527,6 +330,9 @@ proteins = select_evidences.select{|e|e.alignments.length > 0}.collect{|e|e.prot
 puts "Looping over all proteins."
 
 #proteins.each_with_index do |protein, protein_i|
+
+#	Use parallel as this process would take weeks without for large 5,000,000 line evidence file
+#	Takes days (week) on 64 CPU Azure machine anyway.
 
 Parallel.each_with_index(proteins) do |protein, protein_i|
 
@@ -676,7 +482,25 @@ Parallel.each_with_index(proteins) do |protein, protein_i|
 			#puts "---"
 			#puts "Protein:#{protein}:"
 
-			mnp = peptides_without_specified_aas[protein] || []
+			#	mnp = peptides_without_specified_aas[protein] || []
+
+			#	m1 = evidences.select{|e|
+			#		e.protein == protein && e.experiment == experiment && mnp.include?( e.sequence ) }
+
+			#	m2 = evidences.select{|e|
+			#		e.protein == protein && e.experiment == experiment && e.matched_amino_acids == false }
+
+			#	if !m1.empty? || !m2.empty?
+			#		puts "Comparing"
+			#		puts m1.inspect
+			#		puts m2.inspect
+			#		if m1 == m2
+			#			puts "SAME"
+			#		else
+			#			puts "DIFFERENT"		#	never happened during test
+			#		end
+			#	end
+
 
 			#puts protein
 			#	tr|V9HW72|V9HW72_HUMAN
@@ -685,16 +509,31 @@ Parallel.each_with_index(proteins) do |protein, protein_i|
 			#
 			#	There is no position here so ???
 
-			evidences_for_these_sequences = evidences.select{|e|
-				e.protein == protein }.select{|a|
-				a.experiment == experiment }.select{|e|
-				mnp.include? e.sequence }
+#			mnp_evidences_for_these_sequences = evidences.select{|e|
+#				e.protein == protein }.select{|a|
+#				a.experiment == experiment }.select{|e|
+#				mnp.include? e.sequence } #	this takes about 3 seconds
+#	3 separate selects?
+
+#	faster or slower to join into 1? neither it seems
+
+#			mnp_evidences_for_these_sequences = evidences.select{|e|
+#				e.protein == protein && e.experiment == experiment && mnp.include?( e.sequence ) }
+
+#	why mnp and not just?
+#	e.matched_amino_acids == false
+
+#	all three seem to take the same amount of time
+
+			mnp_evidences_for_these_sequences = evidences.select{|e|
+				e.protein == protein && e.experiment == experiment && e.matched_amino_acids == false }
+
 
 			#puts "experiment:#{experiment.to_s}"
 			#puts "MNP:#{mnp.to_s}"
-			#puts "AFTS:#{evidences_for_these_sequences.collect{|e| e.sequence }.sort.uniq.inspect}"
+			#puts "AFTS:#{mnp_evidences_for_these_sequences.collect{|e| e.sequence }.sort.uniq.inspect}"
 
-			protein_mod_line.push( evidences_for_these_sequences.collect{|a|
+			protein_mod_line.push( mnp_evidences_for_these_sequences.collect{|a|
 				a.intensity.to_i }.inject(:+) || "NA" )
 
 
@@ -712,7 +551,7 @@ Parallel.each_with_index(proteins) do |protein, protein_i|
 			protein_mod_line.push( exp_without_modified_positions.collect{|a|
 				Math.log2(a[:intensity].to_i) }.inject(:+) || "NA" )
 
-			protein_mod_line.push( evidences_for_these_sequences.collect{|a|
+			protein_mod_line.push( mnp_evidences_for_these_sequences.collect{|a|
 				Math.log2(a.intensity.to_i) }.inject(:+) || "NA" )
 
 
@@ -734,7 +573,7 @@ Parallel.each_with_index(proteins) do |protein, protein_i|
 			protein_mod_line.push( exp_without_modified_positions.collect{|a|
 				a[:msmscount].to_i }.inject(:+) || "NA" )
 
-			protein_mod_line.push( evidences_for_these_sequences.collect{|a|
+			protein_mod_line.push( mnp_evidences_for_these_sequences.collect{|a|
 				a.msmscount.to_i }.inject(:+) || "NA" )
 
 		end

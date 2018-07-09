@@ -33,6 +33,11 @@ convertion seems to be working.
 
 
 
+C:\Users\jake>\Ruby25-x64\bin\ruby.exe msconvert.rb
+
+
+
+
 
 
 

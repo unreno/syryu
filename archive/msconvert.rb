@@ -38,8 +38,8 @@ msconvert = '/Program Files/ProteoWizard/ProteoWizard 3.0.18187.b51377ef8/msconv
 
 
 
-ftp.nlst.each do |bacterium|
-#Parallel.each(ftp.nlst) do |bacterium|
+#ftp.nlst.each do |bacterium|
+Parallel.each(ftp.nlst) do |bacterium|
 	puts bacterium
 
 	ftp.chdir("#{remote_base}/raw/#{bacterium}")
@@ -121,9 +121,6 @@ ftp.nlst.each do |bacterium|
 			out = "#{outdir}/#{mgf.gsub(/mgf$/,"out")}"
 			puts "Running java -Xmx5000M -jar /ryulab/moda_v1.51/moda_v151.jar -i \"#{config}\" -o \"#{out}\""
 			puts `java -Xmx5000M -jar /ryulab/moda_v1.51/moda_v151.jar -i "#{config}" -o "#{out}"`
-
-
-
 
 			File.delete(sequence)
 

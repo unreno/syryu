@@ -2,15 +2,17 @@
 
 require 'fileutils'
 
-source  = "/Users/jake/massive.ucsd.edu/MSV000079053"
+#	running on D:
 
-out_base = "/Users/jake/out"
+source  = "/massive.ucsd.edu/MSV000079053"
+
+out_base = "/out"
 
 FileUtils.mkdir_p "#{out_base}" unless File.directory? "#{out_base}"
 
 
 #msconvert = 'C:\Program Files\ProteoWizard\ProteoWizard 3.0.18187.b51377ef8\msconvert.exe';
-msconvert = '/Program Files/ProteoWizard/ProteoWizard 3.0.18187.b51377ef8/msconvert.exe';
+msconvert = 'C:/Program Files/ProteoWizard/ProteoWizard 3.0.18187.b51377ef8/msconvert.exe';
 
 exit unless ARGV.length == 1
 bacterium = ARGV[0]
@@ -70,13 +72,16 @@ Dir["*"].each do |raw|
 		puts "Running java -Xmx5000M -jar /ryulab/moda_v1.51/moda_v151.jar -i \"#{config}\" -o \"#{out}\""
 		puts `java -Xmx5000M -jar /ryulab/moda_v1.51/moda_v151.jar -i "#{config}" -o "#{out}"`
 
+		puts "gzip #{out}"
+		`gzip --best #{out}`
+
 #		puts "#{source}/sequence/#{bacterium}/#{sequence}"
 #		File.delete("#{source}/sequence/#{bacterium}/#{sequence}")
 
 	end
 
-	puts "gzip #{source}/raw/#{bacterium}/#{mgf}"
-	`gzip --best #{source}/raw/#{bacterium}/#{mgf}`
+	puts "gzip #{out_base}/#{bacterium}/#{mgf}"
+	`gzip --best #{out_base}/#{bacterium}/#{mgf}`
 
 end
 

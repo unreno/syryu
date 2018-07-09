@@ -40,7 +40,7 @@ msconvert = '/Program Files/ProteoWizard/ProteoWizard 3.0.18187.b51377ef8/msconv
 
 
 exit unless ARGV.length == 1
-bacteriun = ARGV[0]
+bacterium = ARGV[0]
 
 
 #ftp.nlst.each do |bacterium|

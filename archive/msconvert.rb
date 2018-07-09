@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+#	\Ruby25-x64\bin\ruby.exe
+
 require 'parallel'
 
 require 'net/ftp'
@@ -27,10 +29,9 @@ ftp.chdir("#{remote_base}/raw")
 
 
 
-#
-##	http://fields.scripps.edu/rawconv/download/MSFileReader%202.2.62.zip
-#
-#my $msconvert = 'C:\Program Files\ProteoWizard\ProteoWizard 3.0.18187.b51377ef8\msconvert.exe';
+#msconvert = 'C:\Program Files\ProteoWizard\ProteoWizard 3.0.18187.b51377ef8\msconvert.exe';
+msconvert = '/Program Files/ProteoWizard/ProteoWizard 3.0.18187.b51377ef8/msconvert.exe';
+
 #
 ##	parallelize like ... syryu/scripts/modification_locator.rb
 #
@@ -64,7 +65,7 @@ ftp.nlst.each do |bacterium|
 		puts "-Running msconvert on #{raw}"
 
 #		#	lots of quotes are needed
-#		print `"$msconvert" $raw --mgf --filter "msLevel 2" --filter "zeroSample removeExtra"`;
+		puts `"#{msconvert}" #{raw} --mgf --filter "msLevel 2" --filter "zeroSample removeExtra"`;
 
 
 

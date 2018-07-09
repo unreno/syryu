@@ -48,7 +48,7 @@ Dir["*"].each do |raw|
 		Dir::chdir "#{outdir}"
 
 		puts "--Creating config"
-		config = "#{raw_base}.config")
+		config = "#{raw_base}.config"
 		File.open(config,"w") do |f|
 
 			f.puts "Spectra=#{target}\\#{bacterium}\\#{mgf}"

@@ -75,5 +75,8 @@ Dir["*"].each do |raw|
 
 	end
 
+	puts "gzip #{source}/raw/#{bacterium}/#{mgf}"
+	`gzip --best #{source}/raw/#{bacterium}/#{mgf}`
+
 end
 

@@ -30,7 +30,7 @@ Dir["*"].each do |raw|
 
 	#	lots of quotes are needed
 	puts "\"#{msconvert}\" #{raw} --mgf --filter \"msLevel 2\" --filter \"zeroSample removeExtra\" --outdir \"#{out_base}/#{bacterium}\"";
-#	puts `"#{msconvert}" #{raw} --mgf --filter "msLevel 2" --filter "zeroSample removeExtra" --outdir "#{out_base}/#{bacterium}"`;
+	puts `"#{msconvert}" #{raw} --mgf --filter "msLevel 2" --filter "zeroSample removeExtra" --outdir "#{out_base}/#{bacterium}"`;
 
 	mgf = raw.gsub(/RAW$/,"mgf")
 
@@ -68,7 +68,7 @@ Dir["*"].each do |raw|
 
 		out = "#{outdir}/#{mgf.gsub(/mgf$/,"out")}"
 		puts "Running java -Xmx5000M -jar /ryulab/moda_v1.51/moda_v151.jar -i \"#{config}\" -o \"#{out}\""
-#		puts `java -Xmx5000M -jar /ryulab/moda_v1.51/moda_v151.jar -i "#{config}" -o "#{out}"`
+		puts `java -Xmx5000M -jar /ryulab/moda_v1.51/moda_v151.jar -i "#{config}" -o "#{out}"`
 
 		puts "#{source}/sequence/#{bacterium}/#{sequence}"
 		File.delete("#{source}/sequence/#{bacterium}/#{sequence}")

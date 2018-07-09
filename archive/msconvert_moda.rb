@@ -37,7 +37,7 @@ Dir["*"].each do |raw|
 	mgf = "#{raw_base}.mgf")
 
 	puts "#{source}\\raw\\#{bacterium}\\#{raw}"
-#	File.delete "#{source}\\raw\\#{bacterium}\\#{raw}"
+	File.delete "#{source}\\raw\\#{bacterium}\\#{raw}"
 
 	Dir::chdir( "#{source}\\sequence\\#{bacterium}" )
 	Dir["*"].each do |fasta|
@@ -76,7 +76,7 @@ Dir["*"].each do |raw|
 		puts "gzip #{out}"
 		`gzip --best #{out}`
 
-#		puts "#{source}/sequence/#{bacterium}/#{fasta}"
+		puts "#{source}/sequence/#{bacterium}/#{fasta}"
 #		File.delete("#{source}/sequence/#{bacterium}/#{fasta}")
 
 	end

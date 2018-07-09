@@ -2,9 +2,9 @@
 
 require 'fileutils'
 
-source  = "/Users/jakewendt/massive.ucsd.edu/MSV000079053"
+source  = "/Users/jake/massive.ucsd.edu/MSV000079053"
 
-out_base = "/Users/jakewendt/out"
+out_base = "/Users/jake/out"
 
 FileUtils.mkdir_p "#{out_base}" unless File.directory? "#{out_base}"
 

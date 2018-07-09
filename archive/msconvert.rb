@@ -66,10 +66,14 @@ ftp.nlst.each do |bacterium|
 
 		puts "-Running msconvert on #{raw}"
 
-#		#	lots of quotes are needed
+		#	lots of quotes are needed
 		puts "\"#{msconvert}\" #{raw} --mgf --filter \"msLevel 2\" --filter \"zeroSample removeExtra\" --outdir \"#{local_base}/out/#{bacterium}\"";
-		puts `"#{msconvert}" #{raw} --mgf --filter "msLevel 2" --filter "zeroSample removeExtra" --outdir \"#{local_base}/out/#{bacterium}\"`;
+		puts `"#{msconvert}" #{raw} --mgf --filter "msLevel 2" --filter "zeroSample removeExtra" --outdir "#{local_base}/out/#{bacterium}"`;
 
+
+		mgf = raw.gsub(/RAW$/,"mgf")
+
+		File.delete(raw)
 
 		ftp.chdir("#{remote_base}/sequence/#{bacterium}")
 		ftp.nlst.each do |sequence|
@@ -87,16 +91,41 @@ ftp.nlst.each do |bacterium|
 			end
 
 
-
-
+			outdir = "#{local_base}/out/#{bacterium}/#{sequence.gsub(/fasta$/,'')}"
+			FileUtils.mkdir_p "#{outdir}" unless File.directory? "#{outdir}"
+			Dir::chdir "#{outdir}"
 
 			puts "--Creating config"
+			config = mgf.gsub(/mgf$/,"config")
+			File.open(config,"w") do |f|
+
+				f.puts "Spectra=#{local_base}/out/#{bacterium}/#{mgf}"
+				f.puts "Fasta=#{local_base}/sequence/#{bacterium}/#{sequence}"
+
+				f.puts "Instrument=ESI-TRAP"
+				f.puts "PeptTolerance=0.5"
+				f.puts "AutoPMCorrection=1"
+				f.puts "FragTolerance="
+				f.puts "BlindMode=2"
+				f.puts "MinModSize="
+				f.puts "MaxModSize="
+				f.puts "Enzyme=Trypsin, KR/C"
+				f.puts "MissedCleavage=2"
+				f.puts "Protocol=NONE"
+				f.puts "HighResolution=OFF"
+			end
 
 
 			puts "--Running MODa on #{raw} and #{sequence}"
 
+			out = "#{outdir}/#{mgf.gsub(/mgf$/,"out")}"
+			puts "Running java -Xmx5000M -jar /ryulab/moda_v1.51/moda_v151.jar -i \"#{config}\" -o \"#{out}\""
+			puts `java -Xmx5000M -jar /ryulab/moda_v1.51/moda_v151.jar -i "#{config}" -o "#{out}"`
 
 
+
+
+			File.delete(sequence)
 
 		end	#	ftp.nlst.each do |sequence|
 

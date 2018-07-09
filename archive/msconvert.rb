@@ -2,7 +2,7 @@
 
 #	\Ruby25-x64\bin\ruby.exe
 
-require 'parallel'
+#require 'parallel'
 
 require 'net/ftp'
 #https://ruby-doc.org/stdlib-2.4.0/libdoc/net/ftp/rdoc/Net/FTP.html
@@ -38,9 +38,17 @@ msconvert = '/Program Files/ProteoWizard/ProteoWizard 3.0.18187.b51377ef8/msconv
 
 
 
+
+exit unless ARGV.length == 1
+bacteriun = ARGV[0]
+
+
 #ftp.nlst.each do |bacterium|
-Parallel.each(ftp.nlst) do |bacterium|
+#Parallel.each(ftp.nlst) do |bacterium|
 	puts bacterium
+
+
+
 
 	ftp.chdir("#{remote_base}/raw/#{bacterium}")
 
@@ -128,7 +136,7 @@ Parallel.each(ftp.nlst) do |bacterium|
 
 	end	#	ftp.nlst('*').each |raw|
 
-end	#	ftp.nlst('*').each do |bacterium|
+#end	#	ftp.nlst('*').each do |bacterium|
 
 
 ftp.close

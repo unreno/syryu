@@ -20,21 +20,23 @@ bacterium = ARGV[0]
 
 
 puts bacterium
+out_bacterium = "#{out_base}\\#{bacterium}"
+FileUtils.mkdir_p "#{out_bacterium}" unless File.directory? "#{out_bacterium}"
+
 
 Dir::chdir( "#{source}\\raw\\#{bacterium}" )
 
 Dir["*"].each do |raw|
 	puts "-#{raw}"
 
-	FileUtils.mkdir_p "#{out_base}\\#{bacterium}" unless File.directory? "#{out_base}\\#{bacterium}"
-
 	puts "-Running msconvert on #{raw}"
 
 	#	lots of quotes are needed
-	puts "\"#{msconvert}\" #{raw} --mgf --filter \"msLevel 2\" --filter \"zeroSample removeExtra\" --outdir \"#{out_base}\\#{bacterium}\"";
-	puts `"#{msconvert}" #{raw} --mgf --filter "msLevel 2" --filter "zeroSample removeExtra" --outdir "#{out_base}\\#{bacterium}"`;
+	puts "\"#{msconvert}\" #{raw} --mgf --filter \"msLevel 2\" --filter \"zeroSample removeExtra\" --outdir \"#{out_bacterium}\"";
+	puts `"#{msconvert}" #{raw} --mgf --filter "msLevel 2" --filter "zeroSample removeExtra" --outdir "#{out_bacterium}"`;
 
 	mgf = raw.gsub(/RAW$/,"mgf")
+	out_mgf = "#{out_bacterium}\\#{mgf}"
 
 	puts "#{source}\\raw\\#{bacterium}\\#{raw}"
 #	File.delete "#{source}\\raw\\#{bacterium}\\#{raw}"
@@ -42,7 +44,7 @@ Dir["*"].each do |raw|
 	Dir::chdir( "#{source}\\sequence\\#{bacterium}" )
 	Dir["*"].each do |sequence|
 
-		outdir = "#{out_base}\\#{bacterium}\\#{sequence.gsub(/\.fasta$/,'')}"
+		outdir = "#{out_bacterium}\\#{sequence.gsub(/\.fasta$/,'')}"
 		FileUtils.mkdir_p "#{outdir}" unless File.directory? "#{outdir}"
 		Dir::chdir "#{outdir}"
 
@@ -50,7 +52,7 @@ Dir["*"].each do |raw|
 		config = mgf.gsub(/mgf$/,"config")
 		File.open(config,"w") do |f|
 
-			f.puts "Spectra=#{out_base}\\#{bacterium}\\#{mgf}"
+			f.puts "Spectra=#{out_mgf}"
 			f.puts "Fasta=#{source}\\sequence\\#{bacterium}\\#{sequence}"
 
 			f.puts "Instrument=ESI-TRAP"
@@ -69,8 +71,8 @@ Dir["*"].each do |raw|
 		puts "--Running MODa on #{raw} and #{sequence}"
 
 		out = "#{outdir}/#{mgf.gsub(/mgf$/,"out")}"
-		puts "Running java -Xmx5000M -jar D:\\ryulab\\moda_v1.51\\moda_v151.jar -i \"#{config}\" -o \"#{out}\""
-		puts `java -Xmx5000M -jar D:\\ryulab\\moda_v1.51\\moda_v151.jar -i "#{config}" -o "#{out}"`
+		puts "Running java -Xmx10G -jar C:\\ryulab\\moda_v1.51\\moda_v151.jar -i \"#{config}\" -o \"#{out}\""
+		puts `java -Xmx10G -jar C:\\ryulab\\moda_v1.51\\moda_v151.jar -i "#{config}" -o "#{out}"`
 
 		puts "gzip #{out}"
 		`gzip --best #{out}`
@@ -80,8 +82,8 @@ Dir["*"].each do |raw|
 
 	end
 
-	puts "gzip #{out_base}\\#{bacterium}\\#{mgf}"
-	`gzip --best #{out_base}\\#{bacterium}\\#{mgf}`
+	puts "gzip #{out_mgf}"
+	`gzip --best #{out_mgf}`
 
 end
 

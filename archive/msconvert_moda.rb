@@ -37,7 +37,7 @@ Dir["*"].each do |raw|
 	mgf = raw.gsub(/RAW$/,"mgf")
 
 	puts "#{source}/raw/#{bacterium}/#{raw}"
-	File.delete "#{source}/raw/#{bacterium}/#{raw}"
+#	File.delete "#{source}/raw/#{bacterium}/#{raw}"
 
 	Dir::chdir( "#{source}/sequence/#{bacterium}" )
 	Dir["*"].each do |sequence|
@@ -70,7 +70,7 @@ Dir["*"].each do |raw|
 
 		out = "#{outdir}/#{mgf.gsub(/mgf$/,"out")}"
 		puts "Running java -Xmx5000M -jar /ryulab/moda_v1.51/moda_v151.jar -i \"#{config}\" -o \"#{out}\""
-		puts `java -Xmx5000M -jar /ryulab/moda_v1.51/moda_v151.jar -i "#{config}" -o "#{out}"`
+		puts `java -Xmx5000M -jar D:/ryulab/moda_v1.51/moda_v151.jar -i "#{config}" -o "#{out}"`
 
 		puts "gzip #{out}"
 		`gzip --best #{out}`

@@ -70,8 +70,8 @@ Dir["*"].each do |raw|
 		puts "Running java -Xmx5000M -jar /ryulab/moda_v1.51/moda_v151.jar -i \"#{config}\" -o \"#{out}\""
 		puts `java -Xmx5000M -jar /ryulab/moda_v1.51/moda_v151.jar -i "#{config}" -o "#{out}"`
 
-		puts "#{source}/sequence/#{bacterium}/#{sequence}"
-		File.delete("#{source}/sequence/#{bacterium}/#{sequence}")
+#		puts "#{source}/sequence/#{bacterium}/#{sequence}"
+#		File.delete("#{source}/sequence/#{bacterium}/#{sequence}")
 
 	end
 

@@ -69,15 +69,12 @@ Dir["*"].each do |raw|
 
 		puts "--Running MODa on #{raw} and #{fasta}"
 
-		out = "#{outdir}/#{raw_base}.out"
+		out = "#{outdir}\\#{raw_base}.out"
 		puts "Running java -Xmx10G -jar C:\\ryulab\\moda_v1.51\\moda_v151.jar -i \"#{config}\" -o \"#{out}\""
 		puts `java -Xmx10G -jar C:\\ryulab\\moda_v1.51\\moda_v151.jar -i "#{config}" -o "#{out}"`
 
 		puts "gzip #{out}"
 		`gzip #{out}`
-
-		puts "#{source}/sequence/#{bacterium}/#{fasta}"
-#		File.delete("#{source}/sequence/#{bacterium}/#{fasta}")
 
 	end
 

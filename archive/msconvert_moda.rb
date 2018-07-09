@@ -34,7 +34,7 @@ Dir["*"].each do |raw|
 	puts `"#{msconvert}" #{raw} --mgf --filter "msLevel 2" --filter "zeroSample removeExtra" --outdir "#{target}\\#{bacterium}"`;
 
 	raw_base = raw.gsub(/\.RAW$/,"")
-	mgf = "#{raw_base}.mgf")
+	mgf = "#{raw_base}.mgf"
 
 	puts "#{source}\\raw\\#{bacterium}\\#{raw}"
 	File.delete "#{source}\\raw\\#{bacterium}\\#{raw}"

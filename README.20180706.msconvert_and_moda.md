@@ -27,6 +27,12 @@ Seems msconvert.exe needs MSFileReader to read RAW files.
 
 Still not working? Adding XcalDLL
 
+convertion seems to be working.
+
+
+
+
+
 
 
 

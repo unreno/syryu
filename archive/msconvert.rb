@@ -48,6 +48,8 @@ ftp.nlst.each do |bacterium|
 	ftp.nlst.each do |raw|
 		puts "-#{raw}"
 
+		FileUtils.mkdir_p "#{local_base}/out/#{bacterium}" unless File.directory? "#{local_base}/out/#{bacterium}"
+
 		FileUtils.mkdir_p "#{local_base}/raw/#{bacterium}" unless File.directory? "#{local_base}/raw/#{bacterium}"
 		Dir::chdir "#{local_base}/raw/#{bacterium}"
 
@@ -65,11 +67,8 @@ ftp.nlst.each do |bacterium|
 		puts "-Running msconvert on #{raw}"
 
 #		#	lots of quotes are needed
-		puts `"#{msconvert}" #{raw} --mgf --filter "msLevel 2" --filter "zeroSample removeExtra"`;
-
-
-
-
+		puts "\"#{msconvert}\" #{raw} --mgf --filter \"msLevel 2\" --filter \"zeroSample removeExtra\" --outdir \"#{local_base}/raw/#{bacterium}\"";
+		puts `"#{msconvert}" #{raw} --mgf --filter "msLevel 2" --filter "zeroSample removeExtra" --outdir \"#{local_base}/raw/#{bacterium}\"`;
 
 
 		ftp.chdir("#{remote_base}/sequence/#{bacterium}")

@@ -74,7 +74,7 @@ Dir["*"].each do |raw|
 		puts `java -Xmx10G -jar C:\\ryulab\\moda_v1.51\\moda_v151.jar -i "#{config}" -o "#{out}"`
 
 		puts "gzip #{out}"
-		`gzip --best #{out}`
+		`gzip #{out}`
 
 		puts "#{source}/sequence/#{bacterium}/#{fasta}"
 #		File.delete("#{source}/sequence/#{bacterium}/#{fasta}")
@@ -82,7 +82,7 @@ Dir["*"].each do |raw|
 	end
 
 	puts "gzip #{target}\\#{bacterium}\\#{mgf}"
-	`gzip --best #{target}\\#{bacterium}\\#{mgf}`
+	`gzip #{target}\\#{bacterium}\\#{mgf}`
 
 end
 

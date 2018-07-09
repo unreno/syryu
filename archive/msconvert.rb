@@ -67,8 +67,8 @@ ftp.nlst.each do |bacterium|
 		puts "-Running msconvert on #{raw}"
 
 #		#	lots of quotes are needed
-		puts "\"#{msconvert}\" #{raw} --mgf --filter \"msLevel 2\" --filter \"zeroSample removeExtra\" --outdir \"#{local_base}/raw/#{bacterium}\"";
-		puts `"#{msconvert}" #{raw} --mgf --filter "msLevel 2" --filter "zeroSample removeExtra" --outdir \"#{local_base}/raw/#{bacterium}\"`;
+		puts "\"#{msconvert}\" #{raw} --mgf --filter \"msLevel 2\" --filter \"zeroSample removeExtra\" --outdir \"#{local_base}/out/#{bacterium}\"";
+		puts `"#{msconvert}" #{raw} --mgf --filter "msLevel 2" --filter "zeroSample removeExtra" --outdir \"#{local_base}/out/#{bacterium}\"`;
 
 
 		ftp.chdir("#{remote_base}/sequence/#{bacterium}")

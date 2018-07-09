@@ -4,15 +4,15 @@ require 'fileutils'
 
 #	running on D:
 
-source  = "D:/massive.ucsd.edu/MSV000079053"
+source  = 'D:\massive.ucsd.edu\MSV000079053'
 
-out_base = "D:/out"
+out_base = 'D:\out'
 
 FileUtils.mkdir_p "#{out_base}" unless File.directory? "#{out_base}"
 
 
 #msconvert = 'C:\Program Files\ProteoWizard\ProteoWizard 3.0.18187.b51377ef8\msconvert.exe';
-msconvert = 'C:/Program Files/ProteoWizard/ProteoWizard 3.0.18187.b51377ef8/msconvert.exe';
+msconvert = 'C:\Program Files\ProteoWizard\ProteoWizard 3.0.18187.b51377ef8\msconvert.exe';
 
 exit unless ARGV.length == 1
 bacterium = ARGV[0]
@@ -21,28 +21,28 @@ bacterium = ARGV[0]
 
 puts bacterium
 
-Dir::chdir( "#{source}/raw/#{bacterium}" )
+Dir::chdir( "#{source}\\raw\\#{bacterium}" )
 
 Dir["*"].each do |raw|
 	puts "-#{raw}"
 
-	FileUtils.mkdir_p "#{out_base}/#{bacterium}" unless File.directory? "#{out_base}/#{bacterium}"
+	FileUtils.mkdir_p "#{out_base}\\#{bacterium}" unless File.directory? "#{out_base}\\#{bacterium}"
 
 	puts "-Running msconvert on #{raw}"
 
 	#	lots of quotes are needed
-	puts "\"#{msconvert}\" #{raw} --mgf --filter \"msLevel 2\" --filter \"zeroSample removeExtra\" --outdir \"#{out_base}/#{bacterium}\"";
-	puts `"#{msconvert}" #{raw} --mgf --filter "msLevel 2" --filter "zeroSample removeExtra" --outdir "#{out_base}/#{bacterium}"`;
+	puts "\"#{msconvert}\" #{raw} --mgf --filter \"msLevel 2\" --filter \"zeroSample removeExtra\" --outdir \"#{out_base}\\#{bacterium}\"";
+	puts `"#{msconvert}" #{raw} --mgf --filter "msLevel 2" --filter "zeroSample removeExtra" --outdir "#{out_base}\\#{bacterium}"`;
 
 	mgf = raw.gsub(/RAW$/,"mgf")
 
-	puts "#{source}/raw/#{bacterium}/#{raw}"
-#	File.delete "#{source}/raw/#{bacterium}/#{raw}"
+	puts "#{source}\\raw\\#{bacterium}\\#{raw}"
+#	File.delete "#{source}\\raw\\#{bacterium}\\#{raw}"
 
-	Dir::chdir( "#{source}/sequence/#{bacterium}" )
+	Dir::chdir( "#{source}\\sequence\\#{bacterium}" )
 	Dir["*"].each do |sequence|
 
-		outdir = "#{out_base}/#{bacterium}/#{sequence.gsub(/\.fasta$/,'')}"
+		outdir = "#{out_base}\\#{bacterium}\\#{sequence.gsub(/\.fasta$/,'')}"
 		FileUtils.mkdir_p "#{outdir}" unless File.directory? "#{outdir}"
 		Dir::chdir "#{outdir}"
 
@@ -50,8 +50,8 @@ Dir["*"].each do |raw|
 		config = mgf.gsub(/mgf$/,"config")
 		File.open(config,"w") do |f|
 
-			f.puts "Spectra=#{out_base}/#{bacterium}/#{mgf}"
-			f.puts "Fasta=#{source}/sequence/#{bacterium}/#{sequence}"
+			f.puts "Spectra=#{out_base}\\#{bacterium}\\#{mgf}"
+			f.puts "Fasta=#{source}\\sequence\\#{bacterium}\\#{sequence}"
 
 			f.puts "Instrument=ESI-TRAP"
 			f.puts "PeptTolerance=0.5"
@@ -69,8 +69,8 @@ Dir["*"].each do |raw|
 		puts "--Running MODa on #{raw} and #{sequence}"
 
 		out = "#{outdir}/#{mgf.gsub(/mgf$/,"out")}"
-		puts "Running java -Xmx5000M -jar /ryulab/moda_v1.51/moda_v151.jar -i \"#{config}\" -o \"#{out}\""
-		puts `java -Xmx5000M -jar D:/ryulab/moda_v1.51/moda_v151.jar -i "#{config}" -o "#{out}"`
+		puts "Running java -Xmx5000M -jar D:\\ryulab\\moda_v1.51\\moda_v151.jar -i \"#{config}\" -o \"#{out}\""
+		puts `java -Xmx5000M -jar D:\\ryulab\\moda_v1.51\\moda_v151.jar -i "#{config}" -o "#{out}"`
 
 		puts "gzip #{out}"
 		`gzip --best #{out}`
@@ -80,8 +80,8 @@ Dir["*"].each do |raw|
 
 	end
 
-	puts "gzip #{out_base}/#{bacterium}/#{mgf}"
-	`gzip --best #{out_base}/#{bacterium}/#{mgf}`
+	puts "gzip #{out_base}\\#{bacterium}\\#{mgf}"
+	`gzip --best #{out_base}\\#{bacterium}\\#{mgf}`
 
 end
 

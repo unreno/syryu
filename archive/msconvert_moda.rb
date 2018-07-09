@@ -4,9 +4,9 @@ require 'fileutils'
 
 #	running on D:
 
-source  = "/massive.ucsd.edu/MSV000079053"
+source  = "D:/massive.ucsd.edu/MSV000079053"
 
-out_base = "/out"
+out_base = "D:/out"
 
 FileUtils.mkdir_p "#{out_base}" unless File.directory? "#{out_base}"
 

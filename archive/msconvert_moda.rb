@@ -11,8 +11,9 @@ target = 'D:\out'
 FileUtils.mkdir_p "#{target}" unless File.directory? "#{target}"
 
 
-#msconvert = 'C:\Program Files\ProteoWizard\ProteoWizard 3.0.18187.b51377ef8\msconvert.exe';
-msconvert = 'C:\Program Files\ProteoWizard\ProteoWizard 3.0.18187.b51377ef8\msconvert.exe';
+#msconvert = 'C:\Program Files\ProteoWizard\ProteoWizard 3.0.18187.b51377ef8\msconvert.exe'
+msconvert = 'C:\Program Files\ProteoWizard\ProteoWizard 3.0.18187.b51377ef8\msconvert.exe'
+gzip = 'C:\Program Files (x86)\GnuWin32\bin\gzip.exe'
 
 exit unless ARGV.length == 1
 bacterium = ARGV[0]
@@ -73,15 +74,13 @@ Dir["*"].each do |raw|
 		puts "Running java -Xmx10G -jar C:\\ryulab\\moda_v1.51\\moda_v151.jar -i \"#{config}\" -o \"#{out}\""
 		puts `java -Xmx10G -jar C:\\ryulab\\moda_v1.51\\moda_v151.jar -i "#{config}" -o "#{out}"`
 
-#		puts "gzip #{out}"
-#		`gzip #{out}`
+		puts "#{gzip} #{out}"
+		`"#{gzip}" #{out}`
 
 	end
 
-#	No gzip in windows.
-
-#	puts "gzip #{target}\\#{bacterium}\\#{mgf}"
-#	`gzip #{target}\\#{bacterium}\\#{mgf}`
+	puts "#{gzip} #{target}\\#{bacterium}\\#{mgf}"
+	`"#{gzip}" #{target}\\#{bacterium}\\#{mgf}`
 
 end
 

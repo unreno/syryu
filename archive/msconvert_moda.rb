@@ -30,6 +30,8 @@ Dir["*"].each do |raw|
 
 	puts "-Running msconvert on #{raw}"
 
+	Dir::chdir( "#{source}\\raw\\#{bacterium}" )
+
 	#	lots of quotes are needed
 	puts "\"#{msconvert}\" #{raw} --mgf --filter \"msLevel 2\" --filter \"zeroSample removeExtra\" --outdir \"#{target}\\#{bacterium}\"";
 	puts `"#{msconvert}" #{raw} --mgf --filter "msLevel 2" --filter "zeroSample removeExtra" --outdir "#{target}\\#{bacterium}"`;

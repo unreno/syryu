@@ -73,13 +73,15 @@ Dir["*"].each do |raw|
 		puts "Running java -Xmx10G -jar C:\\ryulab\\moda_v1.51\\moda_v151.jar -i \"#{config}\" -o \"#{out}\""
 		puts `java -Xmx10G -jar C:\\ryulab\\moda_v1.51\\moda_v151.jar -i "#{config}" -o "#{out}"`
 
-		puts "gzip #{out}"
-		`gzip #{out}`
+#		puts "gzip #{out}"
+#		`gzip #{out}`
 
 	end
 
-	puts "gzip #{target}\\#{bacterium}\\#{mgf}"
-	`gzip #{target}\\#{bacterium}\\#{mgf}`
+#	No gzip in windows.
+
+#	puts "gzip #{target}\\#{bacterium}\\#{mgf}"
+#	`gzip #{target}\\#{bacterium}\\#{mgf}`
 
 end
 

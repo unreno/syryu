@@ -120,7 +120,7 @@ And lastly I REALLY recommend that you `chmod 400 ~/.aws/*pem` so that others ca
 I have created and saved a Linux AMI based on Amazon Linux.
 I ran `yum update` to upgrade many of the built in packages.
 I modified the base environment ...
-*	Updateed ~/.bashrc with some aliases and PATH modifications
+*	Updated ~/.bashrc with some aliases and PATH modifications
 * edited ~/.vimrc and added ~/.vim/
 *	installed the latest gawk and find
 *	edited ~/.Renviron
